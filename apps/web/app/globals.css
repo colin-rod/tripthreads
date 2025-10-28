@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Playful Citrus Pop Design System */
+
+:root {
+  /* Primary Colors */
+  --primary: 24 95% 71%; /* #F97316 - Orange 500 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+
+  /* Secondary Colors */
+  --secondary: 142 71% 45%; /* #22C55E - Green 500 */
+  --secondary-foreground: 0 0% 100%; /* #FFFFFF */
+
+  /* Destructive Colors */
+  --destructive: 0 84% 60%; /* #EF4444 - Red 500 */
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+
+  /* Neutral Colors */
+  --background: 26 28% 92%; /* #FAF2ED - Warm cream */
+  --foreground: 194 58% 17%; /* #11333B - Deep teal */
+
+  --muted: 244 64% 95%; /* #D6D6F9 - Light lavender */
+  --muted-foreground: 194 20% 35%; /* Darker teal */
+
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 194 58% 17%; /* #11333B */
+
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 194 58% 17%; /* #11333B */
+
+  --border: 29 24% 88%; /* #E8DFD5 - Warm tan */
+  --input: 29 24% 88%; /* #E8DFD5 */
+  --ring: 24 95% 71%; /* #F97316 */
+
+  --accent: 142 71% 45%; /* #22C55E */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+
+  /* Semantic Colors */
+  --success: 142 71% 45%; /* #22C55E */
+  --success-foreground: 0 0% 100%; /* #FFFFFF */
+
+  --warning: 48 96% 53%; /* #FACC15 */
+  --warning-foreground: 194 58% 17%; /* #11333B */
+
+  --error: 0 84% 60%; /* #EF4444 */
+  --error-foreground: 0 0% 100%; /* #FFFFFF */
+
+  --info: 217 91% 60%; /* #3F84F8 */
+  --info-foreground: 0 0% 100%; /* #FFFFFF */
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+@theme inline {
+  /* Map to Tailwind theme */
+  --color-primary: oklch(from hsl(var(--primary)) l c h);
+  --color-primary-foreground: oklch(from hsl(var(--primary-foreground)) l c h);
+  --color-secondary: oklch(from hsl(var(--secondary)) l c h);
+  --color-secondary-foreground: oklch(from hsl(var(--secondary-foreground)) l c h);
+  --color-background: oklch(from hsl(var(--background)) l c h);
+  --color-foreground: oklch(from hsl(var(--foreground)) l c h);
+  --color-muted: oklch(from hsl(var(--muted)) l c h);
+  --color-muted-foreground: oklch(from hsl(var(--muted-foreground)) l c h);
+  --color-border: oklch(from hsl(var(--border)) l c h);
+  --color-success: oklch(from hsl(var(--success)) l c h);
+  --color-warning: oklch(from hsl(var(--warning)) l c h);
+  --color-error: oklch(from hsl(var(--error)) l c h);
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark Mode Colors */
+    --background: 0 0% 10%; /* #1A1A1A */
+    --foreground: 0 0% 96%; /* #F5F5F5 */
+
+    --muted: 0 0% 18%; /* #2E2E2E */
+    --muted-foreground: 0 0% 65%; /* #A6A6A6 */
+
+    --card: 0 0% 13%; /* #212121 */
+    --card-foreground: 0 0% 96%; /* #F5F5F5 */
+
+    --popover: 0 0% 13%; /* #212121 */
+    --popover-foreground: 0 0% 96%; /* #F5F5F5 */
+
+    --border: 0 0% 25%; /* #3F3F3F */
+    --input: 0 0% 25%; /* #3F3F3F */
+  }
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}

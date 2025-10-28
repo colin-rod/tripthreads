@@ -4,7 +4,18 @@
       "Bash(git init:*)",
       "Bash(git remote add:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(git log:*)",
+      "Bash(curl:*)",
+      "Bash(echo:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx create-expo-app@latest . --template blank-typescript --yes)",
+      "Bash(npx husky init)"
     ],
     "deny": [],
     "ask": []
