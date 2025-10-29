@@ -8,17 +8,120 @@ A collaborative trip planning platform that helps groups plan, manage, and reliv
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- **Node.js 20+** (LTS)
+- **npm, yarn, or pnpm**
+- **Supabase account** (free tier works for development)
+- **Stripe account** (test mode, free) - Required for Phase 3+
+
+### Setup Steps
+
+1. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables**
+
+   ```bash
+   # Copy the example file
+   cp .env.example .env.local
+
+   # Edit .env.local with your actual keys
+   # Required for MVP:
+   # - NEXT_PUBLIC_SUPABASE_URL
+   # - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   # - SUPABASE_SERVICE_ROLE_KEY
+   ```
+
+3. **Get Supabase credentials**
+   - Go to [Supabase Dashboard](https://app.supabase.com)
+   - Create a new project (or use existing)
+   - Go to Settings → API
+   - Copy `URL`, `anon public` key, and `service_role` key to `.env.local`
+
+4. **Start development server**
+
+   ```bash
+   # Start both web and mobile
+   npm run dev
+
+   # Or start individually
+   npm run dev:web     # Web only (http://localhost:3000)
+   npm run dev:mobile  # Mobile only (Expo)
+   ```
+
+5. **Run tests**
+   ```bash
+   npm test              # All tests
+   npm run lint          # ESLint
+   npm run type-check    # TypeScript
+   ```
+
+---
+
+## ⚙️ Environment Setup
+
+### Development (.env.local)
+
+**Minimum required variables:**
+
 ```bash
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase and Stripe keys
-
-# Start development server
-npm run dev
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
+
+**Additional variables for complete MVP:**
+
+- `FX_RATES_API_KEY` - For expense tracking (Phase 2)
+- `STRIPE_*` keys - For Pro tier payments (Phase 3)
+- `SENTRY_DSN` - For error monitoring (Phase 4)
+- `NEXT_PUBLIC_POSTHOG_KEY` - For analytics (Phase 4)
+
+See [.env.example](./.env.example) for complete list with descriptions.
+
+### Staging (Vercel)
+
+Set environment variables in Vercel dashboard:
+
+1. Go to your project → Settings → Environment Variables
+2. Add all required variables
+3. Set preview/production scopes appropriately
+4. **Never commit** `.env.local` or `.env` to git!
+
+### Production (Vercel + Expo)
+
+**Web (Vercel):**
+
+- Use production Supabase project
+- Use production Stripe keys (`pk_live_`, `sk_live_`)
+- Enable Sentry and PostHog
+- Set `NODE_ENV=production`
+
+**Mobile (Expo):**
+
+- Configure in `app.json` under `extra` field
+- Use EAS Secrets for sensitive values
+- See [apps/mobile/app.json](./apps/mobile/app.json) for example
+
+### Security Best Practices
+
+✅ **DO:**
+
+- Use `.env.local` for local development
+- Store secrets in Vercel/EAS environment variables
+- Prefix client-safe vars with `NEXT_PUBLIC_` or `EXPO_PUBLIC_`
+- Use different keys for dev/staging/production
+
+❌ **DON'T:**
+
+- Commit `.env.local` or `.env` to git
+- Expose service role keys to client
+- Use production keys in development
+- Share API keys in screenshots or docs
 
 ---
 
@@ -34,6 +137,7 @@ npm run dev
 ## 🎯 Core Features (MVP)
 
 ### Phase 1: Core Foundation (8 weeks)
+
 - ✅ Monorepo setup (Next.js web + Expo mobile)
 - ✅ Supabase Auth (Email, Google, Apple OAuth)
 - ✅ User roles: Owner, Participant, Viewer
@@ -41,6 +145,7 @@ npm run dev
 - ✅ Basic offline sync (read + write queue)
 
 ### Phase 2: Itinerary & Ledger (6 weeks)
+
 - 📅 Natural language itinerary builder
 - 💰 Expense tracking with multi-currency support
 - 🔄 Split rules: equal, by weight, by percentage
@@ -48,6 +153,7 @@ npm run dev
 - ⚖️ Group debt optimization
 
 ### Phase 3: Media, Pro Features & Stripe (6 weeks)
+
 - 📸 Photo/video uploads with compression
 - 🎁 Pro tier gating (unlimited participants/photos)
 - 💳 Stripe integration (subscriptions)
@@ -55,6 +161,7 @@ npm run dev
 - 🔒 GDPR compliance (data export/deletion)
 
 ### Phase 4: Push, Recap & Launch (6 weeks)
+
 - 🔔 Push notifications (web + mobile)
 - 📄 PDF trip recap generation
 - 📊 Analytics and monitoring
@@ -66,6 +173,7 @@ npm run dev
 ## 🏗️ Tech Stack
 
 ### Frontend
+
 - **Next.js 14+** (App Router) - Web application
 - **Expo** (React Native) - Mobile apps (iOS/Android)
 - **TypeScript** - Type safety throughout
@@ -73,6 +181,7 @@ npm run dev
 - **NativeWind** - Tailwind for React Native
 
 ### Backend
+
 - **Supabase** - Backend as a service
   - Postgres database with RLS
   - Authentication (Email, Google, Apple)
@@ -82,12 +191,14 @@ npm run dev
 - **exchangerate.host** - FX rates API
 
 ### Testing
+
 - **Jest/Vitest** - Unit tests
 - **React Testing Library** - Component tests
 - **Playwright** - Web E2E tests
 - **Detox** - Mobile E2E tests
 
 ### DevOps
+
 - **Vercel** - Web hosting
 - **Expo/EAS** - Mobile builds
 - **GitHub Actions** - CI/CD
@@ -99,12 +210,14 @@ npm run dev
 ## 💰 Pricing
 
 ### Free Plan
+
 - 1 active trip at a time
 - Up to 5 participants
 - 100 photos max
 - Basic features
 
 ### Pro Plan (€7/month or €70/year)
+
 - Unlimited trips
 - Unlimited participants
 - Unlimited photos & videos
@@ -122,6 +235,7 @@ npm run dev
 3. ✅ Refactor while keeping tests green
 
 **Coverage requirements:**
+
 - 80% minimum for all code
 - 100% for currency calculations
 - 100% for role-based permissions
@@ -167,18 +281,21 @@ tripthreads/
 ## 🎯 Success Metrics
 
 ### MVP Launch (Month 1)
+
 - 500+ trips created
 - 40%+ trips with ≥2 participants
 - 5%+ free-to-paid conversion
 - <100ms p95 API response time
 
 ### 6 Months
+
 - 5,000+ active trips
 - 50%+ 3-month retention
 - 8%+ conversion rate
 - €10k+ MRR
 
 ### 12 Months
+
 - 20,000+ active trips
 - 10%+ conversion rate
 - €50k+ MRR

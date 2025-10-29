@@ -1,0 +1,8 @@
+node_modules
+.next
+.expo
+dist
+coverage
+build
+jest.config.js
+jest.setup.js

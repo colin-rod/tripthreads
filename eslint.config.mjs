@@ -12,6 +12,7 @@ export default [
       '**/.expo/**',
       '**/coverage/**',
       '**/build/**',
+      '**/*.cjs',
     ],
   },
 
@@ -36,6 +37,14 @@ export default [
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+
+  // Allow require() in CommonJS config files
+  {
+    files: ['**/jest.config.js', '**/jest.setup.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 ]

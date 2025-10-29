@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-undef
 module.exports = {
   preset: 'jest-expo',
   transformIgnorePatterns: [

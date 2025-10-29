@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
     "expo": "~54.0.20",
     "expo-constants": "^18.0.10",
     "expo-linking": "^8.0.8",
