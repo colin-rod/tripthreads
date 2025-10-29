@@ -280,6 +280,18 @@ export interface Database {
         Args: { p_item_date: string; p_trip_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_trip_participant: {
+        Args: { p_trip_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_trip_participant_with_role: {
+        Args: { p_trip_id: string; p_user_id: string; p_roles: string[] }
+        Returns: boolean
+      }
+      can_user_see_expense: {
+        Args: { p_expense_date: string; p_trip_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

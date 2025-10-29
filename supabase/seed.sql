@@ -192,6 +192,15 @@ VALUES (
   '2025-06-18 00:00:00+00'::TIMESTAMPTZ           -- Joined 3 days after start
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
+-- Baylee (viewer) - Read-only access to test viewer permissions
+INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
+VALUES (
+  '10000000-0000-0000-0000-000000000001'::UUID,
+  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  'viewer',
+  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+) ON CONFLICT (trip_id, user_id) DO NOTHING;
+
 -- ============================================================================
 -- TOKYO TRIP PARTICIPANTS (Standard collaboration)
 -- ============================================================================
