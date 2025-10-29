@@ -24,7 +24,8 @@
       "Bash(npm run type-check:*)",
       "Bash(ls:*)",
       "Bash(npx shadcn:*)",
-      "Bash(npx shadcn-ui@latest add toast:*)"
+      "Bash(npx shadcn-ui@latest add toast:*)",
+      "Bash(npx supabase:*)"
     ],
     "deny": [],
     "ask": []
