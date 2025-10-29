@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
+import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 
 interface TripDetailPageProps {
   params: {
@@ -132,6 +133,9 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
         {/* Main Content Area */}
         <div className="md:col-span-2 space-y-6">
+          {/* Invitations List (owners only) */}
+          <PendingInvitesList tripId={trip.id} isOwner={isOwner} />
+
           {/* Timeline/Itinerary (placeholder) */}
           <Card>
             <CardHeader>
