@@ -231,6 +231,90 @@ SELECT 'Can Baylee (viewer) see any date item (should be true):' AS test_name,
        END AS status;
 
 -- ============================================================================
+-- TEST 5: NEW HELPER FUNCTION TESTS (Migration 005)
+-- ============================================================================
+
+-- Test is_trip_owner function
+SELECT 'Alice is owner of Paris trip (should be true):' AS test_name,
+       public.is_trip_owner(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+       ) AS is_owner,
+       CASE
+         WHEN public.is_trip_owner(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+SELECT 'Benji is NOT owner of Paris trip (should be false):' AS test_name,
+       public.is_trip_owner(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+       ) AS is_owner,
+       CASE
+         WHEN NOT public.is_trip_owner(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+-- Test can_user_read_trip_participant function
+SELECT 'Alice can read Paris trip participants (should be true):' AS test_name,
+       public.can_user_read_trip_participant(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+       ) AS can_read,
+       CASE
+         WHEN public.can_user_read_trip_participant(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+SELECT 'Benji can read Paris trip participants (should be true):' AS test_name,
+       public.can_user_read_trip_participant(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+       ) AS can_read,
+       CASE
+         WHEN public.can_user_read_trip_participant(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+SELECT 'Baylee (viewer) can read Paris trip participants (should be true):' AS test_name,
+       public.can_user_read_trip_participant(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+       ) AS can_read,
+       CASE
+         WHEN public.can_user_read_trip_participant(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+SELECT 'Maya CANNOT read Paris trip participants (should be false):' AS test_name,
+       public.can_user_read_trip_participant(
+         '10000000-0000-0000-0000-000000000001'::UUID,
+         'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+       ) AS can_read,
+       CASE
+         WHEN NOT public.can_user_read_trip_participant(
+           '10000000-0000-0000-0000-000000000001'::UUID,
+           'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+         ) THEN '✅ PASS'
+         ELSE '❌ FAIL'
+       END AS status;
+
+-- ============================================================================
 -- TEST SUMMARY
 -- ============================================================================
 
