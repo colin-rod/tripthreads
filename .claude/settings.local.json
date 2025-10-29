@@ -21,7 +21,10 @@
       "Bash(npx eslint:*)",
       "Bash(mkdir:*)",
       "Bash(npm run lint)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(ls:*)",
+      "Bash(npx shadcn:*)",
+      "Bash(npx shadcn-ui@latest add toast:*)"
     ],
     "deny": [],
     "ask": []
