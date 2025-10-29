@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import {
@@ -17,8 +18,19 @@ export default function ComponentsDemo() {
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Header */}
         <div className="space-y-2">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+            ← Back to Home
+          </Link>
           <h1 className="text-4xl font-bold text-foreground">TripThreads Design System</h1>
           <p className="text-lg text-muted-foreground">Playful Citrus Pop - Component Showcase</p>
+          <div className="flex gap-2">
+            <Badge variant="success">Base Components</Badge>
+            <Link href="/error-states-demo">
+              <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                Error & Empty States →
+              </Badge>
+            </Link>
+          </div>
         </div>
 
         {/* Colors */}

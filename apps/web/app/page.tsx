@@ -13,6 +13,9 @@ export default function Home() {
           <Button asChild>
             <Link href="/components-demo">View Components</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href="/error-states-demo">Error & Empty States</Link>
+          </Button>
         </div>
       </div>
     </main>
