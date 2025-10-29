@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { TripActions } from '@/components/features/trips/TripActions'
+import { InviteButton } from '@/components/features/trips/InviteButton'
 
 interface TripDetailPageProps {
   params: {
@@ -72,7 +73,10 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
               </div>
             </div>
 
-            {isOwner && <TripActions trip={trip} />}
+            <div className="flex items-center gap-2">
+              <InviteButton tripId={trip.id} isOwner={isOwner} />
+              {isOwner && <TripActions trip={trip} />}
+            </div>
           </div>
         </CardHeader>
 

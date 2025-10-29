@@ -1,0 +1,237 @@
+'use client'
+
+/**
+ * InviteDialog Component
+ *
+ * Modal dialog for inviting participants to a trip.
+ * Features:
+ * - Share Link tab: Generate shareable link with QR code
+ * - Email Invites tab: Send email invitations (Phase 3)
+ * - Role selector (Participant/Viewer)
+ * - Copy to clipboard functionality
+ */
+
+import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
+import { Check, Copy, Link as LinkIcon, Mail, RefreshCw } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useToast } from '@/components/ui/use-toast'
+
+import { createClient } from '@/lib/supabase/client'
+import { createInviteLink } from '@shared/lib/supabase/queries/invites'
+import type { InviteLinkResult } from '@shared/types/invite'
+
+interface InviteDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  tripId: string
+}
+
+export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) {
+  const { toast } = useToast()
+  const [selectedRole, setSelectedRole] = useState<'participant' | 'viewer'>('participant')
+  const [inviteLink, setInviteLink] = useState<InviteLinkResult | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  async function handleGenerateLink() {
+    setIsGenerating(true)
+    try {
+      const supabase = createClient()
+      const result = await createInviteLink(supabase, tripId, selectedRole)
+
+      setInviteLink(result)
+      toast({
+        title: 'Invite link created!',
+        description: 'Share this link with anyone you want to invite to the trip.',
+      })
+    } catch (error) {
+      console.error('Error generating invite link:', error)
+      toast({
+        title: 'Error creating invite link',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!inviteLink) return
+
+    try {
+      await navigator.clipboard.writeText(inviteLink.url)
+      setCopied(true)
+      toast({
+        title: 'Link copied!',
+        description: 'Invite link copied to clipboard',
+      })
+
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Error copying to clipboard:', error)
+      toast({
+        title: 'Failed to copy',
+        description: 'Please copy the link manually',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  function handleGenerateNew() {
+    setInviteLink(null)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Invite Participants</DialogTitle>
+          <DialogDescription>
+            Share a link or send email invitations to add people to this trip.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="link" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="link">
+              <LinkIcon className="h-4 w-4 mr-2" />
+              Share Link
+            </TabsTrigger>
+            <TabsTrigger value="email" disabled>
+              <Mail className="h-4 w-4 mr-2" />
+              Email Invites
+              <span className="ml-2 text-xs text-muted-foreground">(Coming soon)</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Share Link Tab */}
+          <TabsContent value="link" className="space-y-6 mt-6">
+            {/* Role Selector */}
+            <div className="space-y-3">
+              <Label>Invite as</Label>
+              <RadioGroup
+                value={selectedRole}
+                onValueChange={value => setSelectedRole(value as 'participant' | 'viewer')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="participant" id="participant" />
+                  <Label htmlFor="participant" className="font-normal cursor-pointer">
+                    Participant
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="viewer" id="viewer" />
+                  <Label htmlFor="viewer" className="font-normal cursor-pointer">
+                    Viewer
+                  </Label>
+                </div>
+              </RadioGroup>
+              <p className="text-sm text-muted-foreground">
+                {selectedRole === 'participant'
+                  ? 'Participants can view and edit the trip, add expenses, and upload photos.'
+                  : 'Viewers can only view trip details. They cannot edit or add content.'}
+              </p>
+            </div>
+
+            {!inviteLink ? (
+              /* Generate Link Button */
+              <div className="space-y-4">
+                <Button onClick={handleGenerateLink} disabled={isGenerating} className="w-full">
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <LinkIcon className="mr-2 h-4 w-4" />
+                      Generate Invite Link
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  This link will never expire and can be used unlimited times
+                </p>
+              </div>
+            ) : (
+              /* Link Generated */
+              <div className="space-y-4">
+                {/* Link Display */}
+                <div className="space-y-2">
+                  <Label>Invite Link</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 p-3 bg-muted rounded-md text-sm break-all font-mono">
+                      {inviteLink.url}
+                    </div>
+                    <Button
+                      onClick={handleCopyLink}
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* QR Code */}
+                <div className="space-y-2">
+                  <Label>QR Code</Label>
+                  <div className="flex justify-center p-6 bg-white rounded-lg border">
+                    <QRCodeSVG
+                      value={inviteLink.url}
+                      size={200}
+                      level="M"
+                      includeMargin={true}
+                      fgColor="#11333B"
+                    />
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Scan this code to join the trip
+                  </p>
+                </div>
+
+                {/* Generate New Link */}
+                <div className="pt-2 border-t">
+                  <Button onClick={handleGenerateNew} variant="ghost" className="w-full">
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Generate New Link
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    Creating a new link will not invalidate the current one
+                  </p>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Email Invites Tab (Placeholder for Phase 3) */}
+          <TabsContent value="email" className="space-y-6 mt-6">
+            <div className="text-center py-12 text-muted-foreground">
+              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Email invitations coming soon!</p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  )
+}
