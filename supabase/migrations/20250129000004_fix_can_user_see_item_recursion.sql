@@ -11,6 +11,10 @@
 -- The function is already SECURITY DEFINER in the previous migration
 -- But let's verify it's truly bypassing RLS by checking if the user exists first
 
+-- First, drop the policy that depends on the function
+DROP POLICY IF EXISTS "Users can read itinerary items based on join date" ON public.itinerary_items;
+
+-- Now drop the function
 DROP FUNCTION IF EXISTS public.can_user_see_item(TIMESTAMPTZ, UUID, UUID);
 
 CREATE OR REPLACE FUNCTION public.can_user_see_item(
@@ -66,3 +70,10 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.can_user_see_item IS 'Checks if user can see item based on role and join date (bypasses RLS with SECURITY DEFINER to avoid infinite recursion)';
+
+-- Recreate the itinerary items policy
+CREATE POLICY "Users can read itinerary items based on join date"
+  ON public.itinerary_items FOR SELECT
+  USING (
+    public.can_user_see_item(start_time, trip_id, auth.uid())
+  );
