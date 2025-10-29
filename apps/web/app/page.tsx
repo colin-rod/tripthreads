@@ -1,23 +1,29 @@
-import Link from 'next/link'
-import { Button } from '../components/ui/button'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
 
 export default function Home() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.push('/trips')
+      } else {
+        router.push('/login')
+      }
+    }
+  }, [user, loading, router])
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center space-y-6">
-        <h1 className="text-4xl font-bold mb-4">TripThreads</h1>
-        <p className="text-xl text-muted-foreground">
-          Make memories, not spreadsheets — travel made simple
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button asChild>
-            <Link href="/components-demo">View Components</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/error-states-demo">Error & Empty States</Link>
-          </Button>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[--background]">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-[--primary] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-[--muted-foreground]">Loading...</p>
       </div>
-    </main>
+    </div>
   )
 }
