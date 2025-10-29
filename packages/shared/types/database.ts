@@ -115,12 +115,171 @@ export interface Database {
           created_at?: string
         }
       }
+      itinerary_items: {
+        Row: {
+          id: string
+          trip_id: string
+          type: 'flight' | 'stay' | 'activity'
+          title: string
+          description: string | null
+          start_time: string
+          end_time: string | null
+          location: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          type: 'flight' | 'stay' | 'activity'
+          title: string
+          description?: string | null
+          start_time: string
+          end_time?: string | null
+          location?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          type?: 'flight' | 'stay' | 'activity'
+          title?: string
+          description?: string | null
+          start_time?: string
+          end_time?: string | null
+          location?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      expenses: {
+        Row: {
+          id: string
+          trip_id: string
+          description: string
+          amount: number
+          currency: string
+          category: 'food' | 'transport' | 'accommodation' | 'activity' | 'other'
+          payer_id: string
+          date: string
+          receipt_url: string | null
+          fx_rate: number | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          description: string
+          amount: number
+          currency?: string
+          category?: 'food' | 'transport' | 'accommodation' | 'activity' | 'other'
+          payer_id: string
+          date?: string
+          receipt_url?: string | null
+          fx_rate?: number | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          description?: string
+          amount?: number
+          currency?: string
+          category?: 'food' | 'transport' | 'accommodation' | 'activity' | 'other'
+          payer_id?: string
+          date?: string
+          receipt_url?: string | null
+          fx_rate?: number | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      expense_participants: {
+        Row: {
+          id: string
+          expense_id: string
+          user_id: string
+          share_amount: number
+          share_type: 'equal' | 'percentage' | 'amount'
+          share_value: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          expense_id: string
+          user_id: string
+          share_amount: number
+          share_type?: 'equal' | 'percentage' | 'amount'
+          share_value?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          expense_id?: string
+          user_id?: string
+          share_amount?: number
+          share_type?: 'equal' | 'percentage' | 'amount'
+          share_value?: number | null
+          created_at?: string
+        }
+      }
+      media_files: {
+        Row: {
+          id: string
+          trip_id: string
+          user_id: string
+          type: 'photo' | 'video'
+          url: string
+          thumbnail_url: string | null
+          caption: string | null
+          date_taken: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          user_id: string
+          type: 'photo' | 'video'
+          url: string
+          thumbnail_url?: string | null
+          caption?: string | null
+          date_taken: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          user_id?: string
+          type?: 'photo' | 'video'
+          url?: string
+          thumbnail_url?: string | null
+          caption?: string | null
+          date_taken?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_trip_join_date: {
+        Args: { p_trip_id: string; p_user_id: string }
+        Returns: string
+      }
+      can_user_see_item: {
+        Args: { p_item_date: string; p_trip_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -141,6 +300,24 @@ export type TripParticipant = Database['public']['Tables']['trip_participants'][
 export type TripParticipantInsert = Database['public']['Tables']['trip_participants']['Insert']
 export type TripParticipantUpdate = Database['public']['Tables']['trip_participants']['Update']
 
+export type ItineraryItem = Database['public']['Tables']['itinerary_items']['Row']
+export type ItineraryItemInsert = Database['public']['Tables']['itinerary_items']['Insert']
+export type ItineraryItemUpdate = Database['public']['Tables']['itinerary_items']['Update']
+
+export type Expense = Database['public']['Tables']['expenses']['Row']
+export type ExpenseInsert = Database['public']['Tables']['expenses']['Insert']
+export type ExpenseUpdate = Database['public']['Tables']['expenses']['Update']
+
+export type ExpenseParticipant = Database['public']['Tables']['expense_participants']['Row']
+export type ExpenseParticipantInsert =
+  Database['public']['Tables']['expense_participants']['Insert']
+export type ExpenseParticipantUpdate =
+  Database['public']['Tables']['expense_participants']['Update']
+
+export type MediaFile = Database['public']['Tables']['media_files']['Row']
+export type MediaFileInsert = Database['public']['Tables']['media_files']['Insert']
+export type MediaFileUpdate = Database['public']['Tables']['media_files']['Update']
+
 // Extended types with relationships
 export type TripWithParticipants = Trip & {
   participants: (TripParticipant & {
@@ -152,4 +329,24 @@ export type TripWithOwner = Trip & {
   owner: User
 }
 
+export type ExpenseWithParticipants = Expense & {
+  payer: User
+  participants: (ExpenseParticipant & {
+    user: User
+  })[]
+}
+
+export type ItineraryItemWithCreator = ItineraryItem & {
+  creator: User
+}
+
+export type MediaFileWithUser = MediaFile & {
+  user: User
+}
+
+// Enums
 export type UserRole = TripParticipant['role']
+export type ItineraryItemType = ItineraryItem['type']
+export type ExpenseCategory = Expense['category']
+export type MediaType = MediaFile['type']
+export type ShareType = ExpenseParticipant['share_type']
