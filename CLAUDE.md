@@ -104,6 +104,7 @@ TripThreads follows **strict TDD methodology**:
 > "Write the test first, then write the code to make it pass."
 
 This is critical for:
+
 - **Offline sync reliability** - Data integrity in poor network conditions
 - **Multi-currency calculations** - Accurate FX conversions and settlements
 - **Natural language parsing** - Predictable, consistent parsing behavior
@@ -402,7 +403,174 @@ tripthreads/
 
 ---
 
-## 🗄️ Data Architecture
+## 🗄️ Data Architecture & Database Migrations
+
+### Database Setup & Migrations
+
+TripThreads uses **Supabase (PostgreSQL)** for the database. All schema changes are managed through SQL migration files.
+
+#### Migration File Structure
+
+```
+supabase/
+├── migrations/
+│   ├── 20250129000001_create_users_trips_participants.sql
+│   ├── 20250129000001_create_users_trips_participants_rollback.sql
+│   └── [timestamp]_[description].sql
+├── seed.sql                    # Development seed data
+└── config.toml                 # Supabase configuration
+```
+
+#### Creating Migrations
+
+**IMPORTANT:** When working on database schema changes:
+
+1. **Create timestamped migration files** in `supabase/migrations/`
+   - Format: `YYYYMMDDHHMMSS_description.sql`
+   - Example: `20250129000001_create_users_trips_participants.sql`
+
+2. **Always create a rollback migration**
+   - Format: `YYYYMMDDHHMMSS_description_rollback.sql`
+   - Contains SQL to undo the migration
+
+3. **Include in migrations:**
+   - Table creation with constraints
+   - Indexes for performance
+   - RLS (Row-Level Security) policies
+   - Triggers and functions
+   - Comments for documentation
+
+4. **Migration Best Practices:**
+   - Use `IF NOT EXISTS` for idempotent migrations
+   - Add comments explaining complex logic
+   - Test locally before committing
+   - Never edit existing migrations (create new ones)
+   - Document breaking changes in commit message
+
+#### Applying Migrations
+
+**Local Development:**
+
+```bash
+# Method 1: Using Supabase CLI (recommended)
+supabase db reset              # Reset database and apply all migrations
+supabase db push               # Apply new migrations
+
+# Method 2: Direct SQL execution
+psql $DATABASE_URL -f supabase/migrations/20250129000001_create_users_trips_participants.sql
+```
+
+**Production:**
+
+```bash
+# Via Supabase Dashboard
+# 1. Go to SQL Editor in Supabase Dashboard
+# 2. Copy migration SQL
+# 3. Execute query
+# 4. Verify in Table Editor
+
+# Via Supabase CLI (if connected to production)
+supabase db push --linked
+```
+
+#### Rolling Back Migrations
+
+```bash
+# Apply rollback migration
+psql $DATABASE_URL -f supabase/migrations/20250129000001_create_users_trips_participants_rollback.sql
+
+# Or via Supabase Dashboard SQL Editor
+```
+
+#### Seeding Data
+
+**Local Development:**
+
+```bash
+# Apply seed data
+psql $DATABASE_URL -f supabase/seed.sql
+
+# Or via Supabase CLI
+supabase db reset  # Resets and seeds automatically
+```
+
+**Important Notes:**
+
+- Seed data uses placeholder UUIDs (`00000000-0000-0000-0000-000000000001`)
+- Update UUIDs with real auth.users IDs after creating test accounts
+- Never run seed.sql in production
+
+#### Generating TypeScript Types
+
+After creating migrations, generate TypeScript types:
+
+```bash
+# Generate types from Supabase schema
+npm run generate-types
+
+# Or manually
+supabase gen types typescript --local > packages/shared/types/database.ts
+```
+
+#### Migration Checklist
+
+When creating a new migration:
+
+- [ ] Migration file created with timestamp
+- [ ] Rollback migration created
+- [ ] RLS policies defined for all tables
+- [ ] Indexes added for foreign keys and common queries
+- [ ] Triggers/functions tested
+- [ ] Comments added for documentation
+- [ ] Migration tested locally with `supabase db reset`
+- [ ] Seed data updated if needed
+- [ ] TypeScript types regenerated
+- [ ] Migration documented in CLAUDE.md (this file)
+- [ ] Committed with descriptive message
+
+#### Example Migration Workflow
+
+```bash
+# 1. Create migration files
+touch supabase/migrations/20250129120000_add_expenses_table.sql
+touch supabase/migrations/20250129120000_add_expenses_table_rollback.sql
+
+# 2. Write SQL in migration file (see existing migrations for examples)
+
+# 3. Test migration locally
+supabase db reset  # Applies all migrations + seed
+
+# 4. Generate types
+npm run generate-types
+
+# 5. Commit
+git add supabase/migrations/ packages/shared/types/
+git commit -m "feat(db): add expenses table with RLS policies"
+
+# 6. Apply to production (via Supabase Dashboard)
+```
+
+#### Troubleshooting
+
+**Migration fails:**
+
+- Check for syntax errors in SQL
+- Ensure foreign key references exist
+- Verify RLS policies don't conflict
+- Check for unique constraint violations
+
+**RLS blocks queries:**
+
+- Test policies with different user contexts
+- Use `auth.uid()` in policies
+- Check that user is authenticated
+
+**Types out of sync:**
+
+- Regenerate types: `npm run generate-types`
+- Restart TypeScript server in IDE
+
+---
 
 ### Core Entities
 
@@ -536,7 +704,6 @@ interface MediaFile {
   created_at: string
 }
 ```
-
 
 #### Push Tokens (`push_tokens` table)
 
@@ -1088,33 +1255,33 @@ From the PRD, success is measured by:
 
 ### 6-Month Success
 
-| Metric                 | Target  |
-| ---------------------- | ------- |
-| Active trips           | 5,000+  |
-| 3-month retention rate | 50%+    |
-| Conversion rate        | 8%+     |
-| MRR                    | €10k+   |
-| App store rating       | 4.5+    |
+| Metric                 | Target |
+| ---------------------- | ------ |
+| Active trips           | 5,000+ |
+| 3-month retention rate | 50%+   |
+| Conversion rate        | 8%+    |
+| MRR                    | €10k+  |
+| App store rating       | 4.5+   |
 
 ### 12-Month Success
 
-| Metric          | Target |
-| --------------- | ------ |
-| Active trips    | 20,000 |
-| Engagement rate | 60%+   |
-| Conversion rate | 10%+   |
-| MRR             | €50k+  |
+| Metric          | Target                 |
+| --------------- | ---------------------- |
+| Active trips    | 20,000                 |
+| Engagement rate | 60%+                   |
+| Conversion rate | 10%+                   |
+| MRR             | €50k+                  |
 | Profitability   | Break-even or positive |
 
 ### Engagement KPIs
 
-| Metric                            | Target |
-| --------------------------------- | ------ |
-| Trips with ≥2 participants        | ≥60%   |
-| Average itinerary items per trip  | ≥3     |
-| Average expenses per trip         | ≥5     |
-| DAU/MAU ratio (stickiness)        | ≥30%   |
-| Users who reuse within 3 months   | ≥50%   |
+| Metric                           | Target |
+| -------------------------------- | ------ |
+| Trips with ≥2 participants       | ≥60%   |
+| Average itinerary items per trip | ≥3     |
+| Average expenses per trip        | ≥5     |
+| DAU/MAU ratio (stickiness)       | ≥30%   |
+| Users who reuse within 3 months  | ≥50%   |
 
 ### Quality KPIs
 
@@ -1210,31 +1377,31 @@ Before merging a PR:
 
 ### Technical Risks
 
-| Risk                          | Mitigation                                           |
-| ----------------------------- | ---------------------------------------------------- |
-| Offline sync complexity       | Start with basic queue, defer conflict resolution    |
-| Mobile app store approval     | Follow guidelines strictly, have legal docs ready    |
-| Supabase scaling issues       | Monitor usage, plan for migration if needed          |
-| FX rate API limits/downtime   | Daily caching, backup provider (e.g., Fixer.io)     |
-| Stripe webhook failures       | Idempotency keys, retry logic, manual reconciliation |
+| Risk                        | Mitigation                                           |
+| --------------------------- | ---------------------------------------------------- |
+| Offline sync complexity     | Start with basic queue, defer conflict resolution    |
+| Mobile app store approval   | Follow guidelines strictly, have legal docs ready    |
+| Supabase scaling issues     | Monitor usage, plan for migration if needed          |
+| FX rate API limits/downtime | Daily caching, backup provider (e.g., Fixer.io)      |
+| Stripe webhook failures     | Idempotency keys, retry logic, manual reconciliation |
 
 ### Product Risks
 
-| Risk                    | Mitigation                                          |
-| ----------------------- | --------------------------------------------------- |
-| Low conversion rate     | A/B test paywall triggers, improve onboarding       |
-| Complex UX              | Extensive user testing, progressive disclosure      |
-| Competing products      | Focus on offline + NL input as differentiators      |
-| User retention issues   | Build habit loops, push notifications, trip recaps  |
+| Risk                  | Mitigation                                         |
+| --------------------- | -------------------------------------------------- |
+| Low conversion rate   | A/B test paywall triggers, improve onboarding      |
+| Complex UX            | Extensive user testing, progressive disclosure     |
+| Competing products    | Focus on offline + NL input as differentiators     |
+| User retention issues | Build habit loops, push notifications, trip recaps |
 
 ### Business Risks
 
-| Risk               | Mitigation                                                |
-| ------------------ | --------------------------------------------------------- |
-| Slow user growth   | Product Hunt launch, travel influencer partnerships       |
-| High churn rate    | Improve retention features, offer annual discount         |
-| Cost overruns      | Monitor infra costs closely, optimize Supabase/Stripe fees|
-| Regulatory issues  | GDPR compliance, data export/deletion, legal review       |
+| Risk              | Mitigation                                                 |
+| ----------------- | ---------------------------------------------------------- |
+| Slow user growth  | Product Hunt launch, travel influencer partnerships        |
+| High churn rate   | Improve retention features, offer annual discount          |
+| Cost overruns     | Monitor infra costs closely, optimize Supabase/Stripe fees |
+| Regulatory issues | GDPR compliance, data export/deletion, legal review        |
 
 ---
 
