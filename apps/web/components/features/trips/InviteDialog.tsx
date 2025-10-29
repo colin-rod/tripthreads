@@ -29,8 +29,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import { createInviteLink } from '@shared/lib/supabase/queries/invites'
+import { createInviteLink, createBatchEmailInvites } from '@shared/lib/supabase/queries/invites'
 import type { InviteLinkResult } from '@shared/types/invite'
+import { Textarea } from '@/components/ui/textarea'
 
 interface InviteDialogProps {
   open: boolean
@@ -44,6 +45,10 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   const [inviteLink, setInviteLink] = useState<InviteLinkResult | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Email invite state
+  const [emailInput, setEmailInput] = useState('')
+  const [isSendingEmails, setIsSendingEmails] = useState(false)
 
   async function handleGenerateLink() {
     setIsGenerating(true)
@@ -94,6 +99,66 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
     setInviteLink(null)
   }
 
+  async function handleSendEmailInvites() {
+    if (!emailInput.trim()) {
+      toast({
+        title: 'No emails entered',
+        description: 'Please enter at least one email address',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsSendingEmails(true)
+    try {
+      const supabase = createClient()
+
+      // Parse emails (comma or newline separated)
+      const emails = emailInput
+        .split(/[,\n]/)
+        .map(email => email.trim())
+        .filter(email => email.length > 0)
+
+      if (emails.length === 0) {
+        throw new Error('No valid email addresses found')
+      }
+
+      if (emails.length > 50) {
+        throw new Error('Maximum 50 emails per batch')
+      }
+
+      // Create email invites
+      const invites = await createBatchEmailInvites(supabase, tripId, emails, selectedRole)
+
+      const successCount = invites.length
+      const failCount = emails.length - successCount
+
+      if (successCount > 0) {
+        toast({
+          title: `${successCount} invite${successCount > 1 ? 's' : ''} sent!`,
+          description:
+            failCount > 0
+              ? `${failCount} invite${failCount > 1 ? 's' : ''} failed to send`
+              : 'Email invitations have been created successfully',
+        })
+
+        // Clear input on success
+        setEmailInput('')
+      } else {
+        throw new Error('Failed to send any invitations')
+      }
+    } catch (error) {
+      console.error('Error sending email invites:', error)
+      toast({
+        title: 'Error sending invitations',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSendingEmails(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -110,10 +175,9 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
               <LinkIcon className="h-4 w-4 mr-2" />
               Share Link
             </TabsTrigger>
-            <TabsTrigger value="email" disabled>
+            <TabsTrigger value="email">
               <Mail className="h-4 w-4 mr-2" />
               Email Invites
-              <span className="ml-2 text-xs text-muted-foreground">(Coming soon)</span>
             </TabsTrigger>
           </TabsList>
 
@@ -223,11 +287,88 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
             )}
           </TabsContent>
 
-          {/* Email Invites Tab (Placeholder for Phase 3) */}
+          {/* Email Invites Tab */}
           <TabsContent value="email" className="space-y-6 mt-6">
-            <div className="text-center py-12 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Email invitations coming soon!</p>
+            {/* Role Selector */}
+            <div className="space-y-3">
+              <Label>Invite as</Label>
+              <RadioGroup
+                value={selectedRole}
+                onValueChange={value => setSelectedRole(value as 'participant' | 'viewer')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="participant" id="email-participant" />
+                  <Label htmlFor="email-participant" className="font-normal cursor-pointer">
+                    Participant
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="viewer" id="email-viewer" />
+                  <Label htmlFor="email-viewer" className="font-normal cursor-pointer">
+                    Viewer
+                  </Label>
+                </div>
+              </RadioGroup>
+              <p className="text-sm text-muted-foreground">
+                {selectedRole === 'participant'
+                  ? 'Participants can view and edit the trip, add expenses, and upload photos.'
+                  : 'Viewers can only view trip details. They cannot edit or add content.'}
+              </p>
+            </div>
+
+            {/* Email Input */}
+            <div className="space-y-3">
+              <Label htmlFor="email-input">Email Addresses</Label>
+              <Textarea
+                id="email-input"
+                placeholder="Enter email addresses (one per line or comma-separated)&#10;&#10;Example:&#10;alice@example.com, bob@example.com&#10;charlie@example.com"
+                value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                disabled={isSendingEmails}
+                rows={6}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                You can enter up to 50 email addresses. Separate with commas or line breaks.
+              </p>
+            </div>
+
+            {/* Send Button */}
+            <Button
+              onClick={handleSendEmailInvites}
+              disabled={isSendingEmails || !emailInput.trim()}
+              className="w-full"
+            >
+              {isSendingEmails ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Sending Invitations...
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Email Invitations
+                </>
+              )}
+            </Button>
+
+            {/* Info Note */}
+            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                How it works
+              </h4>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Invitations are created and stored in the database</li>
+                <li>Recipients must sign up or log in to accept</li>
+                <li>Each email invite can only be used once</li>
+                <li>You can resend invitations if needed</li>
+              </ul>
+              <p className="text-xs text-muted-foreground pt-2">
+                Note: Email sending requires Supabase email configuration. Invites are created but
+                automatic emails are not yet implemented.
+              </p>
             </div>
           </TabsContent>
         </Tabs>
