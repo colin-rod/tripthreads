@@ -53,6 +53,9 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
+# Claude Code
+.claude/settings.local.json
+
 # Turborepo
 .turbo/
 
