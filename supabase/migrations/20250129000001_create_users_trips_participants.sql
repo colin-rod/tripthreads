@@ -6,6 +6,10 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
+-- STEP 1: CREATE ALL TABLES (without RLS policies that reference other tables)
+-- ============================================================================
+
+-- ============================================================================
 -- USERS TABLE
 -- ============================================================================
 -- Note: Supabase Auth already creates an auth.users table
@@ -26,28 +30,6 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Index for faster lookups
 CREATE INDEX idx_users_email ON public.users(email);
 CREATE INDEX idx_users_plan ON public.users(plan);
-
--- Enable RLS
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for users table
--- Users can read their own profile
-CREATE POLICY "Users can read own profile"
-  ON public.users
-  FOR SELECT
-  USING (auth.uid() = id);
-
--- Users can update their own profile
-CREATE POLICY "Users can update own profile"
-  ON public.users
-  FOR UPDATE
-  USING (auth.uid() = id);
-
--- Users can insert their own profile (during signup)
-CREATE POLICY "Users can insert own profile"
-  ON public.users
-  FOR INSERT
-  WITH CHECK (auth.uid() = id);
 
 -- ============================================================================
 -- TRIPS TABLE
@@ -73,10 +55,110 @@ CREATE INDEX idx_trips_owner_id ON public.trips(owner_id);
 CREATE INDEX idx_trips_start_date ON public.trips(start_date);
 CREATE INDEX idx_trips_created_at ON public.trips(created_at);
 
--- Enable RLS
-ALTER TABLE public.trips ENABLE ROW LEVEL SECURITY;
+-- ============================================================================
+-- TRIP_PARTICIPANTS TABLE
+-- ============================================================================
 
--- RLS Policies for trips table
+CREATE TABLE IF NOT EXISTS public.trip_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  trip_id UUID NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'participant' CHECK (role IN ('owner', 'participant', 'viewer')),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  invited_by UUID NOT NULL REFERENCES public.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Ensure unique user per trip
+  CONSTRAINT unique_trip_user UNIQUE (trip_id, user_id)
+);
+
+-- Indexes for faster lookups
+CREATE INDEX idx_trip_participants_trip_id ON public.trip_participants(trip_id);
+CREATE INDEX idx_trip_participants_user_id ON public.trip_participants(user_id);
+CREATE INDEX idx_trip_participants_role ON public.trip_participants(role);
+
+-- ============================================================================
+-- STEP 2: CREATE FUNCTIONS (before triggers)
+-- ============================================================================
+
+-- Function to automatically create trip participant entry for trip owner
+CREATE OR REPLACE FUNCTION public.create_trip_owner_participant()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
+  VALUES (NEW.id, NEW.owner_id, 'owner', NEW.owner_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- STEP 3: CREATE TRIGGERS
+-- ============================================================================
+
+-- Trigger to auto-create owner participant
+CREATE TRIGGER on_trip_created
+  AFTER INSERT ON public.trips
+  FOR EACH ROW
+  EXECUTE FUNCTION public.create_trip_owner_participant();
+
+-- Triggers for updated_at
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_trips_updated_at
+  BEFORE UPDATE ON public.trips
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- ============================================================================
+-- STEP 4: ENABLE RLS ON ALL TABLES
+-- ============================================================================
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trip_participants ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- STEP 5: CREATE RLS POLICIES (now all tables exist)
+-- ============================================================================
+
+-- ============================================================================
+-- USERS TABLE RLS POLICIES
+-- ============================================================================
+
+-- Users can read their own profile
+CREATE POLICY "Users can read own profile"
+  ON public.users
+  FOR SELECT
+  USING (auth.uid() = id);
+
+-- Users can update their own profile
+CREATE POLICY "Users can update own profile"
+  ON public.users
+  FOR UPDATE
+  USING (auth.uid() = id);
+
+-- Users can insert their own profile (during signup)
+CREATE POLICY "Users can insert own profile"
+  ON public.users
+  FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- ============================================================================
+-- TRIPS TABLE RLS POLICIES
+-- ============================================================================
+
 -- Users can read trips they're participants in
 CREATE POLICY "Users can read trips they participate in"
   ON public.trips
@@ -108,31 +190,9 @@ CREATE POLICY "Users can delete own trips"
   USING (auth.uid() = owner_id);
 
 -- ============================================================================
--- TRIP_PARTICIPANTS TABLE
+-- TRIP_PARTICIPANTS TABLE RLS POLICIES
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS public.trip_participants (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  trip_id UUID NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'participant' CHECK (role IN ('owner', 'participant', 'viewer')),
-  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  invited_by UUID NOT NULL REFERENCES public.users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  -- Ensure unique user per trip
-  CONSTRAINT unique_trip_user UNIQUE (trip_id, user_id)
-);
-
--- Indexes for faster lookups
-CREATE INDEX idx_trip_participants_trip_id ON public.trip_participants(trip_id);
-CREATE INDEX idx_trip_participants_user_id ON public.trip_participants(user_id);
-CREATE INDEX idx_trip_participants_role ON public.trip_participants(role);
-
--- Enable RLS
-ALTER TABLE public.trip_participants ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for trip_participants table
 -- Users can read participants of trips they're in
 CREATE POLICY "Users can read participants of their trips"
   ON public.trip_participants
@@ -183,47 +243,7 @@ CREATE POLICY "Trip owners can remove participants"
   );
 
 -- ============================================================================
--- FUNCTIONS
--- ============================================================================
-
--- Function to automatically create trip participant entry for trip owner
-CREATE OR REPLACE FUNCTION public.create_trip_owner_participant()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
-  VALUES (NEW.id, NEW.owner_id, 'owner', NEW.owner_id);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to auto-create owner participant
-CREATE TRIGGER on_trip_created
-  AFTER INSERT ON public.trips
-  FOR EACH ROW
-  EXECUTE FUNCTION public.create_trip_owner_participant();
-
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Triggers for updated_at
-CREATE TRIGGER update_users_updated_at
-  BEFORE UPDATE ON public.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
-
-CREATE TRIGGER update_trips_updated_at
-  BEFORE UPDATE ON public.trips
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
-
--- ============================================================================
--- COMMENTS
+-- STEP 6: ADD COMMENTS FOR DOCUMENTATION
 -- ============================================================================
 
 COMMENT ON TABLE public.users IS 'User profiles extending auth.users';
