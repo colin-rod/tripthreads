@@ -80,6 +80,8 @@ export async function getTripById(supabase: SupabaseClient<Database>, tripId: st
         id,
         role,
         joined_at,
+        join_start_date,
+        join_end_date,
         user:users (
           id,
           full_name,

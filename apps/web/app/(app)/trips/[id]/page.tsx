@@ -108,26 +108,42 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
             <CardTitle className="text-lg">Participants</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {trip.trip_participants.map(participant => (
-              <div key={participant.id} className="flex items-center gap-3">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={participant.user.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {participant.user.full_name
-                      ?.split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .toUpperCase() || '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {participant.user.full_name || 'Unknown'}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
+            {trip.trip_participants.map(participant => {
+              const isPartialJoiner = participant.join_start_date && participant.join_end_date
+              return (
+                <div key={participant.id} className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={participant.user.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {participant.user.full_name
+                        ?.split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase() || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">
+                        {participant.user.full_name || 'Unknown'}
+                      </p>
+                      {isPartialJoiner && (
+                        <Badge variant="outline" className="text-xs">
+                          Partial
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
+                    {isPartialJoiner && (
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
+                        {format(new Date(participant.join_end_date), 'MMM d')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </CardContent>
         </Card>
 
