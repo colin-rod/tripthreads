@@ -19,16 +19,46 @@ ALTER TABLE public.trip_participants
       (join_start_date IS NOT NULL AND join_end_date IS NOT NULL AND join_start_date <= join_end_date)
     );
 
--- Add check constraint: join dates must be within trip dates
-ALTER TABLE public.trip_participants
-  ADD CONSTRAINT join_dates_within_trip_dates
-    CHECK (
-      (join_start_date IS NULL AND join_end_date IS NULL) OR
-      (
-        join_start_date >= (SELECT start_date FROM public.trips WHERE id = trip_id) AND
-        join_end_date <= (SELECT end_date FROM public.trips WHERE id = trip_id)
-      )
-    );
+-- Create trigger function to validate join dates are within trip dates
+CREATE OR REPLACE FUNCTION public.validate_join_dates_within_trip()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_trip_start DATE;
+  v_trip_end DATE;
+BEGIN
+  -- Skip validation if no date range set
+  IF NEW.join_start_date IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Get trip dates
+  SELECT start_date, end_date
+  INTO v_trip_start, v_trip_end
+  FROM public.trips
+  WHERE id = NEW.trip_id;
+
+  -- Validate dates are within trip dates
+  IF NEW.join_start_date < v_trip_start THEN
+    RAISE EXCEPTION 'join_start_date (%) cannot be before trip start_date (%)', NEW.join_start_date, v_trip_start;
+  END IF;
+
+  IF NEW.join_end_date > v_trip_end THEN
+    RAISE EXCEPTION 'join_end_date (%) cannot be after trip end_date (%)', NEW.join_end_date, v_trip_end;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Create trigger to validate join dates on INSERT and UPDATE
+DROP TRIGGER IF EXISTS validate_join_dates_trigger ON public.trip_participants;
+CREATE TRIGGER validate_join_dates_trigger
+  BEFORE INSERT OR UPDATE OF join_start_date, join_end_date, trip_id
+  ON public.trip_participants
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_join_dates_within_trip();
 
 -- Create index for date range queries
 CREATE INDEX IF NOT EXISTS idx_trip_participants_join_dates
