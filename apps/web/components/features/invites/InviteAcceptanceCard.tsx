@@ -15,12 +15,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { Calendar, Check, Loader2, X } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/use-toast'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvite } from '@shared/lib/supabase/queries/invites'
@@ -36,6 +39,8 @@ export function InviteAcceptanceCard({ inviteDetails, token }: InviteAcceptanceC
   const { toast } = useToast()
   const [isAccepting, setIsAccepting] = useState(false)
   const [isDeclining, setIsDeclining] = useState(false)
+  const [isPartialJoiner, setIsPartialJoiner] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const { invite, trip, inviter } = inviteDetails
 
@@ -43,11 +48,34 @@ export function InviteAcceptanceCard({ inviteDetails, token }: InviteAcceptanceC
     setIsAccepting(true)
     try {
       const supabase = createClient()
-      const result = await acceptInvite(supabase, token)
+
+      // Validate date range if partial joiner
+      if (isPartialJoiner && (!dateRange?.from || !dateRange?.to)) {
+        toast({
+          title: 'Date range required',
+          description: 'Please select the dates you will be joining the trip',
+          variant: 'destructive',
+        })
+        setIsAccepting(false)
+        return
+      }
+
+      const result = await acceptInvite(
+        supabase,
+        token,
+        isPartialJoiner && dateRange?.from && dateRange?.to
+          ? {
+              joinStartDate: dateRange.from.toISOString().split('T')[0],
+              joinEndDate: dateRange.to.toISOString().split('T')[0],
+            }
+          : undefined
+      )
 
       toast({
         title: 'Welcome to the trip!',
-        description: `You've successfully joined ${trip.name}`,
+        description: isPartialJoiner
+          ? `You've successfully joined ${trip.name} for your selected dates`
+          : `You've successfully joined ${trip.name}`,
       })
 
       // Redirect to trip page
@@ -161,6 +189,49 @@ export function InviteAcceptanceCard({ inviteDetails, token }: InviteAcceptanceC
               </>
             )}
           </ul>
+        </div>
+
+        {/* Partial Joiner Option */}
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="partial-joiner"
+              checked={isPartialJoiner}
+              onCheckedChange={checked => {
+                setIsPartialJoiner(checked === true)
+                if (!checked) {
+                  setDateRange(undefined)
+                }
+              }}
+            />
+            <label
+              htmlFor="partial-joiner"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              I'm only joining for part of this trip
+            </label>
+          </div>
+
+          {isPartialJoiner && (
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">
+                Select the dates you'll be joining:
+              </label>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                minDate={startDate}
+                maxDate={endDate}
+                disabled={isAccepting || isDeclining}
+              />
+              {dateRange?.from && dateRange?.to && (
+                <p className="text-xs text-muted-foreground">
+                  You'll be joining from {format(dateRange.from, 'MMM dd')} to{' '}
+                  {format(dateRange.to, 'MMM dd, yyyy')}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

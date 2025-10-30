@@ -241,11 +241,16 @@ export async function getInviteWithDetails(
  *
  * @param supabase - Supabase client
  * @param token - Invite token
+ * @param dateRange - Optional date range for partial joiners
  * @returns Accept result with trip_id and participant_id
  */
 export async function acceptInvite(
   supabase: SupabaseClient<Database>,
-  token: string
+  token: string,
+  dateRange?: {
+    joinStartDate: string // ISO 8601 date (YYYY-MM-DD)
+    joinEndDate: string // ISO 8601 date (YYYY-MM-DD)
+  }
 ): Promise<AcceptInviteResult> {
   const {
     data: { user },
@@ -260,6 +265,32 @@ export async function acceptInvite(
 
   if (!invite) {
     throw new Error('Invite not found or no longer valid')
+  }
+
+  // Validate date range if provided
+  if (dateRange) {
+    const { data: trip } = await supabase
+      .from('trips')
+      .select('start_date, end_date')
+      .eq('id', invite.trip_id)
+      .single()
+
+    if (!trip) {
+      throw new Error('Trip not found')
+    }
+
+    const tripStart = new Date(trip.start_date)
+    const tripEnd = new Date(trip.end_date)
+    const joinStart = new Date(dateRange.joinStartDate)
+    const joinEnd = new Date(dateRange.joinEndDate)
+
+    if (joinStart < tripStart || joinEnd > tripEnd) {
+      throw new Error('Selected dates must be within the trip dates')
+    }
+
+    if (joinStart > joinEnd) {
+      throw new Error('Start date must be before or equal to end date')
+    }
   }
 
   // Check if user is already a participant
@@ -281,6 +312,10 @@ export async function acceptInvite(
     role: invite.role,
     invited_by: invite.invited_by,
     joined_at: new Date().toISOString(),
+    ...(dateRange && {
+      join_start_date: dateRange.joinStartDate,
+      join_end_date: dateRange.joinEndDate,
+    }),
   }
 
   const { data: participant, error: participantError } = await supabase
