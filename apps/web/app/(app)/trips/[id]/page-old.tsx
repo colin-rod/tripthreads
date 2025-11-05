@@ -29,7 +29,7 @@ interface TripDetailPageProps {
 }
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let trip
   let isOwner = false
