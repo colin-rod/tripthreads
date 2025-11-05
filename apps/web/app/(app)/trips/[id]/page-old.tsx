@@ -108,7 +108,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
             <CardTitle className="text-lg">Participants</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {trip.trip_participants.map(participant => {
+            {trip.trip_participants.map((participant: any) => {
               const isPartialJoiner = participant.join_start_date && participant.join_end_date
               return (
                 <div key={participant.id} className="flex items-center gap-3">
