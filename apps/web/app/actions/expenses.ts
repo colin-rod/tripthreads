@@ -1,4 +1,4 @@
-'use server';
+'use server'
 
 /**
  * Server Actions for Expense Management
@@ -6,38 +6,38 @@
  * Handles expense creation, updates, and deletion with proper RLS enforcement.
  */
 
-import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 
 export interface CreateExpenseInput {
-  tripId: string;
-  amount: number; // in minor units (cents)
-  currency: string; // ISO 4217 code
-  description: string;
-  category: string | null;
-  payer: string | null; // Name of payer
-  splitType: 'equal' | 'custom' | 'shares' | 'none';
-  splitCount: number | null;
-  participants: string[] | null; // Names of participants
-  customSplits: { name: string; amount: number }[] | null;
-  date?: string; // ISO 8601, defaults to now
+  tripId: string
+  amount: number // in minor units (cents)
+  currency: string // ISO 4217 code
+  description: string
+  category: string | null
+  payer: string | null // Name of payer
+  splitType: 'equal' | 'custom' | 'shares' | 'none'
+  splitCount: number | null
+  participants: string[] | null // Names of participants
+  customSplits: { name: string; amount: number }[] | null
+  date?: string // ISO 8601, defaults to now
 }
 
 export async function createExpense(input: CreateExpenseInput) {
-  const supabase = createClient();
+  const supabase = createClient()
 
   try {
     // Get current user
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return {
         success: false,
         error: 'Authentication required',
-      };
+      }
     }
 
     // Verify user is a participant of the trip
@@ -46,13 +46,13 @@ export async function createExpense(input: CreateExpenseInput) {
       .select('id, role')
       .eq('trip_id', input.tripId)
       .eq('user_id', user.id)
-      .single();
+      .single()
 
     if (participantError || !participant) {
       return {
         success: false,
         error: 'You must be a participant of this trip to add expenses',
-      };
+      }
     }
 
     // Viewers cannot add expenses
@@ -60,7 +60,7 @@ export async function createExpense(input: CreateExpenseInput) {
       return {
         success: false,
         error: 'Viewers cannot add expenses',
-      };
+      }
     }
 
     // Create expense
@@ -77,14 +77,14 @@ export async function createExpense(input: CreateExpenseInput) {
         created_by: user.id,
       })
       .select()
-      .single();
+      .single()
 
     if (expenseError) {
-      console.error('Error creating expense:', expenseError);
+      console.error('Error creating expense:', expenseError)
       return {
         success: false,
         error: 'Failed to create expense',
-      };
+      }
     }
 
     // TODO: Create expense participants based on split logic
@@ -95,39 +95,40 @@ export async function createExpense(input: CreateExpenseInput) {
 
     // For now, we'll create a simple equal split for all participants
     if (input.splitType === 'equal' && input.splitCount) {
-      const shareAmount = Math.floor(input.amount / input.splitCount);
+      const splitCount = input.splitCount // Store for type safety in closures
+      const shareAmount = Math.floor(input.amount / splitCount)
 
       const { data: tripParticipants, error: participantsError } = await supabase
         .from('trip_participants')
         .select('user_id')
         .eq('trip_id', input.tripId)
-        .limit(input.splitCount);
+        .limit(splitCount)
 
       if (!participantsError && tripParticipants) {
-        const expenseParticipants = tripParticipants.map((p) => ({
+        const expenseParticipants = tripParticipants.map(p => ({
           expense_id: expense.id,
           user_id: p.user_id,
           share_amount: shareAmount,
           share_type: 'equal' as const,
-          share_value: 100 / input.splitCount, // percentage
-        }));
+          share_value: 100 / splitCount, // percentage
+        }))
 
-        await supabase.from('expense_participants').insert(expenseParticipants);
+        await supabase.from('expense_participants').insert(expenseParticipants)
       }
     }
 
     // Revalidate trip page
-    revalidatePath(`/trips/${input.tripId}`);
+    revalidatePath(`/trips/${input.tripId}`)
 
     return {
       success: true,
       expense,
-    };
+    }
   } catch (error) {
-    console.error('Unexpected error creating expense:', error);
+    console.error('Unexpected error creating expense:', error)
     return {
       success: false,
       error: 'An unexpected error occurred',
-    };
+    }
   }
 }
