@@ -51,7 +51,8 @@
       "Bash(pip --version)",
       "Bash(/Library/Frameworks/Python.framework/Versions/3.12/bin/python3:*)",
       "Bash(kill:*)",
-      "Bash(supabase db reset:*)"
+      "Bash(supabase db reset:*)",
+      "Bash(timeout 10 npm run dev:*)"
     ],
     "deny": [],
     "ask": []

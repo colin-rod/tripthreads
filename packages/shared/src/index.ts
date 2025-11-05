@@ -19,3 +19,12 @@ export type {
   LLMParseRequest,
   LLMParserResult,
 } from './types/parser'
+
+// Re-export lib modules for backwards compatibility
+export * from '../lib/supabase/queries/trips'
+export * from '../lib/supabase/queries/users'
+export * from '../lib/supabase/queries/invites'
+export * from '../lib/validation/trip'
+export * from '../lib/validation/profile'
+export * from '../lib/validation/invite'
+export * from '../lib/utils/avatar'
