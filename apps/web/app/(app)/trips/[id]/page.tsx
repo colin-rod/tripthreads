@@ -37,7 +37,7 @@ type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
 type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[] ? P : never
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let trip!: TripWithRelations
   let isOwner = false

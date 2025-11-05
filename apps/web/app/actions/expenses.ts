@@ -24,7 +24,7 @@ export interface CreateExpenseInput {
 }
 
 export async function createExpense(input: CreateExpenseInput) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     // Get current user

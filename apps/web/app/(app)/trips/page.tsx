@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button'
 import { CreateTripButton } from '@/components/features/trips/CreateTripButton'
 
 async function TripsList() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const trips = await getUserTrips(supabase)

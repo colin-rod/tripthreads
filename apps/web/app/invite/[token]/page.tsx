@@ -24,7 +24,7 @@ interface InvitePageProps {
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = params
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Check if user is authenticated
   const {
