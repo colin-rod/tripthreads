@@ -38,12 +38,12 @@ export const completeProfileSchema = z.object({
 
   notification_preferences: z
     .object({
-      email_trip_invites: z.boolean().default(true),
-      email_expense_updates: z.boolean().default(true),
-      email_trip_updates: z.boolean().default(true),
-      push_trip_invites: z.boolean().default(true),
-      push_expense_updates: z.boolean().default(true),
-      push_trip_updates: z.boolean().default(true),
+      email_trip_invites: z.boolean(),
+      email_expense_updates: z.boolean(),
+      email_trip_updates: z.boolean(),
+      push_trip_invites: z.boolean(),
+      push_expense_updates: z.boolean(),
+      push_trip_updates: z.boolean(),
     })
     .optional(),
 })

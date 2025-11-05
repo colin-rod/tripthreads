@@ -53,7 +53,8 @@
       "Bash(kill:*)",
       "Bash(supabase db reset:*)",
       "Bash(timeout 10 npm run dev:*)",
-      "Bash(packages/shared/src/types/database.ts)"
+      "Bash(packages/shared/src/types/database.ts)",
+      "Bash(undefined is not assignable to boolean\"\n\nFix:\n- Removed .default(true) from individual boolean fields\n- Keep the object as .optional() so entire notification_preferences can be undefined\n- When present, all fields are required booleans (not boolean | undefined)\n- Form provides default values directly instead of schema defaults\n\n🤖 Generated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
