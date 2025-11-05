@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@shared/lib/supabase/queries/trips'
+import { getTripById, isTripOwner } from '@tripthreads/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'

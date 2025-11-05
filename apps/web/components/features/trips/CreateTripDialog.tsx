@@ -44,8 +44,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 
 import { createClient } from '@/lib/supabase/client'
-import { createTrip } from '@shared/lib/supabase/queries/trips'
-import { createTripSchema, type CreateTripInput } from '@shared/lib/validation/trip'
+import { createTrip, createTripSchema, type CreateTripInput } from '@tripthreads/shared'
 
 interface CreateTripDialogProps {
   open: boolean

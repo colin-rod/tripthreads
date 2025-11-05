@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getCurrentUser, isProfileComplete } from '@shared/lib/supabase/queries/users'
+import { getCurrentUser, isProfileComplete } from '@tripthreads/shared'
 import { ProfileCompletionModal } from './ProfileCompletionModal'
 
 export function ProfileCompletionProvider() {

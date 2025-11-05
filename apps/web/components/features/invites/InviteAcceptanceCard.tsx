@@ -26,8 +26,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { DateRangePicker } from '@/components/ui/date-range-picker'
 
 import { createClient } from '@/lib/supabase/client'
-import { acceptInvite } from '@shared/lib/supabase/queries/invites'
-import type { InviteWithDetails } from '@shared/types/invite'
+import { acceptInvite, type InviteWithDetails } from '@tripthreads/shared'
 
 interface InviteAcceptanceCardProps {
   inviteDetails: InviteWithDetails

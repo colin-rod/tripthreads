@@ -44,9 +44,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useToast } from '@/components/ui/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import { completeProfile } from '@shared/lib/supabase/queries/users'
-import { completeProfileSchema, type CompleteProfileInput } from '@shared/lib/validation/profile'
-import { validateAvatarFile } from '@shared/lib/utils/avatar'
+import {
+  completeProfile,
+  completeProfileSchema,
+  type CompleteProfileInput,
+  validateAvatarFile,
+} from '@tripthreads/shared'
 
 interface ProfileCompletionModalProps {
   open: boolean

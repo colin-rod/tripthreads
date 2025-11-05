@@ -37,8 +37,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/components/ui/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import { getTripInvites, revokeInvite, getInviteUrl } from '@shared/lib/supabase/queries/invites'
-import type { TripInvite } from '@shared/types/invite'
+import { getTripInvites, revokeInvite, getInviteUrl, type TripInvite } from '@tripthreads/shared'
 
 interface PendingInvitesListProps {
   tripId: string

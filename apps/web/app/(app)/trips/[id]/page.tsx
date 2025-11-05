@@ -11,52 +11,52 @@
  * - Tabs for Timeline, Expenses, Feed, Settings (future)
  */
 
-import { notFound } from 'next/navigation';
-import { format } from 'date-fns';
-import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react';
+import { notFound } from 'next/navigation'
+import { format } from 'date-fns'
+import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 
-import { createClient } from '@/lib/supabase/server';
-import { getTripById, isTripOwner } from '@shared/lib/supabase/queries/trips';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TripActions } from '@/components/features/trips/TripActions';
-import { InviteButton } from '@/components/features/trips/InviteButton';
-import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList';
-import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper';
-import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper';
+import { createClient } from '@/lib/supabase/server'
+import { getTripById, isTripOwner } from '@tripthreads/shared'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TripActions } from '@/components/features/trips/TripActions'
+import { InviteButton } from '@/components/features/trips/InviteButton'
+import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
+import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
+import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
 
 interface TripDetailPageProps {
   params: {
-    id: string;
-  };
+    id: string
+  }
 }
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
-  const supabase = createClient();
+  const supabase = createClient()
 
-  let trip;
-  let isOwner = false;
+  let trip
+  let isOwner = false
 
   try {
-    trip = await getTripById(supabase, params.id);
-    isOwner = await isTripOwner(supabase, params.id);
+    trip = await getTripById(supabase, params.id)
+    isOwner = await isTripOwner(supabase, params.id)
   } catch (error) {
-    console.error('Error loading trip:', error);
-    notFound();
+    console.error('Error loading trip:', error)
+    notFound()
   }
 
-  const startDate = new Date(trip.start_date);
-  const endDate = new Date(trip.end_date);
+  const startDate = new Date(trip.start_date)
+  const endDate = new Date(trip.end_date)
 
   // Get user's role
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
-  const userParticipant = trip.trip_participants.find((p) => p.user.id === user?.id);
-  const canEdit = userParticipant?.role !== 'viewer';
+  const userParticipant = trip.trip_participants.find(p => p.user.id === user?.id)
+  const canEdit = userParticipant?.role !== 'viewer'
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -106,7 +106,11 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       {trip.cover_image_url && (
         <Card className="mb-6 overflow-hidden">
           <div className="relative aspect-video">
-            <img src={trip.cover_image_url} alt={trip.name} className="object-cover w-full h-full" />
+            <img
+              src={trip.cover_image_url}
+              alt={trip.name}
+              className="object-cover w-full h-full"
+            />
           </div>
         </Card>
       )}
@@ -119,8 +123,8 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
               <CardTitle className="text-lg">Participants</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {trip.trip_participants.map((participant) => {
-                const isPartialJoiner = participant.join_start_date && participant.join_end_date;
+              {trip.trip_participants.map(participant => {
+                const isPartialJoiner = participant.join_start_date && participant.join_end_date
                 return (
                   <div key={participant.id} className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
@@ -128,7 +132,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                       <AvatarFallback>
                         {participant.user.full_name
                           ?.split(' ')
-                          .map((n) => n[0])
+                          .map(n => n[0])
                           .join('')
                           .toUpperCase() || '?'}
                       </AvatarFallback>
@@ -153,7 +157,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                       )}
                     </div>
                   </div>
-                );
+                )
               })}
             </CardContent>
           </Card>
@@ -223,8 +227,8 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                       {canEdit
                         ? 'Add expenses using natural language above'
                         : userParticipant?.role === 'viewer'
-                        ? 'Viewers cannot see expenses'
-                        : 'Start tracking expenses for this trip'}
+                          ? 'Viewers cannot see expenses'
+                          : 'Start tracking expenses for this trip'}
                     </p>
                   </div>
                 </CardContent>
@@ -250,5 +254,5 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

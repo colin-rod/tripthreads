@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import { deleteTrip } from '@shared/lib/supabase/queries/trips'
+import { deleteTrip } from '@tripthreads/shared'
 
 interface DeleteTripDialogProps {
   tripId: string

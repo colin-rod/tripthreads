@@ -40,8 +40,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 
 import { createClient } from '@/lib/supabase/client'
-import { updateTrip } from '@shared/lib/supabase/queries/trips'
-import { updateTripSchema, type UpdateTripInput } from '@shared/lib/validation/trip'
+import { updateTrip, updateTripSchema, type UpdateTripInput } from '@tripthreads/shared'
 
 interface Trip {
   id: string
