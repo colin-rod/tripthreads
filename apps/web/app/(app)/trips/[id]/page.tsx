@@ -1,52 +1,65 @@
 /**
- * Trip Detail Page
+ * Trip Detail Page with AI Parser Integration
  *
- * Displays full trip details with owner/participant info.
+ * Enhanced version with natural language input for expenses and itinerary.
  * Features:
  * - Trip header with name, dates, description
  * - Owner and participants list
+ * - AI-powered expense input (OpenAI GPT-4o-mini)
+ * - AI-powered itinerary input (OpenAI GPT-4o-mini)
  * - Edit/Delete buttons (owner only)
  * - Tabs for Timeline, Expenses, Feed, Settings (future)
  */
 
-import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
-import { Calendar, MapPin, Users } from 'lucide-react'
+import { notFound } from 'next/navigation';
+import { format } from 'date-fns';
+import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react';
 
-import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@shared/lib/supabase/queries/trips'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { TripActions } from '@/components/features/trips/TripActions'
-import { InviteButton } from '@/components/features/trips/InviteButton'
-import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
+import { createClient } from '@/lib/supabase/server';
+import { getTripById, isTripOwner } from '@shared/lib/supabase/queries/trips';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TripActions } from '@/components/features/trips/TripActions';
+import { InviteButton } from '@/components/features/trips/InviteButton';
+import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList';
+import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper';
+import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper';
 
 interface TripDetailPageProps {
   params: {
-    id: string
-  }
+    id: string;
+  };
 }
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
-  const supabase = createClient()
+  const supabase = createClient();
 
-  let trip
-  let isOwner = false
+  let trip;
+  let isOwner = false;
 
   try {
-    trip = await getTripById(supabase, params.id)
-    isOwner = await isTripOwner(supabase, params.id)
+    trip = await getTripById(supabase, params.id);
+    isOwner = await isTripOwner(supabase, params.id);
   } catch (error) {
-    console.error('Error loading trip:', error)
-    notFound()
+    console.error('Error loading trip:', error);
+    notFound();
   }
 
-  const startDate = new Date(trip.start_date)
-  const endDate = new Date(trip.end_date)
+  const startDate = new Date(trip.start_date);
+  const endDate = new Date(trip.end_date);
+
+  // Get user's role
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const userParticipant = trip.trip_participants.find((p) => p.user.id === user?.id);
+  const canEdit = userParticipant?.role !== 'viewer';
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
       {/* Trip Header */}
       <Card className="mb-6">
         <CardHeader>
@@ -55,6 +68,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold">{trip.name}</h1>
                 {isOwner && <Badge variant="outline">Owner</Badge>}
+                {userParticipant?.role === 'viewer' && <Badge variant="secondary">Viewer</Badge>}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
@@ -92,83 +106,149 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       {trip.cover_image_url && (
         <Card className="mb-6 overflow-hidden">
           <div className="relative aspect-video">
-            <img
-              src={trip.cover_image_url}
-              alt={trip.name}
-              className="object-cover w-full h-full"
-            />
+            <img src={trip.cover_image_url} alt={trip.name} className="object-cover w-full h-full" />
           </div>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Participants Card */}
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Participants</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {trip.trip_participants.map(participant => {
-              const isPartialJoiner = participant.join_start_date && participant.join_end_date
-              return (
-                <div key={participant.id} className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={participant.user.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {participant.user.full_name
-                        ?.split(' ')
-                        .map(n => n[0])
-                        .join('')
-                        .toUpperCase() || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">
-                        {participant.user.full_name || 'Unknown'}
-                      </p>
-                      {isPartialJoiner && (
-                        <Badge variant="outline" className="text-xs">
-                          Partial
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
-                    {isPartialJoiner && (
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                        {format(new Date(participant.join_end_date), 'MMM d')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Main Content Area */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Invitations List (owners only) */}
-          <PendingInvitesList tripId={trip.id} isOwner={isOwner} />
-
-          {/* Timeline/Itinerary (placeholder) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Participants Sidebar */}
+        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Timeline</CardTitle>
+              <CardTitle className="text-lg">Participants</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No itinerary items yet</p>
-                <p className="text-sm mt-1">
-                  Add activities, flights, and accommodations to your trip
-                </p>
-              </div>
+            <CardContent className="space-y-3">
+              {trip.trip_participants.map((participant) => {
+                const isPartialJoiner = participant.join_start_date && participant.join_end_date;
+                return (
+                  <div key={participant.id} className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={participant.user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {participant.user.full_name
+                          ?.split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">
+                          {participant.user.full_name || 'Unknown'}
+                        </p>
+                        {isPartialJoiner && (
+                          <Badge variant="outline" className="text-xs">
+                            Partial
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
+                      {isPartialJoiner && (
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
+                          {format(new Date(participant.join_end_date), 'MMM d')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </div>
+
+        {/* Main Content Area */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Invitations List (owners only) */}
+          <PendingInvitesList tripId={trip.id} isOwner={isOwner} />
+
+          {/* Tabs for Timeline, Expenses, etc. */}
+          <Tabs defaultValue="timeline" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="timeline">
+                <Route className="h-4 w-4 mr-2" />
+                Timeline
+              </TabsTrigger>
+              <TabsTrigger value="expenses">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Expenses
+              </TabsTrigger>
+              <TabsTrigger value="feed">
+                <MapPin className="h-4 w-4 mr-2" />
+                Feed
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Timeline Tab */}
+            <TabsContent value="timeline" className="space-y-6 mt-6">
+              {/* AI Itinerary Input (Participants only) */}
+              {canEdit && <ItineraryInputWrapper tripId={trip.id} />}
+
+              {/* Itinerary List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Itinerary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No itinerary items yet</p>
+                    <p className="text-sm mt-1">
+                      {canEdit
+                        ? 'Add activities, flights, and accommodations using natural language above'
+                        : 'Only participants can add itinerary items'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Expenses Tab */}
+            <TabsContent value="expenses" className="space-y-6 mt-6">
+              {/* AI Expense Input (Participants only, hidden from viewers) */}
+              {canEdit && <ExpenseInputWrapper tripId={trip.id} />}
+
+              {/* Expenses List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Expenses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No expenses yet</p>
+                    <p className="text-sm mt-1">
+                      {canEdit
+                        ? 'Add expenses using natural language above'
+                        : userParticipant?.role === 'viewer'
+                        ? 'Viewers cannot see expenses'
+                        : 'Start tracking expenses for this trip'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Feed Tab */}
+            <TabsContent value="feed" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Trip Feed</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No photos or updates yet</p>
+                    <p className="text-sm mt-1">Share photos and memories from your trip</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
-  )
+  );
 }
