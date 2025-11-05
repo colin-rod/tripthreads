@@ -70,7 +70,7 @@ export function ProfileCompletionModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const form = useForm<CompleteProfileInput>({
+  const form = useForm({
     resolver: zodResolver(completeProfileSchema),
     defaultValues: {
       full_name: existingName || '',

@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create user profile in public.users table
       if (data.user) {
+        // @ts-expect-error - Database types need to be regenerated from Supabase schema
         const { error: profileError } = await supabase.from('users').insert({
           id: data.user.id,
           email: data.user.email!,

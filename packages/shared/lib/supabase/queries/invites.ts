@@ -11,13 +11,13 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../types/supabase'
+import type { Database } from '../../../types/database'
 import type {
   TripInvite,
   InviteWithDetails,
   InviteLinkResult,
   AcceptInviteResult,
-} from '../../types/invite'
+} from '../../../types/invite'
 
 type InviteRow = Database['public']['Tables']['trip_invites']['Row']
 type InviteInsert = Database['public']['Tables']['trip_invites']['Insert']
@@ -230,7 +230,7 @@ export async function getInviteWithDetails(
     return null
   }
 
-  return data as InviteWithDetails
+  return data as unknown as InviteWithDetails
 }
 
 /**

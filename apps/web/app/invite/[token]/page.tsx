@@ -24,7 +24,7 @@ interface InvitePageProps {
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = params
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Check if user is authenticated
   const {
@@ -72,12 +72,8 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   // Check if user is already a participant
-  const { data: existingParticipant } = await supabase
-    .from('trip_participants')
-    .select('id, role')
-    .eq('trip_id', inviteDetails.trip.id)
-    .eq('user_id', user.id)
-    .single()
+  // @ts-expect-error - Database types need to be regenerated from Supabase schema
+  const { data: existingParticipant } = await supabase.from('trip_participants').select('id, role').eq('trip_id', inviteDetails.trip.id).eq('user_id', user.id).single()
 
   if (existingParticipant) {
     // User is already a member - redirect to trip

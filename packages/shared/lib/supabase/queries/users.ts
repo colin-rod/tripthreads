@@ -8,7 +8,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../types/supabase'
+import type { Database } from '../../../types/database'
 import { compressAvatar, generateAvatarPath, getAvatarUrl } from '../../utils/avatar'
 
 type User = Database['public']['Tables']['users']['Row']
@@ -150,7 +150,7 @@ export async function completeProfile(
     const storagePath = await uploadAvatar(supabase, data.avatar, authUser.id)
 
     if (storagePath) {
-      const supabaseUrl = supabase.supabaseUrl
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || ''
       avatarUrl = getAvatarUrl(supabaseUrl, storagePath)
     }
   }
@@ -221,7 +221,7 @@ export async function updateProfile(
     const storagePath = await uploadAvatar(supabase, data.avatar, authUser.id)
 
     if (storagePath) {
-      const supabaseUrl = supabase.supabaseUrl
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL || ''
       avatarUrl = getAvatarUrl(supabaseUrl, storagePath)
     }
   }

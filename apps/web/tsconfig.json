@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@shared/*": ["../../packages/shared/*"],
+      "@tripthreads/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [

@@ -29,7 +29,7 @@ interface TripDetailPageProps {
 }
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let trip
   let isOwner = false
@@ -108,16 +108,17 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
             <CardTitle className="text-lg">Participants</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {trip.trip_participants.map(participant => {
+            {trip.trip_participants.map((participant: typeof trip.trip_participants[0]) => {
               const isPartialJoiner = participant.join_start_date && participant.join_end_date
+              const user = participant.user as any
               return (
                 <div key={participant.id} className="flex items-center gap-3">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={participant.user.avatar_url || undefined} />
+                    <AvatarImage src={user.avatar_url || undefined} />
                     <AvatarFallback>
-                      {participant.user.full_name
+                      {user.full_name
                         ?.split(' ')
-                        .map(n => n[0])
+                        .map((n: string) => n[0])
                         .join('')
                         .toUpperCase() || '?'}
                     </AvatarFallback>
@@ -125,7 +126,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium truncate">
-                        {participant.user.full_name || 'Unknown'}
+                        {user.full_name || 'Unknown'}
                       </p>
                       {isPartialJoiner && (
                         <Badge variant="outline" className="text-xs">
@@ -136,8 +137,8 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                     <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
                     {isPartialJoiner && (
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                        {format(new Date(participant.join_end_date), 'MMM d')}
+                        {format(new Date(participant.join_start_date!), 'MMM d')} -{' '}
+                        {format(new Date(participant.join_end_date!), 'MMM d')}
                       </p>
                     )}
                   </div>

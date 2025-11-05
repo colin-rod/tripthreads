@@ -1,24 +1,23 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
+    const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
       // Check if user profile exists in public.users
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', data.user.id)
-        .single()
+      // @ts-expect-error - Database types need to be regenerated from Supabase schema
+      const { data: existingUser } = await supabase.from('users').select('id').eq('id', data.user.id).single()
 
       // Create profile if it doesn't exist (for OAuth users)
       if (!existingUser) {
+        // @ts-expect-error - Database types need to be regenerated from Supabase schema
         await supabase.from('users').insert({
           id: data.user.id,
           email: data.user.email!,

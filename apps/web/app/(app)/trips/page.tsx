@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button'
 import { CreateTripButton } from '@/components/features/trips/CreateTripButton'
 
 async function TripsList() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const trips = await getUserTrips(supabase)
@@ -43,7 +43,7 @@ async function TripsList() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {trips.map(trip => (
-          <TripCard key={trip.id} trip={trip} />
+          <TripCard key={trip.id} trip={trip as any} />
         ))}
       </div>
     )
