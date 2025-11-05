@@ -28,3 +28,14 @@ export * from '../lib/validation/trip'
 export * from '../lib/validation/profile'
 export * from '../lib/validation/invite'
 export * from '../lib/utils/avatar'
+
+// Re-export types from lib/types
+export type {
+  TripInvite,
+  InviteWithDetails,
+  InviteLinkResult,
+  AcceptInviteResult,
+  InviteRole,
+  InviteType,
+  InviteStatus,
+} from '../types/invite'
