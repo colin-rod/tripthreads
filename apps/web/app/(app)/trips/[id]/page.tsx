@@ -33,10 +33,12 @@ interface TripDetailPageProps {
   }
 }
 
+type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
+
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
   const supabase = createClient()
 
-  let trip
+  let trip!: TripWithRelations
   let isOwner = false
 
   try {
