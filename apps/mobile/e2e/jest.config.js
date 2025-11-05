@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = {
   rootDir: '..',
   testMatch: ['<rootDir>/e2e/**/*.e2e.ts'],

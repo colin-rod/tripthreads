@@ -7,9 +7,9 @@
  * @module parser/date
  */
 
-import * as chrono from 'chrono-node';
-import { isValid, parseISO } from 'date-fns';
-import type { ParsedDateTime, DateParserOptions } from '../types/parser';
+import * as chrono from 'chrono-node'
+import { isValid, parseISO } from 'date-fns'
+import type { ParsedDateTime, DateParserOptions } from '../types/parser'
 
 /**
  * Parse a natural language date/time expression
@@ -37,18 +37,18 @@ export function parseNaturalDate(
   input: string,
   options: DateParserOptions = {}
 ): ParsedDateTime | null {
-  const { referenceDate = new Date(), dateFormat = 'US' } = options;
+  const { referenceDate = new Date(), dateFormat = 'US' } = options
 
   // Trim whitespace
-  const trimmedInput = input.trim();
+  const trimmedInput = input.trim()
 
   if (!trimmedInput) {
-    return null;
+    return null
   }
 
   // Try ISO 8601 format first (highest confidence)
   if (/^\d{4}-\d{2}-\d{2}/.test(trimmedInput)) {
-    const date = parseISO(trimmedInput);
+    const date = parseISO(trimmedInput)
     if (isValid(date)) {
       return {
         date,
@@ -57,48 +57,48 @@ export function parseNaturalDate(
         confidence: 1.0,
         originalText: input,
         detectedFormat: 'absolute',
-      };
+      }
     }
   }
 
   // Configure chrono parser based on date format preference
-  let results: chrono.ParsedResult[];
+  let results: chrono.ParsedResult[]
 
   if (dateFormat === 'EU') {
     // Use UK English parser for DD/MM/YYYY format
-    results = chrono.en.GB.parse(trimmedInput, referenceDate, { forwardDate: true });
+    results = chrono.en.GB.parse(trimmedInput, referenceDate, { forwardDate: true })
   } else if (dateFormat === 'US' || dateFormat === 'auto') {
     // Use casual parser for MM/DD/YYYY format (default)
-    results = chrono.casual.parse(trimmedInput, referenceDate, { forwardDate: true });
+    results = chrono.casual.parse(trimmedInput, referenceDate, { forwardDate: true })
   } else {
     // Default fallback
-    results = chrono.parse(trimmedInput, referenceDate, { forwardDate: true });
+    results = chrono.parse(trimmedInput, referenceDate, { forwardDate: true })
   }
 
   if (results.length === 0) {
-    return null;
+    return null
   }
 
   // Use the first result
-  const result = results[0];
-  const startDate = result.start.date();
+  const result = results[0]
+  const startDate = result.start.date()
 
   // Determine if time was specified
   const hasTime =
     result.start.isCertain('hour') ||
     result.start.get('hour') !== undefined ||
     /\d{1,2}:\d{2}/.test(trimmedInput) ||
-    /(am|pm|morning|afternoon|evening|night)/i.test(trimmedInput);
+    /(am|pm|morning|afternoon|evening|night)/i.test(trimmedInput)
 
   // Determine if this is a date range
-  const isRange = !!result.end;
-  const endDate = result.end ? result.end.date() : undefined;
+  const isRange = !!result.end
+  const endDate = result.end ? result.end.date() : undefined
 
   // Calculate confidence score
-  const confidence = calculateConfidence(trimmedInput, result, dateFormat);
+  const confidence = calculateConfidence(trimmedInput, result, dateFormat)
 
   // Detect format type
-  const detectedFormat = detectFormat(trimmedInput, result, isRange);
+  const detectedFormat = detectFormat(trimmedInput, result, isRange)
 
   return {
     date: startDate,
@@ -108,7 +108,7 @@ export function parseNaturalDate(
     confidence,
     originalText: input,
     detectedFormat,
-  };
+  }
 }
 
 /**
@@ -130,29 +130,31 @@ export function parseNaturalDate(
 function calculateConfidence(
   input: string,
   result: chrono.ParsedResult,
-  dateFormat: string
+  _dateFormat: string
 ): number {
   // Vague time expressions (low confidence)
   if (/(morning|afternoon|evening|night|soon)/i.test(input)) {
-    return 0.6;
+    return 0.6
   }
 
   // Ambiguous date format (e.g., "15/12" without year)
   if (/^\d{1,2}\/\d{1,2}$/.test(input.trim())) {
-    return 0.6; // Medium-low confidence, format is ambiguous
+    return 0.6 // Medium-low confidence, format is ambiguous
   }
 
   // Absolute date with year (high confidence)
   if (result.start.isCertain('year') && result.start.get('year') !== undefined) {
-    return 0.95;
+    return 0.95
   }
 
   // Specific relative dates with time (high confidence)
   if (
-    /(today|tomorrow|yesterday|next|last|this|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(input) &&
+    /(today|tomorrow|yesterday|next|last|this|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(
+      input
+    ) &&
     /\d{1,2}(:\d{2})?\s*(am|pm)/i.test(input)
   ) {
-    return 0.85;
+    return 0.85
   }
 
   // Specific relative dates (good confidence)
@@ -160,7 +162,7 @@ function calculateConfidence(
     /(today|tomorrow|yesterday|next|last|this)/i.test(input) &&
     /(monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)/i.test(input)
   ) {
-    return 0.85;
+    return 0.85
   }
 
   // Absolute date without year but with time (good confidence)
@@ -169,30 +171,26 @@ function calculateConfidence(
     result.start.isCertain('day') &&
     result.start.isCertain('hour')
   ) {
-    return 0.85;
+    return 0.85
   }
 
   // Absolute date without year (good confidence)
-  if (
-    result.start.isCertain('month') &&
-    result.start.isCertain('day') &&
-    /^[a-z]/i.test(input)
-  ) {
-    return 0.8;
+  if (result.start.isCertain('month') && result.start.isCertain('day') && /^[a-z]/i.test(input)) {
+    return 0.8
   }
 
   // Date with specific time (good confidence)
   if (result.start.isCertain('hour') && /\d{1,2}:\d{2}/.test(input)) {
-    return 0.85;
+    return 0.85
   }
 
   // "in X days/weeks" (good confidence)
   if (/in \d+ (day|week|month)/i.test(input)) {
-    return 0.85;
+    return 0.85
   }
 
   // Default: medium confidence
-  return 0.7;
+  return 0.7
 }
 
 /**
@@ -209,12 +207,12 @@ function detectFormat(
   isRange: boolean
 ): ParsedDateTime['detectedFormat'] {
   if (isRange) {
-    return 'range';
+    return 'range'
   }
 
   // Ambiguous numeric format
   if (/^\d{1,2}\/\d{1,2}$/.test(input.trim())) {
-    return 'ambiguous';
+    return 'ambiguous'
   }
 
   // Absolute date (has month name or full date)
@@ -224,18 +222,18 @@ function detectFormat(
     ) ||
     /^\d{4}-\d{2}-\d{2}/.test(input)
   ) {
-    return 'absolute';
+    return 'absolute'
   }
 
   // Relative date
   if (/(today|tomorrow|yesterday|next|last|this|in \d+)/i.test(input)) {
-    return 'relative';
+    return 'relative'
   }
 
   // Time expression
   if (/\d{1,2}:\d{2}|(am|pm)/i.test(input) && input.split(' ').length <= 2) {
-    return 'time';
+    return 'time'
   }
 
-  return undefined;
+  return undefined
 }

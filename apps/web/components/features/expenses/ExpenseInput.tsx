@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * Natural Language Expense Input Component
@@ -11,43 +11,43 @@
  * - Loading states and error handling
  */
 
-import { useState } from 'react';
-import { parseWithOpenAI } from '@/lib/parser/openai';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from 'react'
+import { parseWithOpenAI } from '@/lib/parser/openai'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface ExpenseInputProps {
-  tripId: string;
+  tripId: string
   onSubmit: (expense: {
-    amount: number;
-    currency: string;
-    description: string;
-    category: string | null;
-    payer: string | null;
-    splitType: 'equal' | 'custom' | 'shares' | 'none';
-    splitCount: number | null;
-    participants: string[] | null;
-    customSplits: { name: string; amount: number }[] | null;
-  }) => Promise<void>;
+    amount: number
+    currency: string
+    description: string
+    category: string | null
+    payer: string | null
+    splitType: 'equal' | 'custom' | 'shares' | 'none'
+    splitCount: number | null
+    participants: string[] | null
+    customSplits: { name: string; amount: number }[] | null
+  }) => Promise<void>
 }
 
-export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [parsedResult, setParsedResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [parsedResult, setParsedResult] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const handleParse = async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) return
 
-    setLoading(true);
-    setError(null);
-    setParsedResult(null);
+    setLoading(true)
+    setError(null)
+    setParsedResult(null)
 
     try {
       const result = await parseWithOpenAI({
@@ -58,26 +58,26 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
           decimalFormat: 'US',
         },
         model: 'gpt-4o-mini',
-      });
+      })
 
       if (result.success && result.expenseResult) {
-        setParsedResult(result.expenseResult);
+        setParsedResult(result.expenseResult)
       } else {
-        setError(result.error || 'Failed to parse expense');
+        setError(result.error || 'Failed to parse expense')
       }
     } catch (err) {
-      console.error('Expense parsing error:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      console.error('Expense parsing error:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSubmit = async () => {
-    if (!parsedResult) return;
+    if (!parsedResult) return
 
-    setSubmitting(true);
-    setError(null);
+    setSubmitting(true)
+    setError(null)
 
     try {
       await onSubmit({
@@ -90,30 +90,30 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
         splitCount: parsedResult.splitCount,
         participants: parsedResult.participants,
         customSplits: parsedResult.customSplits,
-      });
+      })
 
       // Reset form on success
-      setInput('');
-      setParsedResult(null);
+      setInput('')
+      setParsedResult(null)
     } catch (err) {
-      console.error('Expense submission error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save expense');
+      console.error('Expense submission error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save expense')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const handleReset = () => {
-    setParsedResult(null);
-    setError(null);
-  };
+    setParsedResult(null)
+    setError(null)
+  }
 
   const formatAmount = (amount: number, currency: string) => {
     if (['JPY', 'KRW'].includes(currency)) {
-      return amount.toLocaleString();
+      return amount.toLocaleString()
     }
-    return (amount / 100).toFixed(2);
-  };
+    return (amount / 100).toFixed(2)
+  }
 
   return (
     <div className="space-y-4">
@@ -130,10 +130,10 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
             <Input
               placeholder="e.g., Dinner €60 split 4 ways"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter' && !loading) {
-                  handleParse();
+                  handleParse()
                 }
               }}
               disabled={loading || !!parsedResult}
@@ -181,7 +181,8 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Amount</p>
                     <p className="font-mono text-lg">
-                      {parsedResult.currency} {formatAmount(parsedResult.amount, parsedResult.currency)}
+                      {parsedResult.currency}{' '}
+                      {formatAmount(parsedResult.amount, parsedResult.currency)}
                     </p>
                   </div>
                   <div>
@@ -239,12 +240,16 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
                     <p className="text-xs text-muted-foreground mb-1">Custom Splits</p>
                     <div className="space-y-1">
                       {parsedResult.customSplits.map((split: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded"
+                        >
                           <Badge variant="outline" className="text-xs">
                             {split.name}
                           </Badge>
                           <span className="font-mono">
-                            {parsedResult.currency} {formatAmount(split.amount, parsedResult.currency)}
+                            {parsedResult.currency}{' '}
+                            {formatAmount(split.amount, parsedResult.currency)}
                           </span>
                         </div>
                       ))}
@@ -254,9 +259,7 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
-                  <span>
-                    Confidence: {(parsedResult.confidence * 100).toFixed(0)}%
-                  </span>
+                  <span>Confidence: {(parsedResult.confidence * 100).toFixed(0)}%</span>
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -295,5 +298,5 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
         </ul>
       </div>
     </div>
-  );
+  )
 }

@@ -1,21 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
-import { getDateParserPrompt, getExpenseParserPrompt, SYSTEM_PROMPT, type LLMParseRequest, type LLMParserResult } from '@tripthreads/shared';
+import { NextRequest, NextResponse } from 'next/server'
+import OpenAI from 'openai'
+import {
+  getDateParserPrompt,
+  getExpenseParserPrompt,
+  SYSTEM_PROMPT,
+  type LLMParseRequest,
+  type LLMParserResult,
+} from '@tripthreads/shared'
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const DEFAULT_MODEL = 'gpt-4o-mini';
-const TIMEOUT_MS = 30000; // 30 seconds
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const DEFAULT_MODEL = 'gpt-4o-mini'
+const TIMEOUT_MS = 30000 // 30 seconds
 
 export async function POST(request: NextRequest) {
-  const requestStartTime = Date.now();
-  console.log('[OpenAI API] Request received');
-  console.log('[OpenAI API] API Key exists:', !!OPENAI_API_KEY);
-  console.log('[OpenAI API] API Key length:', OPENAI_API_KEY?.length || 0);
+  const requestStartTime = Date.now()
+  console.log('[OpenAI API] Request received')
+  console.log('[OpenAI API] API Key exists:', !!OPENAI_API_KEY)
+  console.log('[OpenAI API] API Key length:', OPENAI_API_KEY?.length || 0)
 
   try {
     // Check for API key
     if (!OPENAI_API_KEY) {
-      console.log('[OpenAI API] ERROR: No API key found');
+      console.log('[OpenAI API] ERROR: No API key found')
       return NextResponse.json<LLMParserResult>(
         {
           success: false,
@@ -27,13 +33,13 @@ export async function POST(request: NextRequest) {
           rawOutput: '',
         },
         { status: 500 }
-      );
+      )
     }
 
-    const body: LLMParseRequest = await request.json();
-    const { input, parserType, options = {}, model = DEFAULT_MODEL } = body;
+    const body: LLMParseRequest = await request.json()
+    const { input, parserType, options = {}, model = DEFAULT_MODEL } = body
 
-    console.log('[OpenAI API] Request parsed:', { input, parserType, model });
+    console.log('[OpenAI API] Request parsed:', { input, parserType, model })
 
     if (!input || !parserType) {
       return NextResponse.json<LLMParserResult>(
@@ -46,33 +52,33 @@ export async function POST(request: NextRequest) {
           rawOutput: '',
         },
         { status: 400 }
-      );
+      )
     }
 
     // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: OPENAI_API_KEY,
-    });
+    })
 
     // Build prompt based on parser type
-    const referenceDate = (options as any).referenceDate || new Date().toISOString();
-    const defaultCurrency = (options as any).defaultCurrency || 'USD';
+    const referenceDate = (options as any).referenceDate || new Date().toISOString()
+    const defaultCurrency = (options as any).defaultCurrency || 'USD'
 
-    console.log('[OpenAI API] Building prompt...');
+    console.log('[OpenAI API] Building prompt...')
     const prompt =
       parserType === 'date'
         ? getDateParserPrompt(input, referenceDate)
-        : getExpenseParserPrompt(input, defaultCurrency);
+        : getExpenseParserPrompt(input, defaultCurrency)
 
-    console.log('[OpenAI API] Prompt built, length:', prompt.length);
-    console.log('[OpenAI API] Calling OpenAI with model:', model);
+    console.log('[OpenAI API] Prompt built, length:', prompt.length)
+    console.log('[OpenAI API] Calling OpenAI with model:', model)
 
     // Call OpenAI with timeout
-    const startTime = Date.now();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const startTime = Date.now()
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
-    console.log('[OpenAI API] Sending request to OpenAI...');
+    console.log('[OpenAI API] Sending request to OpenAI...')
 
     try {
       const response = await openai.chat.completions.create(
@@ -94,25 +100,25 @@ export async function POST(request: NextRequest) {
         {
           signal: controller.signal,
         }
-      );
+      )
 
-      clearTimeout(timeoutId);
-      console.log('[OpenAI API] Received response from OpenAI');
+      clearTimeout(timeoutId)
+      console.log('[OpenAI API] Received response from OpenAI')
 
-      const latencyMs = Date.now() - startTime;
-      const rawOutput = response.choices[0]?.message?.content || '';
-      const tokensUsed = response.usage?.total_tokens;
+      const latencyMs = Date.now() - startTime
+      const rawOutput = response.choices[0]?.message?.content || ''
+      const tokensUsed = response.usage?.total_tokens
 
-      console.log('[OpenAI API] Response received, latency:', latencyMs, 'ms, tokens:', tokensUsed);
+      console.log('[OpenAI API] Response received, latency:', latencyMs, 'ms, tokens:', tokensUsed)
 
       // Parse OpenAI response
-      console.log('[OpenAI API] Parsing JSON response...');
-      let parsedResult;
+      console.log('[OpenAI API] Parsing JSON response...')
+      let parsedResult
       try {
-        parsedResult = JSON.parse(rawOutput);
-        console.log('[OpenAI API] JSON parsed successfully');
-      } catch (parseError) {
-        console.log('[OpenAI API] Failed to parse JSON:', rawOutput);
+        parsedResult = JSON.parse(rawOutput)
+        console.log('[OpenAI API] JSON parsed successfully')
+      } catch {
+        console.log('[OpenAI API] Failed to parse JSON:', rawOutput)
         return NextResponse.json<LLMParserResult>({
           success: false,
           error: 'Failed to parse OpenAI JSON response',
@@ -120,14 +126,14 @@ export async function POST(request: NextRequest) {
           model,
           latencyMs,
           rawOutput,
-        });
+        })
       }
 
       // Convert date strings back to Date objects for date parser
       if (parserType === 'date' && parsedResult.date) {
-        parsedResult.date = new Date(parsedResult.date);
+        parsedResult.date = new Date(parsedResult.date)
         if (parsedResult.endDate) {
-          parsedResult.endDate = new Date(parsedResult.endDate);
+          parsedResult.endDate = new Date(parsedResult.endDate)
         }
       }
 
@@ -139,16 +145,20 @@ export async function POST(request: NextRequest) {
         latencyMs,
         tokensUsed,
         rawOutput,
-      };
+      }
 
-      console.log('[OpenAI API] Returning success response, total time:', Date.now() - requestStartTime, 'ms');
-      return NextResponse.json(result);
+      console.log(
+        '[OpenAI API] Returning success response, total time:',
+        Date.now() - requestStartTime,
+        'ms'
+      )
+      return NextResponse.json(result)
     } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      console.log('[OpenAI API] Fetch error:', fetchError.name, fetchError.message);
+      clearTimeout(timeoutId)
+      console.log('[OpenAI API] Fetch error:', fetchError.name, fetchError.message)
 
       if (fetchError.name === 'AbortError') {
-        console.log('[OpenAI API] Request timed out after', TIMEOUT_MS, 'ms');
+        console.log('[OpenAI API] Request timed out after', TIMEOUT_MS, 'ms')
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -160,7 +170,7 @@ export async function POST(request: NextRequest) {
             rawOutput: '',
           },
           { status: 408 }
-        );
+        )
       }
 
       // OpenAI API error
@@ -176,7 +186,7 @@ export async function POST(request: NextRequest) {
             rawOutput: '',
           },
           { status: 401 }
-        );
+        )
       }
 
       if (fetchError.status === 429) {
@@ -191,13 +201,13 @@ export async function POST(request: NextRequest) {
             rawOutput: '',
           },
           { status: 429 }
-        );
+        )
       }
 
-      throw fetchError;
+      throw fetchError
     }
   } catch (error: any) {
-    console.error('[OpenAI API] Unhandled error:', error);
+    console.error('[OpenAI API] Unhandled error:', error)
     return NextResponse.json<LLMParserResult>(
       {
         success: false,
@@ -208,6 +218,6 @@ export async function POST(request: NextRequest) {
         rawOutput: '',
       },
       { status: 500 }
-    );
+    )
   }
 }

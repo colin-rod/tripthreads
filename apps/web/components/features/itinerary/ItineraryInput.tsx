@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * Natural Language Itinerary Input Component
@@ -11,41 +11,41 @@
  * - Loading states and error handling
  */
 
-import { useState } from 'react';
-import { parseWithOpenAI } from '@/lib/parser/openai';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock, MapPin } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { format } from 'date-fns';
+import { useState } from 'react'
+import { parseWithOpenAI } from '@/lib/parser/openai'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { format } from 'date-fns'
 
 interface ItineraryInputProps {
-  tripId: string;
+  tripId: string
   onSubmit: (item: {
-    type: 'flight' | 'stay' | 'activity';
-    title: string;
-    description?: string;
-    startTime: string;
-    endTime?: string;
-    location?: string;
-  }) => Promise<void>;
+    type: 'flight' | 'stay' | 'activity'
+    title: string
+    description?: string
+    startTime: string
+    endTime?: string
+    location?: string
+  }) => Promise<void>
 }
 
-export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [parsedResult, setParsedResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProps) {
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [parsedResult, setParsedResult] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const handleParse = async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) return
 
-    setLoading(true);
-    setError(null);
-    setParsedResult(null);
+    setLoading(true)
+    setError(null)
+    setParsedResult(null)
 
     try {
       const result = await parseWithOpenAI({
@@ -56,30 +56,30 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
           dateFormat: 'US',
         },
         model: 'gpt-4o-mini',
-      });
+      })
 
       if (result.success && result.dateResult) {
-        setParsedResult(result.dateResult);
+        setParsedResult(result.dateResult)
       } else {
-        setError(result.error || 'Failed to parse itinerary item');
+        setError(result.error || 'Failed to parse itinerary item')
       }
     } catch (err) {
-      console.error('Itinerary parsing error:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      console.error('Itinerary parsing error:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSubmit = async () => {
-    if (!parsedResult) return;
+    if (!parsedResult) return
 
-    setSubmitting(true);
-    setError(null);
+    setSubmitting(true)
+    setError(null)
 
     try {
       // Extract item details from original text
-      const itemDetails = extractItemDetails(input);
+      const itemDetails = extractItemDetails(input)
 
       await onSubmit({
         type: itemDetails.type,
@@ -88,48 +88,52 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
         startTime: parsedResult.date.toISOString(),
         endTime: parsedResult.endDate?.toISOString(),
         location: itemDetails.location,
-      });
+      })
 
       // Reset form on success
-      setInput('');
-      setParsedResult(null);
+      setInput('')
+      setParsedResult(null)
     } catch (err) {
-      console.error('Itinerary submission error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save itinerary item');
+      console.error('Itinerary submission error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save itinerary item')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const extractItemDetails = (text: string) => {
     // Simple heuristics to extract item type, title, description, and location
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase()
 
-    let type: 'flight' | 'stay' | 'activity' = 'activity';
+    let type: 'flight' | 'stay' | 'activity' = 'activity'
     if (lowerText.includes('flight') || lowerText.includes('plane')) {
-      type = 'flight';
-    } else if (lowerText.includes('hotel') || lowerText.includes('stay') || lowerText.includes('accommodation')) {
-      type = 'stay';
+      type = 'flight'
+    } else if (
+      lowerText.includes('hotel') ||
+      lowerText.includes('stay') ||
+      lowerText.includes('accommodation')
+    ) {
+      type = 'stay'
     }
 
     // Extract title (first meaningful phrase)
-    const words = text.split(/\s+/);
-    const title = words.slice(0, Math.min(5, words.length)).join(' ');
+    const words = text.split(/\s+/)
+    const title = words.slice(0, Math.min(5, words.length)).join(' ')
 
     // Extract location (look for "to", "in", "at" patterns)
-    let location: string | undefined;
-    const locationMatch = text.match(/(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+on|\s+at|\s+from|$)/);
+    let location: string | undefined
+    const locationMatch = text.match(/(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+on|\s+at|\s+from|$)/)
     if (locationMatch) {
-      location = locationMatch[1].trim();
+      location = locationMatch[1].trim()
     }
 
-    return { type, title, description: text, location };
-  };
+    return { type, title, description: text, location }
+  }
 
   const handleReset = () => {
-    setParsedResult(null);
-    setError(null);
-  };
+    setParsedResult(null)
+    setError(null)
+  }
 
   return (
     <div className="space-y-4">
@@ -146,10 +150,10 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
             <Input
               placeholder="e.g., Flight to Paris Monday 9am"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter' && !loading) {
-                  handleParse();
+                  handleParse()
                 }
               }}
               disabled={loading || !!parsedResult}
@@ -204,9 +208,7 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
                       <Calendar className="h-3 w-3" />
                       Start Date/Time
                     </p>
-                    <p className="text-sm font-mono">
-                      {format(parsedResult.date, 'PPp')}
-                    </p>
+                    <p className="text-sm font-mono">{format(parsedResult.date, 'PPp')}</p>
                   </div>
                   {parsedResult.endDate && (
                     <div>
@@ -214,9 +216,7 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
                         <Calendar className="h-3 w-3" />
                         End Date/Time
                       </p>
-                      <p className="text-sm font-mono">
-                        {format(parsedResult.endDate, 'PPp')}
-                      </p>
+                      <p className="text-sm font-mono">{format(parsedResult.endDate, 'PPp')}</p>
                     </div>
                   )}
                 </div>
@@ -241,9 +241,7 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
-                  <span>
-                    Confidence: {(parsedResult.confidence * 100).toFixed(0)}%
-                  </span>
+                  <span>Confidence: {(parsedResult.confidence * 100).toFixed(0)}%</span>
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -282,5 +280,5 @@ export function ItineraryInput({ tripId, onSubmit }: ItineraryInputProps) {
         </ul>
       </div>
     </div>
-  );
+  )
 }
