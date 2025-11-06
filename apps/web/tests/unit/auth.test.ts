@@ -39,7 +39,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signUp).mockResolvedValue({
         data: { user: mockUser, session: null },
         error: null,
-      } as any)
+      } as unknown)
 
       const { data, error } = await supabase.auth.signUp({
         email: 'test@example.com',
@@ -70,12 +70,12 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signUp).mockResolvedValue({
         data: { user: null, session: null },
         error: mockError,
-      } as any)
+      } as unknown)
 
       const { error } = await supabase.auth.signUp({
         email: 'existing@example.com',
         password: 'password123',
-      } as any)
+      } as unknown)
 
       expect(error).toEqual(mockError)
     })
@@ -92,7 +92,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
         data: { session: mockSession, user: mockSession.user },
         error: null,
-      } as any)
+      } as unknown)
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: 'test@example.com',
@@ -113,7 +113,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
         data: { session: null, user: null },
         error: mockError,
-      } as any)
+      } as unknown)
 
       const { error } = await supabase.auth.signInWithPassword({
         email: 'test@example.com',
@@ -129,7 +129,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
         data: { provider: 'google', url: 'https://accounts.google.com/...' },
         error: null,
-      } as any)
+      } as unknown)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -154,7 +154,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
         data: { provider: null, url: null },
         error: mockError,
-      } as any)
+      } as unknown)
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -202,7 +202,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { session: mockSession },
         error: null,
-      } as any)
+      } as unknown)
 
       const { data, error } = await supabase.auth.getSession()
 
@@ -214,7 +214,7 @@ describe('Authentication', () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { session: null },
         error: null,
-      } as any)
+      } as unknown)
 
       const { data, error } = await supabase.auth.getSession()
 

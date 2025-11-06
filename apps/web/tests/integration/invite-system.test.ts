@@ -17,13 +17,11 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 import {
   TEST_USERS,
-  TEST_TRIP_IDS,
   getAuthenticatedClient,
   createTestTrip,
   generateInviteLink,
   createEmailInvite,
   acceptInvite,
-  verifyParticipantAccess,
   revokeInvite,
   cleanupTestTrip,
   testInviteFlow,
@@ -221,7 +219,7 @@ describe('Invite System Integration Tests', () => {
       createdTripIds.push(trip.id)
 
       // Invalid email should fail at validation or DB level
-      const { error } = await aliceClient.from('trip_invites').insert({
+      await aliceClient.from('trip_invites').insert({
         trip_id: trip.id,
         email: 'not-an-email',
         role: 'participant',
@@ -653,7 +651,7 @@ describe('Invite System Integration Tests', () => {
       await createEmailInvite(aliceClient, trip.id, email, 'participant')
 
       // Try to create duplicate
-      const { error } = await aliceClient.from('trip_invites').insert({
+      await aliceClient.from('trip_invites').insert({
         trip_id: trip.id,
         email,
         role: 'participant',
@@ -802,7 +800,7 @@ describe('Invite System Integration Tests', () => {
     })
 
     it('TC7.2: Complete viewer invite flow', async () => {
-      const { trip, invite, participant } = await testInviteFlow(
+      const { trip, participant } = await testInviteFlow(
         aliceClient,
         mayaClient,
         TEST_USERS.alice.id,

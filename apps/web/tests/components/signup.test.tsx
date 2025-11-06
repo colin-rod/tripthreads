@@ -24,7 +24,7 @@ describe('SignupPage', () => {
     vi.useFakeTimers()
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-    } as any)
+    } as ReturnType<typeof useRouter>)
     vi.mocked(useAuth).mockReturnValue({
       signUp: mockSignUp,
       signInWithGoogle: mockSignInWithGoogle,

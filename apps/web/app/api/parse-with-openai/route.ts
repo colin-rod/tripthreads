@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
     })
 
     // Build prompt based on parser type
-    const referenceDate = (options as any).referenceDate || new Date().toISOString()
-    const defaultCurrency = (options as any).defaultCurrency || 'USD'
+    const referenceDate = (options as Record<string, unknown>)?.referenceDate as string || new Date().toISOString()
+    const defaultCurrency = (options as Record<string, unknown>)?.defaultCurrency as string || 'USD'
 
     console.log('[OpenAI API] Building prompt...')
     const prompt =
@@ -153,11 +153,12 @@ export async function POST(request: NextRequest) {
         'ms'
       )
       return NextResponse.json(result)
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId)
-      console.log('[OpenAI API] Fetch error:', fetchError.name, fetchError.message)
+      const error = fetchError as Error & { status?: number }
+      console.log('[OpenAI API] Fetch error:', error.name, error.message)
 
-      if (fetchError.name === 'AbortError') {
+      if (error.name === 'AbortError') {
         console.log('[OpenAI API] Request timed out after', TIMEOUT_MS, 'ms')
         return NextResponse.json<LLMParserResult>(
           {
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
       }
 
       // OpenAI API error
-      if (fetchError.status === 401) {
+      if (error.status === 401) {
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -189,7 +190,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      if (fetchError.status === 429) {
+      if (error.status === 429) {
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -204,14 +205,15 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      throw fetchError
+      throw error
     }
-  } catch (error: any) {
-    console.error('[OpenAI API] Unhandled error:', error)
+  } catch (error: unknown) {
+    const err = error as Error
+    console.error('[OpenAI API] Unhandled error:', err)
     return NextResponse.json<LLMParserResult>(
       {
         success: false,
-        error: error.message || 'Unknown error',
+        error: err.message || 'Unknown error',
         errorType: 'internal_error',
         model: DEFAULT_MODEL,
         latencyMs: Date.now() - requestStartTime,
