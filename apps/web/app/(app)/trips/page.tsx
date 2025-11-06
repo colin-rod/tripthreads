@@ -17,6 +17,7 @@ import { getUserTrips } from '@tripthreads/shared'
 import { TripCard } from '@/components/features/trips/TripCard'
 import { Button } from '@/components/ui/button'
 import { CreateTripButton } from '@/components/features/trips/CreateTripButton'
+import { FirstTripTourProvider } from '@/components/features/tour/FirstTripTourProvider'
 
 async function TripsList() {
   const supabase = await createClient()
@@ -76,22 +77,28 @@ function TripsListSkeleton() {
   )
 }
 
-export default function TripsPage() {
-  return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Trips</h1>
-          <p className="text-muted-foreground mt-1">Plan, organize, and track your adventures</p>
-        </div>
-        <CreateTripButton />
-      </div>
+export default async function TripsPage() {
+  const supabase = await createClient()
+  const trips = await getUserTrips(supabase).catch(() => [])
+  const userHasTrips = trips.length > 0
 
-      {/* Trips List */}
-      <Suspense fallback={<TripsListSkeleton />}>
-        <TripsList />
-      </Suspense>
-    </div>
+  return (
+    <FirstTripTourProvider userHasTrips={userHasTrips}>
+      <div className="container mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Your Trips</h1>
+            <p className="text-muted-foreground mt-1">Plan, organize, and track your adventures</p>
+          </div>
+          <CreateTripButton />
+        </div>
+
+        {/* Trips List */}
+        <Suspense fallback={<TripsListSkeleton />}>
+          <TripsList />
+        </Suspense>
+      </div>
+    </FirstTripTourProvider>
   )
 }

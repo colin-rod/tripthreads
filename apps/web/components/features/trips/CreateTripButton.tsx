@@ -18,7 +18,7 @@ export function CreateTripButton() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} size="default">
+      <Button onClick={() => setOpen(true)} size="default" data-tour="create-trip-button">
         <Plus className="mr-2 h-4 w-4" />
         Create Trip
       </Button>

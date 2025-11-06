@@ -137,6 +137,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                       placeholder="e.g., Paris Summer 2025"
                       {...field}
                       disabled={isSubmitting}
+                      data-tour="trip-name-input"
                     />
                   </FormControl>
                   <FormMessage />
@@ -163,6 +164,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                               !field.value && 'text-muted-foreground'
                             )}
                             disabled={isSubmitting}
+                            data-tour="start-date-picker"
                           >
                             {field.value ? (
                               format(new Date(field.value), 'MMM dd, yyyy')
@@ -205,6 +207,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                               !field.value && 'text-muted-foreground'
                             )}
                             disabled={isSubmitting}
+                            data-tour="end-date-picker"
                           >
                             {field.value ? (
                               format(new Date(field.value), 'MMM dd, yyyy')
@@ -268,7 +271,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} data-tour="create-trip-submit">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Trip
               </Button>
