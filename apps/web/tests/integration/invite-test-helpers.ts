@@ -110,10 +110,24 @@ export async function generateInviteLink(
   tripId: string,
   role: InviteRole = 'participant'
 ) {
+  // Get current user ID
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError || !userData.user) {
+    throw new Error(`Failed to get current user: ${userError?.message}`)
+  }
+
+  // Generate a unique token using the database function
+  const { data: tokenData, error: tokenError } = await client.rpc('generate_invite_token')
+  if (tokenError || !tokenData) {
+    throw new Error(`Failed to generate token: ${tokenError?.message}`)
+  }
+
   const { data, error } = await client
     .from('trip_invites')
     .insert({
       trip_id: tripId,
+      token: tokenData,
+      invited_by: userData.user.id,
       role,
       invite_type: 'link',
       status: 'pending',
@@ -137,10 +151,24 @@ export async function createEmailInvite(
   email: string,
   role: InviteRole = 'participant'
 ) {
+  // Get current user ID
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError || !userData.user) {
+    throw new Error(`Failed to get current user: ${userError?.message}`)
+  }
+
+  // Generate a unique token using the database function
+  const { data: tokenData, error: tokenError } = await client.rpc('generate_invite_token')
+  if (tokenError || !tokenData) {
+    throw new Error(`Failed to generate token: ${tokenError?.message}`)
+  }
+
   const { data, error } = await client
     .from('trip_invites')
     .insert({
       trip_id: tripId,
+      token: tokenData,
+      invited_by: userData.user.id,
       email,
       role,
       invite_type: 'email',
@@ -377,7 +405,7 @@ export async function createExpiredInvite(
   tripId: string,
   role: InviteRole = 'participant'
 ) {
-  // Create invite
+  // Create invite using generateInviteLink which now handles all required fields
   const invite = await generateInviteLink(client, tripId, role)
 
   // Manually update created_at to be 8 days ago (past 7-day expiry)
