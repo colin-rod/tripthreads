@@ -11,6 +11,7 @@ export type User = Database['public']['Tables']['users']['Row']
 // Utils
 export * from './utils/currency'
 export * from './utils/cn'
+export * from './utils/avatar'
 
 // Parser
 export * from './parser/llm-prompts'

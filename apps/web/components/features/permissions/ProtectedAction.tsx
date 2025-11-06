@@ -51,11 +51,12 @@ export function ProtectedAction({
   }
 
   // Clone the child element and disable it
+  const childProps = children.props as { className?: string }
   const disabledChild = cloneElement(children, {
     disabled: true,
     onClick: handleClick,
-    className: `${children.props.className || ''} cursor-not-allowed`,
-  })
+    className: `${childProps.className || ''} cursor-not-allowed`,
+  } as React.HTMLAttributes<HTMLElement>)
 
   return (
     <>

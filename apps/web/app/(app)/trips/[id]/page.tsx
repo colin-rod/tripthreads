@@ -34,7 +34,10 @@ interface TripDetailPageProps {
 }
 
 type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
-type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[] ? P : never
+type TripRole = 'owner' | 'participant' | 'viewer'
+type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[]
+  ? Omit<P, 'role'> & { role: TripRole }
+  : never
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
   const supabase = await createClient()
@@ -58,7 +61,10 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const tripParticipants = (trip.trip_participants ?? []) as TripParticipant[]
+  const tripParticipants = (trip.trip_participants ?? []).map(p => ({
+    ...p,
+    role: p.role as TripRole,
+  })) as TripParticipant[]
   const userParticipant = tripParticipants.find(participant => participant.user?.id === user?.id)
   const canEdit = userParticipant?.role !== 'viewer'
 
