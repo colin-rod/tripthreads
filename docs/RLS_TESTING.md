@@ -62,7 +62,7 @@ We maintain two complementary test suites:
 ```sql
 SELECT * FROM public.trips
 WHERE id = '10000000-0000-0000-0000-000000000001'
--- Running as Maya (aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e)
+-- Running as Maya (55555555-5555-5555-5555-555555555555)
 -- Should return 0 rows
 ```
 
@@ -229,10 +229,10 @@ All tests use these seed users:
 
 | User   | ID             | Email           | Roles                                         |
 | ------ | -------------- | --------------- | --------------------------------------------- |
-| Alice  | `ea1854fb-...` | temp@test.com   | Owner of Paris trip                           |
-| Benji  | `0af9094b-...` | benji@temp.com  | Participant on Paris trip (joined 2025-06-18) |
-| Baylee | `29f0dac4-...` | baylee@temp.com | Viewer on Paris trip                          |
-| Maya   | `aafa06ac-...` | maya@test.com   | Owner of Tokyo trip, not on Paris trip        |
+| Alice  | `22222222-...` | temp@test.com   | Owner of Paris trip                           |
+| Benji  | `44444444-...` | benji@temp.com  | Participant on Paris trip (joined 2025-06-18) |
+| Baylee | `66666666-...` | baylee@temp.com | Viewer on Paris trip                          |
+| Maya   | `55555555-...` | maya@test.com   | Owner of Tokyo trip, not on Paris trip        |
 
 ## Running Tests
 

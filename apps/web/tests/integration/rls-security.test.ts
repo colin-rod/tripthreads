@@ -13,22 +13,22 @@ import { Database } from '@/types/database'
 // Test user credentials (from seed.sql)
 const TEST_USERS = {
   alice: {
-    id: 'ea1854fb-b8f4-480f-899f-af1bcf0218b3',
+    id: '22222222-2222-2222-2222-222222222222',
     email: 'temp@test.com',
     password: 'test123456', // Set in seed
   },
   benji: {
-    id: '0af9094b-dedb-4472-8133-20577fbc8f98',
+    id: '44444444-4444-4444-4444-444444444444',
     email: 'benji@temp.com',
     password: 'test123456',
   },
   baylee: {
-    id: '29f0dac4-7629-45f8-8fa1-10e0df75ce1b',
+    id: '66666666-6666-6666-6666-666666666666',
     email: 'baylee@temp.com',
     password: 'test123456',
   },
   maya: {
-    id: 'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e',
+    id: '55555555-5555-5555-5555-555555555555',
     email: 'maya@test.com',
     password: 'test123456',
   },
