@@ -9,11 +9,12 @@
 
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Calendar, Users, MapPin } from 'lucide-react'
+import { Calendar, Users, MapPin, Pencil, Trash2 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface TripParticipant {
   user: {
@@ -35,9 +36,11 @@ interface Trip {
 
 interface TripCardProps {
   trip: Trip
+  onEdit?: (tripId: string) => void
+  onDelete?: (tripId: string) => void
 }
 
-export function TripCard({ trip }: TripCardProps) {
+export function TripCard({ trip, onEdit, onDelete }: TripCardProps) {
   const startDate = new Date(trip.start_date)
   const endDate = new Date(trip.end_date)
   const today = new Date()
@@ -61,21 +64,62 @@ export function TripCard({ trip }: TripCardProps) {
   const displayedParticipants = trip.trip_participants?.slice(0, 3) || []
   const additionalCount = Math.max(0, participantCount - 3)
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onEdit?.(trip.id)
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onDelete?.(trip.id)
+  }
+
   return (
-    <Link href={`/trips/${trip.id}`}>
-      <Card className="group cursor-pointer transition-all hover:shadow-lg hover:border-primary/50">
+    <Card className="group relative cursor-pointer transition-all hover:shadow-lg hover:border-primary/50">
+      <Link href={`/trips/${trip.id}`} className="block">
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="group-hover:text-primary transition-colors">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="group-hover:text-primary transition-colors truncate">
                 {trip.name}
               </CardTitle>
               <CardDescription className="mt-1.5 flex items-center gap-1.5 text-sm">
-                <Calendar className="h-3.5 w-3.5" />
-                {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+                <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">
+                  {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+                </span>
               </CardDescription>
             </div>
-            <Badge variant={statusConfig[status].variant}>{statusConfig[status].label}</Badge>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant={statusConfig[status].variant}>{statusConfig[status].label}</Badge>
+              {/* Action buttons */}
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleEdit}
+                    aria-label="Edit trip"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleDelete}
+                    aria-label="Delete trip"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </CardHeader>
 
@@ -130,7 +174,7 @@ export function TripCard({ trip }: TripCardProps) {
             </div>
           )}
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   )
 }
