@@ -56,15 +56,17 @@ export default function InviteScreen() {
   const handleAcceptInvite = async () => {
     if (!invite || !user) return
 
+    const { invite: inviteInfo, trip } = invite
+
     setAccepting(true)
 
     try {
       await acceptInvite(supabase, params.token)
 
-      Alert.alert('Success!', `You've joined ${invite.trip_name} as a ${invite.role}`, [
+      Alert.alert('Success!', `You've joined ${trip.name} as a ${inviteInfo.role}`, [
         {
           text: 'View Trip',
-          onPress: () => router.replace(`/(app)/trips/${invite.trip_id}`),
+          onPress: () => router.replace(`/(app)/trips/${trip.id}`),
         },
       ])
     } catch (err) {
@@ -114,6 +116,8 @@ export default function InviteScreen() {
     )
   }
 
+  const { invite: inviteInfo, trip, inviter } = invite
+
   return (
     <View className="flex-1 justify-center px-6 bg-background">
       <StatusBar style="auto" />
@@ -128,12 +132,12 @@ export default function InviteScreen() {
 
       <View className="bg-card p-6 rounded-xl border border-border mb-6">
         <Text className="text-sm text-muted-foreground mb-1">Trip Name</Text>
-        <Text className="text-2xl font-bold text-foreground mb-4">{invite.trip_name}</Text>
+        <Text className="text-2xl font-bold text-foreground mb-4">{trip.name}</Text>
 
-        {invite.trip_description && (
+        {trip.description && (
           <>
             <Text className="text-sm text-muted-foreground mb-1">Description</Text>
-            <Text className="text-base text-foreground mb-4">{invite.trip_description}</Text>
+            <Text className="text-base text-foreground mb-4">{trip.description}</Text>
           </>
         )}
 
@@ -141,19 +145,19 @@ export default function InviteScreen() {
           <View>
             <Text className="text-sm text-muted-foreground mb-1">Dates</Text>
             <Text className="text-base text-foreground">
-              {new Date(invite.trip_start_date).toLocaleDateString()} -{' '}
-              {new Date(invite.trip_end_date).toLocaleDateString()}
+              {new Date(trip.start_date).toLocaleDateString()} -{' '}
+              {new Date(trip.end_date).toLocaleDateString()}
             </Text>
           </View>
           <View>
             <Text className="text-sm text-muted-foreground mb-1">Role</Text>
-            <Text className="text-base text-foreground capitalize">{invite.role}</Text>
+            <Text className="text-base text-foreground capitalize">{inviteInfo.role}</Text>
           </View>
         </View>
 
         <View>
           <Text className="text-sm text-muted-foreground mb-1">Invited by</Text>
-          <Text className="text-base text-foreground">{invite.inviter_name}</Text>
+          <Text className="text-base text-foreground">{inviter.full_name}</Text>
         </View>
       </View>
 
@@ -176,7 +180,7 @@ export default function InviteScreen() {
         </Button>
       </View>
 
-      {invite.role === 'viewer' && (
+      {inviteInfo.role === 'viewer' && (
         <View className="mt-6 p-4 bg-warning/10 rounded-lg">
           <Text className="text-sm text-warning-foreground">
             ℹ️ As a viewer, you'll be able to see the trip itinerary and photos, but you won't be
