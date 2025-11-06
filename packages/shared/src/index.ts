@@ -7,7 +7,9 @@
 export { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from './utils/currency'
 
 // Database types
-export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from './types/database'
+export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from '../types/database'
+export type { Trip, TripSummary } from '../types/trip'
+export { toTripSummary } from '../types/trip'
 
 // Natural Language Parser (Production - OpenAI GPT-4o-mini)
 export { SYSTEM_PROMPT, getDateParserPrompt, getExpenseParserPrompt } from './parser/llm-prompts'

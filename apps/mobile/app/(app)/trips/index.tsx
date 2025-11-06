@@ -15,10 +15,16 @@ export default function TripsListScreen() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadTrips()
-  }, [])
+    if (!user?.id) {
+      setTrips([])
+      setLoading(false)
+      return
+    }
 
-  const loadTrips = async () => {
+    loadTrips(user.id)
+  }, [user?.id])
+
+  const loadTrips = async (userId: string) => {
     try {
       setLoading(true)
 
@@ -26,7 +32,7 @@ export default function TripsListScreen() {
       const { data, error } = await supabase
         .from('trip_participants')
         .select('trip_id, trips(*)')
-        .eq('user_id', user?.id)
+        .eq('user_id', userId)
 
       if (error) {
         console.error('Error loading trips:', error)
