@@ -17,13 +17,11 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 import {
   TEST_USERS,
-  TEST_TRIP_IDS,
   getAuthenticatedClient,
   createTestTrip,
   generateInviteLink,
   createEmailInvite,
   acceptInvite,
-  verifyParticipantAccess,
   revokeInvite,
   cleanupTestTrip,
   testInviteFlow,
@@ -132,14 +130,12 @@ describe('Invite System Integration Tests', () => {
       createdTripIds.push(trip.id)
 
       // Benji (non-organizer) tries to generate invite
-      const { error } = await benjiClient
-        .from('trip_invites')
-        .insert({
-          trip_id: trip.id,
-          role: 'participant',
-          invite_type: 'link',
-          status: 'pending',
-        })
+      const { error } = await benjiClient.from('trip_invites').insert({
+        trip_id: trip.id,
+        role: 'participant',
+        invite_type: 'link',
+        status: 'pending',
+      })
 
       expect(error).toBeTruthy()
       expect(error!.message).toContain('permission denied')
@@ -183,12 +179,7 @@ describe('Invite System Integration Tests', () => {
       const trip = await createTestTrip(aliceClient, TEST_USERS.alice.id)
       createdTripIds.push(trip.id)
 
-      const invite = await createEmailInvite(
-        aliceClient,
-        trip.id,
-        'test@example.com',
-        'viewer'
-      )
+      const invite = await createEmailInvite(aliceClient, trip.id, 'test@example.com', 'viewer')
 
       expect(invite.token).toBeDefined()
       expect(invite.token).toMatch(/^[0-9a-f]{32}$/)
@@ -221,7 +212,7 @@ describe('Invite System Integration Tests', () => {
       createdTripIds.push(trip.id)
 
       // Invalid email should fail at validation or DB level
-      const { error } = await aliceClient.from('trip_invites').insert({
+      await aliceClient.from('trip_invites').insert({
         trip_id: trip.id,
         email: 'not-an-email',
         role: 'participant',
@@ -247,7 +238,7 @@ describe('Invite System Integration Tests', () => {
       }
 
       expect(invites.length).toBe(3)
-      expect(invites.every((inv) => inv.status === 'pending')).toBe(true)
+      expect(invites.every(inv => inv.status === 'pending')).toBe(true)
     })
   })
 
@@ -262,11 +253,7 @@ describe('Invite System Integration Tests', () => {
       const invite = await generateInviteLink(aliceClient, trip.id, 'participant')
 
       // Benji accepts the invite
-      const participant = await acceptInvite(
-        benjiClient,
-        TEST_USERS.benji.id,
-        invite.token
-      )
+      const participant = await acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
 
       expect(participant).toBeDefined()
       expect(participant.trip_id).toBe(trip.id)
@@ -279,11 +266,7 @@ describe('Invite System Integration Tests', () => {
 
       const invite = await generateInviteLink(aliceClient, trip.id, 'viewer')
 
-      const participant = await acceptInvite(
-        mayaClient,
-        TEST_USERS.maya.id,
-        invite.token
-      )
+      const participant = await acceptInvite(mayaClient, TEST_USERS.maya.id, invite.token)
 
       expect(participant.role).toBe('viewer')
     })
@@ -388,17 +371,17 @@ describe('Invite System Integration Tests', () => {
     it('TC4.1: Expired token rejected with clear error', async () => {
       const invalidToken = createInvalidToken()
 
-      await expect(
-        acceptInvite(benjiClient, TEST_USERS.benji.id, invalidToken)
-      ).rejects.toThrow(/Invite not found/)
+      await expect(acceptInvite(benjiClient, TEST_USERS.benji.id, invalidToken)).rejects.toThrow(
+        /Invite not found/
+      )
     })
 
     it('TC4.2: Invalid/tampered token rejected', async () => {
       const tamperedToken = 'hacked-token-00000000000000000000'
 
-      await expect(
-        acceptInvite(mayaClient, TEST_USERS.maya.id, tamperedToken)
-      ).rejects.toThrow(/Invite not found/)
+      await expect(acceptInvite(mayaClient, TEST_USERS.maya.id, tamperedToken)).rejects.toThrow(
+        /Invite not found/
+      )
     })
 
     it('TC4.3: Already-member cannot accept duplicate invite', async () => {
@@ -411,9 +394,9 @@ describe('Invite System Integration Tests', () => {
       await acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
 
       // Benji tries to accept again
-      await expect(
-        acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
-      ).rejects.toThrow(/already a participant/)
+      await expect(acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)).rejects.toThrow(
+        /already a participant/
+      )
     })
 
     it('TC4.4: Non-organizer cannot generate invite', async () => {
@@ -442,17 +425,17 @@ describe('Invite System Integration Tests', () => {
       await revokeInvite(aliceClient, invite.id)
 
       // Try to accept revoked invite
-      await expect(
-        acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
-      ).rejects.toThrow(/Invite not found/)
+      await expect(acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)).rejects.toThrow(
+        /Invite not found/
+      )
     })
 
     it('TC4.6: Cannot accept invite for non-existent trip', async () => {
       const fakeToken = '00000000000000000000000000000000'
 
-      await expect(
-        acceptInvite(mayaClient, TEST_USERS.maya.id, fakeToken)
-      ).rejects.toThrow(/Invite not found/)
+      await expect(acceptInvite(mayaClient, TEST_USERS.maya.id, fakeToken)).rejects.toThrow(
+        /Invite not found/
+      )
     })
 
     it('TC4.7: Self-invite not allowed (organizer joining own trip)', async () => {
@@ -463,9 +446,9 @@ describe('Invite System Integration Tests', () => {
 
       // Alice (organizer) is already owner/participant, trying to join again
       // This should fail because Alice is already part of the trip
-      await expect(
-        acceptInvite(aliceClient, TEST_USERS.alice.id, invite.token)
-      ).rejects.toThrow(/already a participant/)
+      await expect(acceptInvite(aliceClient, TEST_USERS.alice.id, invite.token)).rejects.toThrow(
+        /already a participant/
+      )
     })
   })
 
@@ -533,7 +516,7 @@ describe('Invite System Integration Tests', () => {
       expect(benjiItems).toBeDefined()
       // Should see only "After Join" item
       const visibleItems = benjiItems!.filter(
-        (item) => new Date(item.start_time) >= new Date('2025-12-05')
+        item => new Date(item.start_time) >= new Date('2025-12-05')
       )
       expect(visibleItems.length).toBeGreaterThan(0)
     })
@@ -605,7 +588,7 @@ describe('Invite System Integration Tests', () => {
 
       // Should only return items from Dec 6 onward
       const beforeJoinDate = items!.filter(
-        (item) => new Date(item.start_time) < new Date('2025-12-06')
+        item => new Date(item.start_time) < new Date('2025-12-06')
       )
       expect(beforeJoinDate.length).toBe(0)
     })
@@ -653,7 +636,7 @@ describe('Invite System Integration Tests', () => {
       await createEmailInvite(aliceClient, trip.id, email, 'participant')
 
       // Try to create duplicate
-      const { error } = await aliceClient.from('trip_invites').insert({
+      await aliceClient.from('trip_invites').insert({
         trip_id: trip.id,
         email,
         role: 'participant',
@@ -687,8 +670,8 @@ describe('Invite System Integration Tests', () => {
       )
 
       // One should succeed, one should fail
-      const succeeded = results.filter((r) => r.status === 'fulfilled')
-      const failed = results.filter((r) => r.status === 'rejected')
+      const succeeded = results.filter(r => r.status === 'fulfilled')
+      const failed = results.filter(r => r.status === 'rejected')
 
       expect(succeeded.length + failed.length).toBe(2)
       // At least one should succeed (email invites are single-use)
@@ -703,24 +686,16 @@ describe('Invite System Integration Tests', () => {
       await aliceClient.from('trips').delete().eq('id', trip.id)
 
       // Try to accept invite
-      await expect(
-        acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
-      ).rejects.toThrow()
+      await expect(acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)).rejects.toThrow()
     })
 
     it('TC6.4: Very long email addresses handled', async () => {
       const trip = await createTestTrip(aliceClient, TEST_USERS.alice.id)
       createdTripIds.push(trip.id)
 
-      const longEmail =
-        'very.long.email.address.that.might.cause.issues@verylongdomainname.com'
+      const longEmail = 'very.long.email.address.that.might.cause.issues@verylongdomainname.com'
 
-      const invite = await createEmailInvite(
-        aliceClient,
-        trip.id,
-        longEmail,
-        'participant'
-      )
+      const invite = await createEmailInvite(aliceClient, trip.id, longEmail, 'participant')
 
       expect(invite.email).toBe(longEmail)
     })
@@ -743,11 +718,7 @@ describe('Invite System Integration Tests', () => {
 
       // Benji can re-accept since the link is still valid
       // This is expected behavior for link invites (multi-use)
-      const participant = await acceptInvite(
-        benjiClient,
-        TEST_USERS.benji.id,
-        invite.token
-      )
+      const participant = await acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
 
       expect(participant).toBeDefined()
     })
@@ -802,7 +773,7 @@ describe('Invite System Integration Tests', () => {
     })
 
     it('TC7.2: Complete viewer invite flow', async () => {
-      const { trip, invite, participant } = await testInviteFlow(
+      const { trip, participant } = await testInviteFlow(
         aliceClient,
         mayaClient,
         TEST_USERS.alice.id,
@@ -850,12 +821,8 @@ describe('Invite System Integration Tests', () => {
         .select('*')
         .eq('trip_id', trip.id)
 
-      const benjiParticipant = participants!.find(
-        (p) => p.user_id === TEST_USERS.benji.id
-      )
-      const mayaParticipant = participants!.find(
-        (p) => p.user_id === TEST_USERS.maya.id
-      )
+      const benjiParticipant = participants!.find(p => p.user_id === TEST_USERS.benji.id)
+      const mayaParticipant = participants!.find(p => p.user_id === TEST_USERS.maya.id)
 
       expect(benjiParticipant).toBeDefined()
       expect(mayaParticipant).toBeDefined()
@@ -871,9 +838,9 @@ describe('Invite System Integration Tests', () => {
       await revokeInvite(aliceClient, invite.id)
 
       // Try to accept
-      await expect(
-        acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)
-      ).rejects.toThrow(/Invite not found/)
+      await expect(acceptInvite(benjiClient, TEST_USERS.benji.id, invite.token)).rejects.toThrow(
+        /Invite not found/
+      )
     })
   })
 })

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import LoginPage from '../../app/(auth)/login/page'
 import { useAuth } from '../../lib/auth/auth-context'
 
@@ -23,7 +24,7 @@ describe('LoginPage', () => {
     vi.clearAllMocks()
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-    } as any)
+    } as unknown as AppRouterInstance)
     vi.mocked(useAuth).mockReturnValue({
       signIn: mockSignIn,
       signInWithGoogle: mockSignInWithGoogle,

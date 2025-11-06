@@ -35,10 +35,21 @@ interface ExpenseInputProps {
   }) => Promise<void>
 }
 
+interface ParsedExpense {
+  amount: number
+  currency: string
+  description: string
+  category: string | null
+  payer: string | null
+  split_type: 'equal' | 'percentage' | 'amount'
+  participants: string[]
+  customSplits?: { name: string; amount: number }[]
+}
+
 export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [parsedResult, setParsedResult] = useState<any>(null)
+  const [parsedResult, setParsedResult] = useState<ParsedExpense | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -226,7 +237,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Participants</p>
                     <div className="flex flex-wrap gap-1">
-                      {parsedResult.participants.map((participant: string, idx: number) => (
+                      {parsedResult.participants.map((participant, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs">
                           {participant}
                         </Badge>
@@ -239,7 +250,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Custom Splits</p>
                     <div className="space-y-1">
-                      {parsedResult.customSplits.map((split: any, idx: number) => (
+                      {parsedResult.customSplits.map((split, idx) => (
                         <div
                           key={idx}
                           className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded"

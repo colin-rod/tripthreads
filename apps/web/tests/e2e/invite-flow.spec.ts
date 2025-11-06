@@ -233,7 +233,7 @@ test.describe('Invite Flow E2E Tests', () => {
       expect(page.url()).toContain('/login')
     })
 
-    test('TC3.2: Valid invite shows acceptance card', async ({ page, context }) => {
+    test('TC3.2: Valid invite shows acceptance card', async ({ page }) => {
       // Alice creates invite
       await login(page, ALICE.email, ALICE.password)
       await createTestTrip(page, `Accept Test ${Date.now()}`)
@@ -256,14 +256,13 @@ test.describe('Invite Flow E2E Tests', () => {
 
       // Verify acceptance card visible
       await expect(page.locator('[data-testid="invite-acceptance-card"]')).toBeVisible()
-      await expect(page.locator('text=You\'ve been invited')).toBeVisible()
+      await expect(page.locator("text=You've been invited")).toBeVisible()
     })
 
-    test('TC3.3: Can accept invite and join trip', async ({ page, context }) => {
+    test('TC3.3: Can accept invite and join trip', async ({ page }) => {
       // Alice creates invite
       await login(page, ALICE.email, ALICE.password)
       await createTestTrip(page, `Join Test ${Date.now()}`)
-      const tripUrl = page.url()
 
       await page.click('[data-testid="invite-button"]')
       await page.click('button:has-text("Generate Link")')
@@ -328,7 +327,7 @@ test.describe('Invite Flow E2E Tests', () => {
       await expect(page.locator('text=Invite not found')).toBeVisible()
     })
 
-    test('TC3.6: Already-member redirected to trip', async ({ page, context }) => {
+    test('TC3.6: Already-member redirected to trip', async ({ page }) => {
       // Alice creates invite
       await login(page, ALICE.email, ALICE.password)
       await createTestTrip(page, `Already Member Test ${Date.now()}`)
@@ -390,7 +389,7 @@ test.describe('Invite Flow E2E Tests', () => {
       await expect(page.locator('text=Revoked')).toBeVisible()
     })
 
-    test('TC4.3: Usage count shown for link invites', async ({ page, context }) => {
+    test('TC4.3: Usage count shown for link invites', async ({ page }) => {
       await login(page, ALICE.email, ALICE.password)
       await createTestTrip(page, `Usage Count Test ${Date.now()}`)
 
@@ -427,7 +426,7 @@ test.describe('Invite Flow E2E Tests', () => {
   // TC5: Role-Based UI Visibility
   // ========================================================================
   test.describe('TC5: Role-Based UI', () => {
-    test('TC5.1: Participant sees invite button', async ({ page, context }) => {
+    test('TC5.1: Participant sees invite button', async ({ page }) => {
       // Alice creates trip and adds Benji as participant
       await login(page, ALICE.email, ALICE.password)
       await createTestTrip(page, `UI Role Test ${Date.now()}`)

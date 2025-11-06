@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import SignupPage from '../../app/(auth)/signup/page'
 import { useAuth } from '../../lib/auth/auth-context'
 
@@ -24,7 +25,7 @@ describe('SignupPage', () => {
     vi.useFakeTimers()
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-    } as any)
+    } as unknown as AppRouterInstance)
     vi.mocked(useAuth).mockReturnValue({
       signUp: mockSignUp,
       signInWithGoogle: mockSignInWithGoogle,

@@ -15,12 +15,22 @@ import { Calendar, MapPin, Users } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { getTripById, isTripOwner } from '@tripthreads/core'
+import type { Database } from '@/types/database'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
+
+type TripParticipant = Database['public']['Tables']['trip_participants']['Row'] & {
+  user: {
+    full_name: string | null
+    avatar_url: string | null
+  }
+  join_start_date?: string | null
+  join_end_date?: string | null
+}
 
 interface TripDetailPageProps {
   params: {
@@ -108,7 +118,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
             <CardTitle className="text-lg">Participants</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {trip.trip_participants.map((participant: any) => {
+            {trip.trip_participants.map((participant: TripParticipant) => {
               const isPartialJoiner = participant.join_start_date && participant.join_end_date
               return (
                 <div key={participant.id} className="flex items-center gap-3">
