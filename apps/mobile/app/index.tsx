@@ -1,20 +1,24 @@
-import { View, Text } from 'react-native'
+import { View, ActivityIndicator } from 'react-native'
+import { Redirect } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { Link } from 'expo-router'
-import { Button } from '../components/ui/button'
+import { useAuth } from '../lib/auth/auth-context'
 
 export default function Index() {
-  return (
-    <View className="flex-1 justify-center items-center px-6 bg-background">
-      <StatusBar style="auto" />
-      <Text className="text-4xl font-bold text-foreground mb-4 text-center">TripThreads</Text>
-      <Text className="text-lg text-muted-foreground mb-8 text-center">
-        Make memories, not spreadsheets — travel made simple
-      </Text>
+  const { user, loading } = useAuth()
 
-      <Link href="/components-demo" asChild>
-        <Button accessibilityLabel="View mobile components">View Mobile Components</Button>
-      </Link>
-    </View>
-  )
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background">
+        <StatusBar style="auto" />
+        <ActivityIndicator size="large" color="#F97316" />
+      </View>
+    )
+  }
+
+  // Redirect based on authentication state
+  if (user) {
+    return <Redirect href="/(app)/trips" />
+  } else {
+    return <Redirect href="/(auth)/login" />
+  }
 }

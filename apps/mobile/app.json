@@ -14,7 +14,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tripthreads.app",
+      "associatedDomains": ["applinks:tripthreads.com", "applinks:dev.tripthreads.com"]
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +24,37 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.tripthreads.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "tripthreads.com",
+              "pathPrefix": "/invite"
+            },
+            {
+              "scheme": "https",
+              "host": "tripthreads.com",
+              "pathPrefix": "/trips"
+            },
+            {
+              "scheme": "https",
+              "host": "dev.tripthreads.com",
+              "pathPrefix": "/invite"
+            },
+            {
+              "scheme": "https",
+              "host": "dev.tripthreads.com",
+              "pathPrefix": "/trips"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +62,14 @@
     "extra": {
       "supabaseUrl": "https://tbwbaydyyjokrsjtgerh.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NDU3NTIsImV4cCI6MjA3NzIyMTc1Mn0.leF3xI7QVNOTWvwNW-V8H0dsIKnlfDtrkiR_8XPhItQ"
-    }
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://tripthreads.com"
+        }
+      ]
+    ]
   }
 }

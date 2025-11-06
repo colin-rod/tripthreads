@@ -1,6 +1,19 @@
 import { Stack } from 'expo-router'
+import { AuthProvider } from '../lib/auth/auth-context'
+import { useDeepLink } from '../lib/linking/use-deep-link'
 import '../global.css'
 
-export default function RootLayout() {
+function RootLayoutNav() {
+  // Initialize deep link handling
+  useDeepLink()
+
   return <Stack screenOptions={{ headerShown: false }} />
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  )
 }
