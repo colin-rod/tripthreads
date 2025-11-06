@@ -63,7 +63,8 @@ jobs:
       - run: npm ci
       - run: npx turbo run build --filter=web
         env:
-          SKIP_ENV_VALIDATION: true
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Upload web build artifacts
         uses: actions/upload-artifact@v4
         with:
