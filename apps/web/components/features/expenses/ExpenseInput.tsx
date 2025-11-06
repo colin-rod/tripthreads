@@ -13,6 +13,7 @@
 
 import { useState } from 'react'
 import { parseWithOpenAI } from '@/lib/parser/openai'
+import type { ParsedExpense } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,17 +34,6 @@ interface ExpenseInputProps {
     participants: string[] | null
     customSplits: { name: string; amount: number }[] | null
   }) => Promise<void>
-}
-
-interface ParsedExpense {
-  amount: number
-  currency: string
-  description: string
-  category: string | null
-  payer: string | null
-  split_type: 'equal' | 'percentage' | 'amount'
-  participants: string[]
-  customSplits?: { name: string; amount: number }[]
 }
 
 export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {

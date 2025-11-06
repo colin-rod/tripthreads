@@ -13,6 +13,7 @@
 
 import { useState } from 'react'
 import { parseWithOpenAI } from '@/lib/parser/openai'
+import type { ParsedDateTime } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,19 +34,10 @@ interface ItineraryInputProps {
   }) => Promise<void>
 }
 
-interface ParsedItinerary {
-  type: 'flight' | 'stay' | 'activity'
-  title: string
-  description?: string
-  startTime: string
-  endTime?: string
-  location?: string
-}
-
 export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [parsedResult, setParsedResult] = useState<ParsedItinerary | null>(null)
+  const [parsedResult, setParsedResult] = useState<ParsedDateTime | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
