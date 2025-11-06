@@ -148,12 +148,14 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
-                    {isPartialJoiner && (
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                        {format(new Date(participant.join_end_date), 'MMM d')}
-                      </p>
-                    )}
+                    {isPartialJoiner &&
+                      participant.join_start_date &&
+                      participant.join_end_date && (
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
+                          {format(new Date(participant.join_end_date), 'MMM d')}
+                        </p>
+                      )}
                   </div>
                 </div>
               )
