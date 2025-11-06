@@ -238,7 +238,7 @@ if (!existingUser) {
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
 ```
 
 **Mobile (app.json → extra):**
@@ -248,7 +248,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   "expo": {
     "extra": {
       "supabaseUrl": "https://xxx.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "supabaseAnonKey": "<YOUR_SUPABASE_ANON_KEY>"
     }
   }
 }
@@ -274,7 +274,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    - Create OAuth 2.0 Client ID
    - Application type: Web application
    - Authorized redirect URIs:
-     - `https://tbwbaydyyjokrsjtgerh.supabase.co/auth/v1/callback` (Supabase)
+     - `https://YOUR_PROJECT.supabase.co/auth/v1/callback` (Supabase)
      - `http://localhost:3000/auth/callback` (local dev)
 4. Copy Client ID and Client Secret to Supabase
 5. Save configuration
