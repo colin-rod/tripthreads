@@ -185,7 +185,6 @@ For any buttons that should be disabled for viewers, wrap with `ProtectedAction`
 
 ```tsx
 import { ProtectedAction } from '@/components/features/permissions/ProtectedAction'
-
 ;<ProtectedAction canEdit={canEdit} action="add itinerary items" tripId={tripId}>
   <Button>Add Item</Button>
 </ProtectedAction>
@@ -340,6 +339,374 @@ For issues or questions:
 - Check [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) for detailed implementation docs
 - Check [apps/web/lib/permissions/README.md](apps/web/lib/permissions/README.md) for usage patterns
 - Review Linear issue: CRO-798
+
+---
+
+## 10. Mobile Deep Linking Setup (CRO-798)
+
+Mobile deep linking allows invite and trip links to open the app directly. This requires configuration on both web and mobile platforms.
+
+### Prerequisites
+
+- [ ] Web app deployed with HTTPS
+- [ ] iOS app bundle ID: `com.tripthreads.app`
+- [ ] Android package name: `com.tripthreads.app`
+- [ ] Mobile app ready to build with EAS
+
+---
+
+### iOS Universal Links Setup
+
+**1. Create Apple App Site Association (AASA) file**
+
+Create `apps/web/public/.well-known/apple-app-site-association`:
+
+```json
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.tripthreads.app",
+        "paths": ["/invite/*", "/trips/*"]
+      }
+    ]
+  }
+}
+```
+
+**Important:**
+
+- Replace `TEAM_ID` with your Apple Developer Team ID
+- File must be served at: `https://tripthreads.com/.well-known/apple-app-site-association`
+- No file extension
+- Must be served over HTTPS
+- Content-Type: `application/json`
+
+**2. Update Next.js config to serve AASA**
+
+In `apps/web/next.config.js`:
+
+```javascript
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/.well-known/apple-app-site-association',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+    ]
+  },
+}
+```
+
+**3. Verify AASA file**
+
+After deploying:
+
+```bash
+# Check file is accessible
+curl https://tripthreads.com/.well-known/apple-app-site-association
+
+# Use Apple's validator
+# Visit: https://search.developer.apple.com/appsearch-validation-tool/
+# Enter: https://tripthreads.com
+```
+
+---
+
+### Android App Links Setup
+
+**1. Get app signing certificate fingerprint**
+
+For EAS builds:
+
+```bash
+# Get keystore fingerprint from EAS
+eas credentials -p android
+
+# OR from keystore file
+keytool -list -v -keystore your-release-keystore.jks -alias your-key-alias
+```
+
+**2. Create Digital Asset Links file**
+
+Create `apps/web/public/.well-known/assetlinks.json`:
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.tripthreads.app",
+      "sha256_cert_fingerprints": ["YOUR_SHA256_FINGERPRINT_HERE"]
+    }
+  }
+]
+```
+
+**Important:**
+
+- Replace `YOUR_SHA256_FINGERPRINT_HERE` with the SHA-256 fingerprint from step 1
+- File must be served at: `https://tripthreads.com/.well-known/assetlinks.json`
+- Must be served over HTTPS
+- Content-Type: `application/json`
+
+**3. Update Next.js config for assetlinks**
+
+In `apps/web/next.config.js`:
+
+```javascript
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/.well-known/apple-app-site-association',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+      {
+        source: '/.well-known/assetlinks.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+    ]
+  },
+}
+```
+
+**4. Verify assetlinks file**
+
+After deploying:
+
+```bash
+# Check file is accessible
+curl https://tripthreads.com/.well-known/assetlinks.json
+
+# Use Google's validator
+# Visit: https://developers.google.com/digital-asset-links/tools/generator
+# Test your domain and package name
+```
+
+---
+
+### Web Fallback Pages
+
+Ensure invite and trip pages have proper meta tags for sharing:
+
+**apps/web/app/invite/[token]/page.tsx:**
+
+```typescript
+export async function generateMetadata({ params }: { params: { token: string } }) {
+  // Fetch invite details
+  const invite = await getInviteWithDetails(supabase, params.token)
+
+  return {
+    title: `You're invited to ${invite?.trip_name || 'a trip'} on TripThreads`,
+    description: 'Accept your invitation to start planning together',
+    openGraph: {
+      title: `You're invited to ${invite?.trip_name || 'a trip'}`,
+      description: 'Tap to open in the TripThreads app',
+    },
+  }
+}
+```
+
+**apps/web/app/trips/[id]/page.tsx:**
+
+```typescript
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const trip = await getTripById(supabase, params.id)
+
+  return {
+    title: `${trip?.name || 'Trip'} - TripThreads`,
+    description: trip?.description || 'View trip details',
+    openGraph: {
+      title: trip?.name,
+      description: 'Open in the TripThreads app',
+    },
+  }
+}
+```
+
+---
+
+### Mobile App Build & Deploy
+
+**1. Build iOS app for TestFlight:**
+
+```bash
+cd apps/mobile
+
+# Build for iOS
+eas build --platform ios --profile production
+
+# Submit to App Store Connect
+eas submit --platform ios
+```
+
+**2. Build Android app for Play Store:**
+
+```bash
+# Build for Android
+eas build --platform android --profile production
+
+# Submit to Play Store
+eas submit --platform android
+```
+
+**3. Configure EAS build profiles**
+
+Ensure `eas.json` has correct bundle IDs:
+
+```json
+{
+  "build": {
+    "production": {
+      "ios": {
+        "bundleIdentifier": "com.tripthreads.app"
+      },
+      "android": {
+        "package": "com.tripthreads.app"
+      }
+    }
+  }
+}
+```
+
+---
+
+### Testing Deep Links
+
+**iOS Simulator:**
+
+```bash
+# Test custom scheme
+xcrun simctl openurl booted "tripthreads://invite/abc123"
+
+# Test universal link
+xcrun simctl openurl booted "https://tripthreads.com/invite/abc123"
+```
+
+**Android Emulator:**
+
+```bash
+# Test custom scheme
+adb shell am start -W -a android.intent.action.VIEW -d "tripthreads://invite/abc123"
+
+# Test app link
+adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/invite/abc123"
+```
+
+**Physical Devices (Recommended):**
+
+1. Install app via TestFlight (iOS) or Internal Testing (Android)
+2. Send invite link via Messages/Email
+3. Tap link - app should open automatically
+4. Verify navigation to correct screen
+
+---
+
+### Deployment Checklist
+
+#### Web Deployment
+
+- [ ] Create AASA file at `apps/web/public/.well-known/apple-app-site-association`
+- [ ] Create assetlinks.json at `apps/web/public/.well-known/assetlinks.json`
+- [ ] Update Next.js config with headers
+- [ ] Deploy web app to production
+- [ ] Verify AASA is accessible: `https://tripthreads.com/.well-known/apple-app-site-association`
+- [ ] Verify assetlinks.json is accessible: `https://tripthreads.com/.well-known/assetlinks.json`
+- [ ] Test with Apple validator
+- [ ] Test with Google validator
+
+#### Mobile Deployment
+
+- [ ] Mobile app configuration updated in `app.json`
+- [ ] Deep linking code implemented and tested locally
+- [ ] Build iOS app with EAS
+- [ ] Build Android app with EAS
+- [ ] Submit to TestFlight/Internal Testing
+- [ ] Test deep links on physical devices
+- [ ] Verify universal links work on iOS
+- [ ] Verify app links work on Android
+- [ ] Submit to App Store/Play Store for review
+
+---
+
+### Monitoring Deep Links
+
+**PostHog Events:**
+
+Track the following events to monitor deep link usage:
+
+- `deep_link_opened` - When app is opened via deep link
+- `invite_link_opened` - Specifically for invite links
+- `trip_link_opened` - Specifically for trip links
+- `deep_link_auth_redirect` - When unauthenticated user is redirected to login
+
+**Analytics Dashboard:**
+
+Create a PostHog dashboard to monitor:
+
+- Deep link open rate
+- Deep link to app install conversion
+- Deep link to trip join conversion
+- Most common deep link paths
+
+---
+
+### Troubleshooting
+
+**Universal links not working on iOS:**
+
+1. Reset universal links on device:
+   - Settings → Safari → Clear History and Website Data
+2. Verify AASA file is served correctly (no redirect, correct content-type)
+3. Check Apple's validator shows no errors
+4. Ensure app is installed via TestFlight or App Store (dev builds may not work)
+5. Try long-pressing link instead of tapping
+
+**App links not working on Android:**
+
+1. Verify assetlinks.json is accessible and correct
+2. Check app link verification:
+   ```bash
+   adb shell dumpsys package d
+   ```
+3. Look for your domain and verify status is "verified"
+4. Reinstall app if needed
+5. Clear app defaults: Settings → Apps → TripThreads → Open by default → Clear defaults
+
+**App opens but doesn't navigate:**
+
+1. Check deep link parser logic
+2. Verify auth state is loaded before navigation
+3. Check console logs for errors
+4. Test parsing logic directly:
+   ```typescript
+   console.log(parseDeepLink('https://tripthreads.com/invite/abc123'))
+   ```
+
+---
+
+### Documentation
+
+Full deep linking testing guide: [apps/mobile/DEEP_LINKING_TESTING.md](apps/mobile/DEEP_LINKING_TESTING.md)
 
 ---
 
