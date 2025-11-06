@@ -18,7 +18,6 @@ import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getTripById, isTripOwner } from '@tripthreads/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TripActions } from '@/components/features/trips/TripActions'
@@ -26,6 +25,7 @@ import { InviteButton } from '@/components/features/trips/InviteButton'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
+import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
 
 interface TripDetailPageProps {
   params: {
@@ -122,49 +122,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Participants Sidebar */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Participants</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {trip.trip_participants.map((participant: any) => {
-                const isPartialJoiner = participant.join_start_date && participant.join_end_date
-                return (
-                  <div key={participant.id} className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={participant.user.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {participant.user.full_name
-                          ?.split(' ')
-                          .map((n: string) => n[0])
-                          .join('')
-                          .toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">
-                          {participant.user.full_name || 'Unknown'}
-                        </p>
-                        {isPartialJoiner && (
-                          <Badge variant="outline" className="text-xs">
-                            Partial
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
-                      {isPartialJoiner && (
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                          {format(new Date(participant.join_end_date), 'MMM d')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+          <ParticipantsList participants={tripParticipants} />
         </div>
 
         {/* Main Content Area */}

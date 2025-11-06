@@ -8,6 +8,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          id: string
+          trip_id: string
+          user_id: string
+          status: 'pending' | 'approved' | 'rejected'
+          requested_at: string
+          responded_at: string | null
+          responded_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          trip_id: string
+          user_id: string
+          status?: 'pending' | 'approved' | 'rejected'
+          requested_at?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          trip_id?: string
+          user_id?: string
+          status?: 'pending' | 'approved' | 'rejected'
+          requested_at?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'access_requests_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'access_requests_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'access_requests_responded_by_fkey'
+            columns: ['responded_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       expense_participants: {
         Row: {
           created_at: string
