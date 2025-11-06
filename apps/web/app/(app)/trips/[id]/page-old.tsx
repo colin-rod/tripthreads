@@ -15,7 +15,6 @@ import { Calendar, MapPin, Users } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { getTripById, isTripOwner } from '@tripthreads/core'
-import type { Database } from '@/types/database'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -23,13 +22,18 @@ import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 
-type TripParticipant = Database['public']['Tables']['trip_participants']['Row'] & {
+type TripParticipant = {
+  id: string
+  role: string
+  joined_at: string
+  join_start_date: string | null
+  join_end_date: string | null
   user: {
+    id: string
     full_name: string | null
     avatar_url: string | null
+    email: string
   }
-  join_start_date?: string | null
-  join_end_date?: string | null
 }
 
 interface TripDetailPageProps {
