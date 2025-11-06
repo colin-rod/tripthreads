@@ -5,11 +5,8 @@ import { StatusBar } from 'expo-status-bar'
 import { Button } from '../../../components/ui/button'
 import { supabase } from '../../../lib/supabase/client'
 import { useAuth } from '../../../lib/auth/auth-context'
-import {
-  getInviteWithDetails,
-  acceptInvite,
-} from '@tripthreads/shared/lib/supabase/queries/invites'
-import type { InviteWithDetails } from '@tripthreads/shared/types/invite'
+import { getInviteWithDetails, acceptInvite } from '@tripthreads/core'
+import type { InviteWithDetails } from '@tripthreads/core'
 
 export default function InviteScreen() {
   const router = useRouter()
