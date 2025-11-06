@@ -6,7 +6,7 @@ import {
   SYSTEM_PROMPT,
   type LLMParseRequest,
   type LLMParserResult,
-} from '@tripthreads/shared'
+} from '@tripthreads/core'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const DEFAULT_MODEL = 'gpt-4o-mini'

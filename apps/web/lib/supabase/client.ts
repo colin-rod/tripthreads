@@ -1,5 +1,5 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@tripthreads/shared'
+import type { Database } from '@tripthreads/core'
 
 // Allow environment variables to be set before import (for testing)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

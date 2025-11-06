@@ -13,7 +13,7 @@ import { Suspense } from 'react'
 import { Plus } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getUserTrips } from '@tripthreads/shared'
+import { getUserTrips } from '@tripthreads/core'
 import { TripCard } from '@/components/features/trips/TripCard'
 import { Button } from '@/components/ui/button'
 import { CreateTripButton } from '@/components/features/trips/CreateTripButton'

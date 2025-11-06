@@ -19,7 +19,7 @@
 import { useState, cloneElement, ReactElement } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { PermissionDeniedModal } from './PermissionDeniedModal'
-import { getViewerTooltip } from '@/lib/permissions/role-checks'
+import { getViewerTooltip } from '@tripthreads/core'
 
 interface ProtectedActionProps {
   children: ReactElement

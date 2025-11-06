@@ -1,6 +1,7 @@
 {
   "name": "@tripthreads/shared",
   "version": "0.1.0",
+  "deprecated": "This package is deprecated. Use @tripthreads/core instead. See DEPRECATED.md for migration guide.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

@@ -4,7 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Button } from '../../../components/ui/button'
 import { supabase } from '../../../lib/supabase/client'
-import type { Trip } from '@tripthreads/shared/types/trip'
+import type { Trip } from '@tripthreads/core'
 
 export default function TripDetailScreen() {
   const router = useRouter()

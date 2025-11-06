@@ -29,11 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import {
-  createInviteLink,
-  createBatchEmailInvites,
-  type InviteLinkResult,
-} from '@tripthreads/shared'
+import { createInviteLink, createBatchEmailInvites, type InviteLinkResult } from '@tripthreads/core'
 import { Textarea } from '@/components/ui/textarea'
 
 interface InviteDialogProps {

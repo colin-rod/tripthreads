@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar'
 import { Button } from '../../../components/ui/button'
 import { supabase } from '../../../lib/supabase/client'
 import { useAuth } from '../../../lib/auth/auth-context'
-import type { Trip } from '@tripthreads/shared/types/trip'
+import type { Trip } from '@tripthreads/core'
 
 export default function TripsListScreen() {
   const router = useRouter()
@@ -27,6 +27,12 @@ export default function TripsListScreen() {
   const loadTrips = async (userId: string) => {
     try {
       setLoading(true)
+
+      // Ensure user is authenticated
+      if (!user?.id) {
+        setLoading(false)
+        return
+      }
 
       // Get trips where user is a participant
       const { data, error } = await supabase

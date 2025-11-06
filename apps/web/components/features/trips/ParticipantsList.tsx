@@ -15,7 +15,7 @@ import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getRoleLabel } from '@/lib/permissions/role-checks'
+import { getRoleLabel } from '@tripthreads/core'
 
 type TripRole = 'owner' | 'participant' | 'viewer'
 

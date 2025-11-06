@@ -14,7 +14,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn } from '@tripthreads/core'
 import type { TourStep } from '@/lib/tour/types'
 
 interface TourTooltipProps {

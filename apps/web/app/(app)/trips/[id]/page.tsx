@@ -16,7 +16,7 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@tripthreads/shared'
+import { getTripById, isTripOwner } from '@tripthreads/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

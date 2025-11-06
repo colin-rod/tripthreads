@@ -49,7 +49,7 @@ import {
   completeProfileSchema,
   type CompleteProfileInput,
   validateAvatarFile,
-} from '@tripthreads/shared'
+} from '@tripthreads/core'
 
 interface ProfileCompletionModalProps {
   open: boolean

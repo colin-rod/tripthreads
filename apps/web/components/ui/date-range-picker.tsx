@@ -17,7 +17,7 @@ import { Calendar as CalendarIcon } from 'lucide-react'
 import { DateRange, DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 

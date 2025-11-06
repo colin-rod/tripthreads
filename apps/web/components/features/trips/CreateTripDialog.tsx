@@ -41,10 +41,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useToast } from '@/components/ui/use-toast'
-import { cn } from '@/lib/utils'
+import { cn } from '@tripthreads/core'
 
 import { createClient } from '@/lib/supabase/client'
-import { createTrip, createTripSchema, type CreateTripInput } from '@tripthreads/shared'
+import { createTrip, createTripSchema, type CreateTripInput } from '@tripthreads/core'
 
 interface CreateTripDialogProps {
   open: boolean
