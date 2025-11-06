@@ -776,19 +776,29 @@ main (production)
     └── feature/* (feature branches)
 ```
 
+**⚠️ CRITICAL RULE: Always branch from `development`, NEVER from `main`**
+
+All feature branches must be created from the `development` branch. This ensures that:
+- Features are integrated into staging first for testing
+- Production (`main`) remains stable and only receives tested code
+- The deployment pipeline works correctly (features → staging → production)
+
 ### Branch Purposes
 
 - **`main`** - Production branch
   - Deploys to: `tripthreads.com` (web) + production mobile builds
   - Protected, requires PR approval
   - Only merge from `development`
+  - **⚠️ NEVER create feature branches from `main`**
 
 - **`development`** - Staging branch
   - Deploys to: `dev.tripthreads.com` (web) + TestFlight/Internal Testing
   - Integration branch for all features
   - Default branch for PRs
+  - **✅ ALWAYS create feature branches from `development`**
 
 - **`feature/*`** - Feature branches
+  - **MUST be created from `development`** (not `main`)
   - Naming: `feature/P{phase}-{issue-number}-{short-description}`
   - Examples:
     - `feature/P1-5-supabase-auth`
@@ -797,7 +807,7 @@ main (production)
 
 ### Development Workflow
 
-1. **Create feature branch** from `development`:
+1. **Create feature branch** from `development` (NOT from `main`):
 
    ```bash
    git checkout development
