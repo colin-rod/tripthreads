@@ -266,7 +266,7 @@ CREATE POLICY "Trip participants can read all media"
 
 ```sql
 -- Set auth context to Alice
-SET LOCAL auth.uid TO 'ea1854fb-b8f4-480f-899f-af1bcf0218b3';
+SET LOCAL auth.uid TO '22222222-2222-2222-2222-222222222222';
 
 -- Query itinerary items
 SELECT COUNT(*) FROM public.itinerary_items
@@ -283,7 +283,7 @@ WHERE trip_id = '10000000-0000-0000-0000-000000000001';
 
 ```sql
 -- Set auth context to Benji
-SET LOCAL auth.uid TO '0af9094b-dedb-4472-8133-20577fbc8f98';
+SET LOCAL auth.uid TO '44444444-4444-4444-4444-444444444444';
 
 -- Query itinerary items
 SELECT COUNT(*) FROM public.itinerary_items
@@ -300,7 +300,7 @@ WHERE trip_id = '10000000-0000-0000-0000-000000000001';
 
 ```sql
 -- Set auth context to Baylee
-SET LOCAL auth.uid TO '29f0dac4-7629-45f8-8fa1-10e0df75ce1b';
+SET LOCAL auth.uid TO '66666666-6666-6666-6666-666666666666';
 
 -- Query itinerary items
 SELECT COUNT(*) FROM public.itinerary_items
