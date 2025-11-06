@@ -85,12 +85,12 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
         amount: parsedResult.amount,
         currency: parsedResult.currency,
         description: parsedResult.description,
-        category: parsedResult.category,
-        payer: parsedResult.payer,
+        category: parsedResult.category ?? null,
+        payer: parsedResult.payer ?? null,
         splitType: parsedResult.splitType,
-        splitCount: parsedResult.splitCount,
-        participants: parsedResult.participants,
-        customSplits: parsedResult.customSplits,
+        splitCount: parsedResult.splitCount ?? null,
+        participants: parsedResult.participants ?? null,
+        customSplits: parsedResult.customSplits ?? null,
       })
 
       // Reset form on success
