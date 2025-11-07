@@ -21,7 +21,9 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npx supabase:*)",
       "Bash(packages/shared/types/database.ts)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

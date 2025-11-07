@@ -149,6 +149,57 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          attachments: Json
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          metadata: Json
+          trip_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json
+          content: string
+          created_at?: string
+          id?: string
+          message_type: string
+          metadata?: Json
+          trip_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          metadata?: Json
+          trip_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_messages_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chat_messages_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       expense_participants: {
         Row: {
           created_at: string

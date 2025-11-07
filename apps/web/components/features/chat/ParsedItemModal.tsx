@@ -215,10 +215,10 @@ export function ParsedItemModal({
           tripId,
           type: itineraryType,
           title: itineraryTitle,
-          description: itineraryDescription || null,
+          description: itineraryDescription || undefined,
           startTime: new Date(itineraryStartDate).toISOString(),
-          endTime: itineraryEndDate ? new Date(itineraryEndDate).toISOString() : null,
-          location: itineraryLocation || null,
+          endTime: itineraryEndDate ? new Date(itineraryEndDate).toISOString() : undefined,
+          location: itineraryLocation || undefined,
         })
 
         if (!result.success) {

@@ -31,6 +31,9 @@ export interface CreateBotMessageInput {
     expenseIds?: string[]
     itineraryIds?: string[]
     actionTaken?: string
+    command?: string
+    hasExpense?: boolean
+    hasItinerary?: boolean
   }
 }
 
@@ -75,10 +78,10 @@ export async function createMessage(input: CreateMessageInput) {
       .insert({
         trip_id: input.tripId,
         user_id: user.id,
-        message_type: 'user',
+        message_type: 'user' as const,
         content: input.content,
-        attachments: input.attachments || [],
-        metadata: input.metadata || {},
+        attachments: (input.attachments || []) as any,
+        metadata: (input.metadata || {}) as any,
       })
       .select()
       .single()
@@ -122,10 +125,10 @@ export async function createBotMessage(input: CreateBotMessageInput) {
       .insert({
         trip_id: input.tripId,
         user_id: null, // Bot messages have no user
-        message_type: 'bot',
+        message_type: 'bot' as const,
         content: input.content,
-        attachments: [],
-        metadata: input.metadata || {},
+        attachments: [] as any,
+        metadata: (input.metadata || {}) as any,
       })
       .select()
       .single()
@@ -222,7 +225,7 @@ export async function getChatMessages(tripId: string, limit = 50) {
 
     return {
       success: true as const,
-      data: (messages || []) as ChatMessageData[],
+      data: (messages || []) as unknown as ChatMessageData[],
       error: undefined,
     }
   } catch (error) {
