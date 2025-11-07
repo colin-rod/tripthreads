@@ -107,10 +107,8 @@ describe('Platform Detection', () => {
 
   describe('isTouchDevice', () => {
     it('detects touch support via ontouchstart', () => {
-      // @ts-expect-error - test property
       window.ontouchstart = () => {}
       expect(isTouchDevice()).toBe(true)
-      // @ts-expect-error - test property
       delete window.ontouchstart
     })
 
