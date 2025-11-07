@@ -3,26 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import type { ChatAttachment } from '@/app/actions/chat'
+import type { ChatMessageData } from '@/app/actions/chat'
 import { ChatAttachmentDisplay } from './ChatAttachment'
 
-export interface ChatMessageData {
-  id: string
-  trip_id: string
-  user_id: string | null
-  message_type: 'user' | 'bot' | 'system'
-  content: string
-  attachments: ChatAttachment[]
-  metadata: Record<string, unknown>
-  created_at: string
-  updated_at: string
-  user?: {
-    id: string
-    full_name: string | null
-    email: string
-    avatar_url: string | null
-  } | null
-}
+export type { ChatMessageData }
 
 interface ChatMessageProps {
   message: ChatMessageData

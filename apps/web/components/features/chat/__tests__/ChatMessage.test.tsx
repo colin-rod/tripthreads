@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { ChatMessage, type ChatMessageData } from '../ChatMessage'
+import { ChatMessage } from '../ChatMessage'
+import type { ChatMessageData } from '@/app/actions/chat'
 
 // Mock date-fns format function
 jest.mock('date-fns', () => ({

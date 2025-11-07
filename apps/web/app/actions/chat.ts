@@ -154,6 +154,24 @@ export async function createBotMessage(input: CreateBotMessageInput) {
   }
 }
 
+export interface ChatMessageData {
+  id: string
+  trip_id: string
+  user_id: string | null
+  message_type: 'user' | 'bot' | 'system'
+  content: string
+  attachments: ChatAttachment[]
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  user?: {
+    id: string
+    full_name: string | null
+    email: string
+    avatar_url: string | null
+  } | null
+}
+
 /**
  * Get chat messages for a trip
  */
@@ -169,8 +187,9 @@ export async function getChatMessages(tripId: string, limit = 50) {
 
     if (authError || !user) {
       return {
-        success: false,
-        error: 'Authentication required',
+        success: false as const,
+        error: 'Authentication required' as const,
+        data: undefined,
       }
     }
 
@@ -195,20 +214,23 @@ export async function getChatMessages(tripId: string, limit = 50) {
     if (messagesError) {
       console.error('Error fetching messages:', messagesError)
       return {
-        success: false,
-        error: 'Failed to fetch messages',
+        success: false as const,
+        error: 'Failed to fetch messages' as const,
+        data: undefined,
       }
     }
 
     return {
-      success: true,
-      data: messages || [],
+      success: true as const,
+      data: (messages || []) as ChatMessageData[],
+      error: undefined,
     }
   } catch (error) {
     console.error('Unexpected error fetching messages:', error)
     return {
-      success: false,
-      error: 'An unexpected error occurred',
+      success: false as const,
+      error: 'An unexpected error occurred' as const,
+      data: undefined,
     }
   }
 }
