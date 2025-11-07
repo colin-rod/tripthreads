@@ -4,6 +4,7 @@
  * Server Actions for Expense Management
  *
  * Handles expense creation, updates, and deletion with proper RLS enforcement.
+ * Includes participant resolution (name → user_id) and split calculation.
  */
 
 import { revalidatePath } from 'next/cache'
@@ -15,12 +16,65 @@ export interface CreateExpenseInput {
   currency: string // ISO 4217 code
   description: string
   category: string | null
-  payer: string | null // Name of payer
-  splitType: 'equal' | 'custom' | 'shares' | 'none'
+  payer: string | null // Name or user_id of payer
+  splitType: 'equal' | 'custom' | 'shares' | 'percentage' | 'none'
   splitCount: number | null
-  participants: string[] | null // Names of participants
+  participants: string[] | null // Names or user_ids of participants
   customSplits: { name: string; amount: number }[] | null
+  percentageSplits?: { name: string; percentage: number }[] | null
   date?: string // ISO 8601, defaults to now
+}
+
+interface TripParticipant {
+  user_id: string
+  full_name: string
+}
+
+/**
+ * Resolve a participant identifier (name or user_id) to user_id
+ */
+async function resolveParticipantId(
+  _supabase: unknown,
+  _tripId: string,
+  identifier: string,
+  tripParticipants: TripParticipant[]
+): Promise<string | null> {
+  // Check if it's already a valid UUID (user_id)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidRegex.test(identifier)) {
+    // Verify this user is a trip participant
+    const participant = tripParticipants.find(p => p.user_id === identifier)
+    return participant ? identifier : null
+  }
+
+  // Try to match by name (case-insensitive)
+  const matchedParticipant = tripParticipants.find(
+    p => p.full_name.toLowerCase() === identifier.toLowerCase()
+  )
+
+  return matchedParticipant ? matchedParticipant.user_id : null
+}
+
+/**
+ * Get all trip participants with user details
+ */
+async function getTripParticipants(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tripId: string
+): Promise<TripParticipant[]> {
+  const { data, error } = await supabase
+    .from('trip_participants')
+    .select('user_id, users!inner(full_name)')
+    .eq('trip_id', tripId)
+
+  if (error) {
+    throw new Error(`Failed to fetch trip participants: ${error.message}`)
+  }
+
+  return data.map(p => ({
+    user_id: p.user_id,
+    full_name: (p.users as { full_name: string }).full_name,
+  }))
 }
 
 export async function createExpense(input: CreateExpenseInput) {
@@ -63,6 +117,27 @@ export async function createExpense(input: CreateExpenseInput) {
       }
     }
 
+    // Get all trip participants for resolution
+    const tripParticipants = await getTripParticipants(supabase, input.tripId)
+
+    // Resolve payer
+    let payerId = user.id // Default to current user
+    if (input.payer) {
+      const resolved = await resolveParticipantId(
+        supabase,
+        input.tripId,
+        input.payer,
+        tripParticipants
+      )
+      if (!resolved) {
+        return {
+          success: false,
+          error: `Payer "${input.payer}" is not a participant in this trip`,
+        }
+      }
+      payerId = resolved
+    }
+
     // Create expense
     const { data: expense, error: expenseError } = await supabase
       .from('expenses')
@@ -72,7 +147,7 @@ export async function createExpense(input: CreateExpenseInput) {
         currency: input.currency,
         description: input.description,
         category: input.category || 'other',
-        payer_id: user.id, // For now, assume current user is payer
+        payer_id: payerId,
         date: input.date || new Date().toISOString(),
         created_by: user.id,
       })
@@ -87,38 +162,186 @@ export async function createExpense(input: CreateExpenseInput) {
       }
     }
 
-    // TODO: Create expense participants based on split logic
-    // This would involve:
-    // 1. Get all trip participants
-    // 2. Calculate shares based on splitType, splitCount, participants, customSplits
-    // 3. Insert into expense_participants table
+    // Create expense participants based on split logic
+    const expenseParticipants: Array<{
+      expense_id: string
+      user_id: string
+      share_amount: number
+      share_type: string
+      share_value: number | null
+    }> = []
 
-    // For now, we'll create a simple equal split for all participants
-    if (input.splitType === 'equal' && input.splitCount) {
-      const splitCount = input.splitCount // Store for type safety in closures
-      const shareAmount = Math.floor(input.amount / splitCount)
+    if (input.splitType === 'equal') {
+      // Equal split among specified participants or split count
+      let participantIds: string[] = []
 
-      const { data: tripParticipants, error: participantsError } = await supabase
-        .from('trip_participants')
-        .select('user_id')
-        .eq('trip_id', input.tripId)
-        .limit(splitCount)
+      if (input.participants && input.participants.length > 0) {
+        // Resolve participant names/ids
+        for (const p of input.participants) {
+          const resolved = await resolveParticipantId(supabase, input.tripId, p, tripParticipants)
+          if (!resolved) {
+            // Rollback expense
+            await supabase.from('expenses').delete().eq('id', expense.id)
+            return {
+              success: false,
+              error: `Participant "${p}" is not in this trip`,
+            }
+          }
+          participantIds.push(resolved)
+        }
+      } else if (input.splitCount) {
+        // Use first N trip participants
+        participantIds = tripParticipants.slice(0, input.splitCount).map(p => p.user_id)
+      } else {
+        // Default to all trip participants
+        participantIds = tripParticipants.map(p => p.user_id)
+      }
 
-      if (!participantsError && tripParticipants) {
-        const expenseParticipants = tripParticipants.map(p => ({
+      const shareAmount = Math.floor(input.amount / participantIds.length)
+      const remainder = input.amount - shareAmount * participantIds.length
+
+      participantIds.forEach((userId, index) => {
+        expenseParticipants.push({
           expense_id: expense.id,
-          user_id: p.user_id,
-          share_amount: shareAmount,
-          share_type: 'equal' as const,
-          share_value: 100 / splitCount, // percentage
-        }))
+          user_id: userId,
+          share_amount: shareAmount + (index === 0 ? remainder : 0), // Give remainder to first
+          share_type: 'equal',
+          share_value: null,
+        })
+      })
+    } else if (input.splitType === 'percentage' && input.percentageSplits) {
+      // Percentage split
+      let totalAssigned = 0
 
-        await supabase.from('expense_participants').insert(expenseParticipants)
+      for (let i = 0; i < input.percentageSplits.length; i++) {
+        const split = input.percentageSplits[i]
+        const userId = await resolveParticipantId(
+          supabase,
+          input.tripId,
+          split.name,
+          tripParticipants
+        )
+
+        if (!userId) {
+          await supabase.from('expenses').delete().eq('id', expense.id)
+          return {
+            success: false,
+            error: `Participant "${split.name}" is not in this trip`,
+          }
+        }
+
+        // For last participant, assign remaining to avoid rounding errors
+        let shareAmount: number
+        if (i === input.percentageSplits.length - 1) {
+          shareAmount = input.amount - totalAssigned
+        } else {
+          shareAmount = Math.floor((input.amount * split.percentage) / 100)
+          totalAssigned += shareAmount
+        }
+
+        expenseParticipants.push({
+          expense_id: expense.id,
+          user_id: userId,
+          share_amount: shareAmount,
+          share_type: 'percentage',
+          share_value: split.percentage,
+        })
+      }
+    } else if (input.splitType === 'custom' && input.customSplits) {
+      // Custom amount split
+      const totalCustom = input.customSplits.reduce((sum, s) => sum + s.amount, 0)
+
+      if (totalCustom !== input.amount) {
+        await supabase.from('expenses').delete().eq('id', expense.id)
+        return {
+          success: false,
+          error: `Custom splits (${totalCustom}) do not sum to expense total (${input.amount})`,
+        }
+      }
+
+      for (const split of input.customSplits) {
+        const userId = await resolveParticipantId(
+          supabase,
+          input.tripId,
+          split.name,
+          tripParticipants
+        )
+
+        if (!userId) {
+          await supabase.from('expenses').delete().eq('id', expense.id)
+          return {
+            success: false,
+            error: `Participant "${split.name}" is not in this trip`,
+          }
+        }
+
+        expenseParticipants.push({
+          expense_id: expense.id,
+          user_id: userId,
+          share_amount: split.amount,
+          share_type: 'amount',
+          share_value: split.amount,
+        })
+      }
+    } else if (input.splitType === 'shares' && input.participants) {
+      // Shares-based split (equal shares value)
+      const totalShares = input.participants.length
+      let totalAssigned = 0
+
+      for (let i = 0; i < input.participants.length; i++) {
+        const userId = await resolveParticipantId(
+          supabase,
+          input.tripId,
+          input.participants[i],
+          tripParticipants
+        )
+
+        if (!userId) {
+          await supabase.from('expenses').delete().eq('id', expense.id)
+          return {
+            success: false,
+            error: `Participant "${input.participants[i]}" is not in this trip`,
+          }
+        }
+
+        let shareAmount: number
+        if (i === input.participants.length - 1) {
+          shareAmount = input.amount - totalAssigned
+        } else {
+          shareAmount = Math.floor(input.amount / totalShares)
+          totalAssigned += shareAmount
+        }
+
+        expenseParticipants.push({
+          expense_id: expense.id,
+          user_id: userId,
+          share_amount: shareAmount,
+          share_type: 'shares',
+          share_value: 1, // One share each
+        })
+      }
+    }
+
+    // Insert expense participants
+    if (expenseParticipants.length > 0) {
+      const { error: participantsError } = await supabase
+        .from('expense_participants')
+        .insert(expenseParticipants)
+
+      if (participantsError) {
+        console.error('Error creating participants:', participantsError)
+        // Rollback expense
+        await supabase.from('expenses').delete().eq('id', expense.id)
+        return {
+          success: false,
+          error: 'Failed to create expense participants',
+        }
       }
     }
 
     // Revalidate trip page
     revalidatePath(`/trips/${input.tripId}`)
+    revalidatePath(`/trips/${input.tripId}/expenses`)
 
     return {
       success: true,
@@ -128,7 +351,7 @@ export async function createExpense(input: CreateExpenseInput) {
     console.error('Unexpected error creating expense:', error)
     return {
       success: false,
-      error: 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
     }
   }
 }
