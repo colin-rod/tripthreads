@@ -4,22 +4,24 @@
  * Tests the dialog component for viewing, creating, and editing itinerary items.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, jest, beforeEach } from '@jest/globals'
+import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItineraryItemDialog } from '@/components/features/itinerary/ItineraryItemDialog'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
+import type { Database } from '@tripthreads/core'
 
 // Mock server actions
-vi.mock('@/app/actions/itinerary', () => ({
-  createItineraryItem: vi.fn(),
-  updateItineraryItem: vi.fn(),
+jest.mock('@/app/actions/itinerary', () => ({
+  createItineraryItem: jest.fn(),
+  updateItineraryItem: jest.fn(),
 }))
 
 // Mock toast
-vi.mock('@/hooks/use-toast', () => ({
+jest.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({
-    toast: vi.fn(),
+    toast: jest.fn(),
   }),
 }))
 
@@ -48,11 +50,11 @@ const mockParticipants = [
 ]
 
 describe('ItineraryItemDialog', () => {
-  const mockOnOpenChange = vi.fn()
-  const mockOnSuccess = vi.fn()
+  const mockOnOpenChange = jest.fn()
+  const mockOnSuccess = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('View Mode', () => {
@@ -246,10 +248,10 @@ describe('ItineraryItemDialog', () => {
     it('should call createItineraryItem on submit', async () => {
       const user = userEvent.setup()
       const { createItineraryItem } = await import('@/app/actions/itinerary')
-      vi.mocked(createItineraryItem).mockResolvedValue({
-        success: true,
-        item: mockItem,
-      })
+        jest.mocked(createItineraryItem).mockResolvedValue({
+          success: true,
+          item: mockItem as unknown as Database['public']['Tables']['itinerary_items']['Row'],
+        })
 
       render(
         <ItineraryItemDialog
@@ -329,10 +331,13 @@ describe('ItineraryItemDialog', () => {
     it('should call updateItineraryItem on submit', async () => {
       const user = userEvent.setup()
       const { updateItineraryItem } = await import('@/app/actions/itinerary')
-      vi.mocked(updateItineraryItem).mockResolvedValue({
-        success: true,
-        item: { ...mockItem, title: 'Updated Title' },
-      })
+        jest.mocked(updateItineraryItem).mockResolvedValue({
+          success: true,
+          item: {
+            ...mockItem,
+            title: 'Updated Title',
+          } as unknown as Database['public']['Tables']['itinerary_items']['Row'],
+        })
 
       render(
         <ItineraryItemDialog
@@ -401,7 +406,7 @@ describe('ItineraryItemDialog', () => {
     it('should display error toast on create failure', async () => {
       const user = userEvent.setup()
       const { createItineraryItem } = await import('@/app/actions/itinerary')
-      vi.mocked(createItineraryItem).mockResolvedValue({
+      jest.mocked(createItineraryItem).mockResolvedValue({
         success: false,
         error: 'Failed to create item',
       })

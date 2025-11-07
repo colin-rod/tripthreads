@@ -14,14 +14,14 @@
 
 import { useState, useMemo } from 'react'
 import { format, startOfWeek, addDays, isSameDay, parseISO } from 'date-fns'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
 import {
   CALENDAR_START_HOUR,
   CALENDAR_END_HOUR,
   CALENDAR_HOUR_HEIGHT,
   DAYS_OF_WEEK_SHORT,
-} from '@/../../packages/shared/constants/itinerary'
-import { separateAllDayEvents } from '@/../../packages/shared/lib/supabase/queries/itinerary'
+} from '@tripthreads/shared/constants/itinerary'
+import { separateAllDayEvents } from '@tripthreads/shared/lib/supabase/queries/itinerary'
 import { CalendarEventCard } from './CalendarEventCard'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'

@@ -132,7 +132,7 @@ describe('PermissionDeniedModal', () => {
   })
 
   it('sends access request when Request Edit Access is clicked', async () => {
-    mockRequestEditAccess.mockResolvedValueOnce({ success: true })
+    mockRequestEditAccess.mockResolvedValueOnce(undefined)
 
     render(
       <PermissionDeniedModal
@@ -151,7 +151,7 @@ describe('PermissionDeniedModal', () => {
   })
 
   it('changes button text to "Request Sent" after successful request', async () => {
-    mockRequestEditAccess.mockResolvedValueOnce({ success: true })
+    mockRequestEditAccess.mockResolvedValueOnce(undefined)
 
     render(
       <PermissionDeniedModal
@@ -171,7 +171,7 @@ describe('PermissionDeniedModal', () => {
   })
 
   it('disables button after request is sent', async () => {
-    mockRequestEditAccess.mockResolvedValueOnce({ success: true })
+    mockRequestEditAccess.mockResolvedValueOnce(undefined)
 
     render(
       <PermissionDeniedModal
@@ -194,7 +194,7 @@ describe('PermissionDeniedModal', () => {
   it('shows sending state while request is in progress', async () => {
     // Simulate slow request
     mockRequestEditAccess.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
+      () => new Promise(resolve => setTimeout(() => resolve(undefined), 100))
     )
 
     render(

@@ -1,38 +1,43 @@
-import { describe, it, expect, beforeEach, vi } from '@jest/globals'
+import { describe, it, beforeEach, jest } from '@jest/globals'
+import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import LoginPage from '../../app/(auth)/login/page'
 import { useAuth } from '../../lib/auth/auth-context'
 
+type AuthResult = { error: Error | null }
+const createAuthMock = <Args extends unknown[] = []>() =>
+  jest.fn<(...args: Args) => Promise<AuthResult>>()
+
 // Mock Next.js navigation
-vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(),
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
 }))
 
 // Mock auth context
-vi.mock('../../lib/auth/auth-context', () => ({
-  useAuth: vi.fn(),
+jest.mock('../../lib/auth/auth-context', () => ({
+  useAuth: jest.fn(),
 }))
 
 describe('LoginPage', () => {
-  const mockPush = vi.fn()
-  const mockSignIn = vi.fn()
-  const mockSignInWithGoogle = vi.fn()
+  const mockPush = jest.fn()
+  const mockSignIn = createAuthMock<[string, string]>()
+  const mockSignInWithGoogle = createAuthMock()
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.mocked(useRouter).mockReturnValue({
+    jest.clearAllMocks()
+    jest.mocked(useRouter).mockReturnValue({
       push: mockPush,
     } as unknown as AppRouterInstance)
-    vi.mocked(useAuth).mockReturnValue({
+    jest.mocked(useAuth).mockReturnValue({
       signIn: mockSignIn,
       signInWithGoogle: mockSignInWithGoogle,
       user: null,
       session: null,
       loading: false,
-      signUp: vi.fn(),
-      signOut: vi.fn(),
+      signUp: createAuthMock<[string, string, string]>(),
+      signOut: createAuthMock(),
     })
   })
 

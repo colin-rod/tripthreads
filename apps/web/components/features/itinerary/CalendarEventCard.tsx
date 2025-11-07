@@ -8,10 +8,11 @@
  */
 
 import { format, parseISO } from 'date-fns'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@/../../packages/shared/constants/itinerary'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
+import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 interface CalendarEventCardProps {
   item: ItineraryItemWithParticipants
@@ -23,9 +24,8 @@ export function CalendarEventCard({ item, isAllDay, onClick }: CalendarEventCard
   const config = ITINERARY_ITEM_TYPE_CONFIG[item.type]
 
   // Get icon component dynamically
-  const IconComponent =
-    (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[config.icon] ||
-    LucideIcons.Calendar
+  const iconName = config.icon as keyof typeof LucideIcons
+  const IconComponent = (LucideIcons[iconName] as LucideIcon | undefined) || LucideIcons.Calendar
 
   // Format time
   const startTime = parseISO(item.start_time)

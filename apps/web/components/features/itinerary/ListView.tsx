@@ -12,12 +12,13 @@
  */
 
 import { format, parseISO } from 'date-fns'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
-import { groupItineraryItemsByDate } from '@/../../packages/shared/lib/supabase/queries/itinerary'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@/../../packages/shared/constants/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
+import { groupItineraryItemsByDate } from '@tripthreads/shared/lib/supabase/queries/itinerary'
+import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
 import { MoreHorizontal } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,9 +102,8 @@ function ItineraryListItem({
   onDelete,
 }: ItineraryListItemProps) {
   const config = ITINERARY_ITEM_TYPE_CONFIG[item.type]
-  const IconComponent =
-    (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[config.icon] ||
-    LucideIcons.Calendar
+  const iconName = config.icon as keyof typeof LucideIcons
+  const IconComponent = (LucideIcons[iconName] as LucideIcon | undefined) || LucideIcons.Calendar
 
   const startTime = parseISO(item.start_time)
   const timeString = item.is_all_day ? 'All day' : format(startTime, 'h:mm a')

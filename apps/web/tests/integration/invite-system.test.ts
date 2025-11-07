@@ -135,6 +135,8 @@ describe('Invite System Integration Tests', () => {
         role: 'participant',
         invite_type: 'link',
         status: 'pending',
+        token: 'test-token-non-owner',
+        invited_by: TEST_USERS.benji.id,
       })
 
       expect(error).toBeTruthy()
@@ -218,6 +220,8 @@ describe('Invite System Integration Tests', () => {
         role: 'participant',
         invite_type: 'email',
         status: 'pending',
+        token: 'invalid-email-token',
+        invited_by: TEST_USERS.alice.id,
       })
 
       // Should fail (either validation or DB constraint)
@@ -409,6 +413,8 @@ describe('Invite System Integration Tests', () => {
         role: 'participant',
         invite_type: 'link',
         status: 'pending',
+        token: `non-organizer-${trip.id}`,
+        invited_by: TEST_USERS.benji.id,
       })
 
       expect(error).toBeTruthy()
@@ -642,6 +648,8 @@ describe('Invite System Integration Tests', () => {
         role: 'participant',
         invite_type: 'email',
         status: 'pending',
+        token: `duplicate-email-${trip.id}`,
+        invited_by: TEST_USERS.alice.id,
       })
 
       // May or may not have unique constraint - if no error, that's also ok

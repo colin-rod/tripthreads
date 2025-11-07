@@ -13,8 +13,9 @@ import { useForm } from 'react-hook-form'
 import type {
   ItineraryItemWithParticipants,
   ItineraryItemLink,
-} from '@/../../packages/shared/types/itinerary'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@/../../packages/shared/constants/itinerary'
+  ItineraryItemType,
+} from '@tripthreads/shared/types/itinerary'
+import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ import {
 import { Link as LinkIcon, X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createItineraryItem, updateItineraryItem } from '@/app/actions/itinerary'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/components/ui/use-toast'
 
 interface ItineraryItemDialogProps {
   open: boolean

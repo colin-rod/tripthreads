@@ -12,7 +12,8 @@ import type {
   ItineraryItemType,
   ItineraryItemLink,
   ItineraryItemMetadata,
-} from '@/../../packages/shared/types/itinerary'
+} from '@tripthreads/shared/types/itinerary'
+import type { Database } from '@tripthreads/core'
 
 export interface CreateItineraryItemInput {
   tripId: string
@@ -85,22 +86,24 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
     }
 
     // Create itinerary item
+    const insertData: Database['public']['Tables']['itinerary_items']['Insert'] = {
+      trip_id: input.tripId,
+      type: input.type,
+      title: input.title,
+      description: input.description,
+      notes: input.notes ?? null,
+      links: (input.links || []) as unknown as Database['public']['Tables']['itinerary_items']['Insert']['links'],
+      start_time: input.startTime,
+      end_time: input.endTime ?? null,
+      is_all_day: input.isAllDay ?? false,
+      location: input.location ?? null,
+      metadata: (input.metadata || {}) as Database['public']['Tables']['itinerary_items']['Insert']['metadata'],
+      created_by: user.id,
+    }
+
     const { data: item, error: itemError } = await supabase
       .from('itinerary_items')
-      .insert({
-        trip_id: input.tripId,
-        type: input.type,
-        title: input.title,
-        description: input.description,
-        notes: input.notes,
-        links: input.links || [],
-        start_time: input.startTime,
-        end_time: input.endTime,
-        is_all_day: input.isAllDay || false,
-        location: input.location,
-        metadata: input.metadata || {},
-        created_by: user.id,
-      })
+      .insert(insertData)
       .select()
       .single()
 
@@ -114,10 +117,11 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
 
     // Add participants if specified
     if (input.participantIds && input.participantIds.length > 0) {
-      const participantInserts = input.participantIds.map(userId => ({
-        itinerary_item_id: item.id,
-        user_id: userId,
-      }))
+      const participantInserts: Database['public']['Tables']['itinerary_item_participants']['Insert'][] =
+        input.participantIds.map(userId => ({
+          itinerary_item_id: item.id,
+          user_id: userId,
+        }))
 
       const { error: participantError } = await supabase
         .from('itinerary_item_participants')
