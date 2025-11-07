@@ -2,6 +2,7 @@
 export * from './types/database'
 export * from './types/parser'
 export * from './types/invite'
+export * from './types/itinerary'
 
 // Convenience type exports from Database
 import type { Database } from './types/database'
@@ -28,6 +29,10 @@ export * from './validation/profile'
 export * from './queries/trips'
 export * from './queries/users'
 export * from './queries/invites'
+export * from './queries/itinerary'
 
 // Permissions
 export * from './permissions/role-checks'
+
+// Constants
+export * from './constants/itinerary'

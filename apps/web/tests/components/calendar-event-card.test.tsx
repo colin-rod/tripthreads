@@ -9,7 +9,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CalendarEventCard } from '@/components/features/itinerary/CalendarEventCard'
-import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 
 const mockTimedItem: ItineraryItemWithParticipants = {
   id: 'item-1',

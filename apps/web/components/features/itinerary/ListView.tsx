@@ -12,9 +12,8 @@
  */
 
 import { format, parseISO } from 'date-fns'
-import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
-import { groupItineraryItemsByDate } from '@tripthreads/shared/lib/supabase/queries/itinerary'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/core'
+import { groupItineraryItemsByDate, ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
 import { MoreHorizontal } from 'lucide-react'

@@ -21,8 +21,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@tripthreads/shared/*": ["../../packages/shared/*"]
+      "@/*": ["./*"]
     }
   },
   "include": [

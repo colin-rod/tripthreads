@@ -14,8 +14,8 @@ import type {
   ItineraryItemWithParticipants,
   ItineraryItemLink,
   ItineraryItemType,
-} from '@tripthreads/shared/types/itinerary'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
+} from '@tripthreads/core'
+import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import {
   Dialog,
   DialogContent,

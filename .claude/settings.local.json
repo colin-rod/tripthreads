@@ -25,7 +25,8 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(supabase status:*)",
-      "Bash(npm run generate-types:*)"
+      "Bash(npm run generate-types:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": [],
     "ask": []

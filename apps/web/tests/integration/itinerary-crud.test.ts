@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@tripthreads/shared/types/database'
+import type { Database } from '@tripthreads/core'
 
 // Test configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!

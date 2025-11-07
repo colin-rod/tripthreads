@@ -64,6 +64,7 @@ Thumbs.db
 
 # Supabase
 .supabase/
+supabase.ts
 
 # ESLint
 .eslintcache

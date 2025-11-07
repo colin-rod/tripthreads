@@ -9,8 +9,7 @@ import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItineraryItemDialog } from '@/components/features/itinerary/ItineraryItemDialog'
-import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
-import type { Database } from '@tripthreads/core'
+import type { ItineraryItemWithParticipants, Database } from '@tripthreads/core'
 
 // Mock server actions
 jest.mock('@/app/actions/itinerary', () => ({
@@ -248,10 +247,10 @@ describe('ItineraryItemDialog', () => {
     it('should call createItineraryItem on submit', async () => {
       const user = userEvent.setup()
       const { createItineraryItem } = await import('@/app/actions/itinerary')
-        jest.mocked(createItineraryItem).mockResolvedValue({
-          success: true,
-          item: mockItem as unknown as Database['public']['Tables']['itinerary_items']['Row'],
-        })
+      jest.mocked(createItineraryItem).mockResolvedValue({
+        success: true,
+        item: mockItem as unknown as Database['public']['Tables']['itinerary_items']['Row'],
+      })
 
       render(
         <ItineraryItemDialog
@@ -331,13 +330,13 @@ describe('ItineraryItemDialog', () => {
     it('should call updateItineraryItem on submit', async () => {
       const user = userEvent.setup()
       const { updateItineraryItem } = await import('@/app/actions/itinerary')
-        jest.mocked(updateItineraryItem).mockResolvedValue({
-          success: true,
-          item: {
-            ...mockItem,
-            title: 'Updated Title',
-          } as unknown as Database['public']['Tables']['itinerary_items']['Row'],
-        })
+      jest.mocked(updateItineraryItem).mockResolvedValue({
+        success: true,
+        item: {
+          ...mockItem,
+          title: 'Updated Title',
+        } as unknown as Database['public']['Tables']['itinerary_items']['Row'],
+      })
 
       render(
         <ItineraryItemDialog

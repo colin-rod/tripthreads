@@ -9,7 +9,7 @@ import '@testing-library/jest-dom'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ListView } from '@/components/features/itinerary/ListView'
-import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 
 const mockItems: ItineraryItemWithParticipants[] = [
   {

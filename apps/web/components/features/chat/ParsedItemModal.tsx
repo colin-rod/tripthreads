@@ -26,7 +26,7 @@ import { toast } from 'sonner'
 import { createExpense } from '@/app/actions/expenses'
 import { createItineraryItem } from '@/app/actions/itinerary'
 import { Loader2 } from 'lucide-react'
-import type { ItineraryItemType } from '@tripthreads/shared/types/itinerary'
+import type { ItineraryItemType } from '@tripthreads/core'
 
 type UiItineraryType = 'flight' | 'stay' | 'activity'
 

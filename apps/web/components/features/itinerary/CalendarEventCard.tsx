@@ -8,8 +8,8 @@
  */
 
 import { format, parseISO } from 'date-fns'
-import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/shared/constants/itinerary'
-import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
+import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
+import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'

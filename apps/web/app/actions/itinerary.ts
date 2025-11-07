@@ -12,8 +12,8 @@ import type {
   ItineraryItemType,
   ItineraryItemLink,
   ItineraryItemMetadata,
-} from '@tripthreads/shared/types/itinerary'
-import type { Database } from '@tripthreads/core'
+  Database,
+} from '@tripthreads/core'
 
 export interface CreateItineraryItemInput {
   tripId: string
@@ -92,12 +92,14 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
       title: input.title,
       description: input.description,
       notes: input.notes ?? null,
-      links: (input.links || []) as unknown as Database['public']['Tables']['itinerary_items']['Insert']['links'],
+      links: (input.links ||
+        []) as unknown as Database['public']['Tables']['itinerary_items']['Insert']['links'],
       start_time: input.startTime,
       end_time: input.endTime ?? null,
       is_all_day: input.isAllDay ?? false,
       location: input.location ?? null,
-      metadata: (input.metadata || {}) as Database['public']['Tables']['itinerary_items']['Insert']['metadata'],
+      metadata: (input.metadata ||
+        {}) as Database['public']['Tables']['itinerary_items']['Insert']['metadata'],
       created_by: user.id,
     }
 
