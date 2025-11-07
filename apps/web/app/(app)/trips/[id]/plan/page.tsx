@@ -8,9 +8,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getTripById } from '@tripthreads/core'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
-import { MapPin } from 'lucide-react'
+import { ItineraryViewContainer } from '@/components/features/itinerary/ItineraryViewContainer'
 
 interface TripPlanPageProps {
   params: Promise<{
@@ -46,6 +45,13 @@ export default async function TripPlanPage({ params }: TripPlanPageProps) {
   )
   const canEdit = userParticipant?.role !== 'viewer'
 
+  // Prepare trip participants for the container
+  const participants =
+    trip.trip_participants?.map(p => ({
+      id: p.user?.id || '',
+      full_name: p.user?.full_name || null,
+    })) || []
+
   return (
     <div className="container mx-auto h-full max-w-7xl overflow-y-auto p-6">
       <div className="space-y-6">
@@ -57,23 +63,15 @@ export default async function TripPlanPage({ params }: TripPlanPageProps) {
         {/* AI Itinerary Input (Participants only) */}
         {canEdit && <ItineraryInputWrapper tripId={trip.id} />}
 
-        {/* Itinerary List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12 text-muted-foreground">
-              <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No itinerary items yet</p>
-              <p className="text-sm mt-1">
-                {canEdit
-                  ? 'Add activities, flights, and accommodations using natural language above or via @TripThread in Chat'
-                  : 'Only participants can add itinerary items'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Itinerary Views (Calendar/List) */}
+        <ItineraryViewContainer
+          tripId={trip.id}
+          tripStartDate={trip.start_date}
+          tripEndDate={trip.end_date}
+          currentUserId={user.id}
+          tripParticipants={participants}
+          canEdit={canEdit}
+        />
       </div>
     </div>
   )

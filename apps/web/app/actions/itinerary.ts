@@ -8,15 +8,40 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import type {
+  ItineraryItemType,
+  ItineraryItemLink,
+  ItineraryItemMetadata,
+} from '@/../../packages/shared/types/itinerary'
 
 export interface CreateItineraryItemInput {
   tripId: string
-  type: 'flight' | 'stay' | 'activity'
+  type: ItineraryItemType
   title: string
   description?: string
+  notes?: string
+  links?: ItineraryItemLink[]
   startTime: string // ISO 8601
   endTime?: string // ISO 8601
+  isAllDay?: boolean
   location?: string
+  metadata?: ItineraryItemMetadata
+  participantIds?: string[] // If empty/null, defaults to all trip participants
+}
+
+export interface UpdateItineraryItemInput {
+  id: string
+  type?: ItineraryItemType
+  title?: string
+  description?: string | null
+  notes?: string | null
+  links?: ItineraryItemLink[]
+  startTime?: string // ISO 8601
+  endTime?: string | null // ISO 8601
+  isAllDay?: boolean
+  location?: string | null
+  metadata?: ItineraryItemMetadata
+  participantIds?: string[] // If provided, updates participants
 }
 
 export async function createItineraryItem(input: CreateItineraryItemInput) {
@@ -67,9 +92,13 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
         type: input.type,
         title: input.title,
         description: input.description,
+        notes: input.notes,
+        links: input.links || [],
         start_time: input.startTime,
         end_time: input.endTime,
+        is_all_day: input.isAllDay || false,
         location: input.location,
+        metadata: input.metadata || {},
         created_by: user.id,
       })
       .select()
@@ -83,6 +112,24 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
       }
     }
 
+    // Add participants if specified
+    if (input.participantIds && input.participantIds.length > 0) {
+      const participantInserts = input.participantIds.map(userId => ({
+        itinerary_item_id: item.id,
+        user_id: userId,
+      }))
+
+      const { error: participantError } = await supabase
+        .from('itinerary_item_participants')
+        .insert(participantInserts)
+
+      if (participantError) {
+        console.error('Error adding participants:', participantError)
+        // Don't fail the whole operation, just log the error
+      }
+    }
+    // If no participant_ids provided, item is for all trip participants (default behavior)
+
     // Revalidate trip page
     revalidatePath(`/trips/${input.tripId}`)
 
@@ -92,6 +139,183 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
     }
   } catch (error) {
     console.error('Unexpected error creating itinerary item:', error)
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Update an existing itinerary item
+ *
+ * Users can update items they created, are involved in, or if they're the trip owner.
+ * RLS policy enforces these permissions.
+ */
+export async function updateItineraryItem(input: UpdateItineraryItemInput) {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Get the item to find the trip_id for revalidation
+    const { data: existingItem, error: fetchError } = await supabase
+      .from('itinerary_items')
+      .select('trip_id')
+      .eq('id', input.id)
+      .single()
+
+    if (fetchError || !existingItem) {
+      return {
+        success: false,
+        error: 'Itinerary item not found',
+      }
+    }
+
+    // Build update object (only include fields that are provided)
+    const updateData: Record<string, unknown> = {}
+    if (input.type !== undefined) updateData.type = input.type
+    if (input.title !== undefined) updateData.title = input.title
+    if (input.description !== undefined) updateData.description = input.description
+    if (input.notes !== undefined) updateData.notes = input.notes
+    if (input.links !== undefined) updateData.links = input.links
+    if (input.startTime !== undefined) updateData.start_time = input.startTime
+    if (input.endTime !== undefined) updateData.end_time = input.endTime
+    if (input.isAllDay !== undefined) updateData.is_all_day = input.isAllDay
+    if (input.location !== undefined) updateData.location = input.location
+    if (input.metadata !== undefined) updateData.metadata = input.metadata
+
+    // Update itinerary item
+    // RLS policy will enforce permissions (creator, involved participant, or trip owner)
+    const { data: item, error: itemError } = await supabase
+      .from('itinerary_items')
+      .update(updateData)
+      .eq('id', input.id)
+      .select()
+      .single()
+
+    if (itemError) {
+      console.error('Error updating itinerary item:', itemError)
+      return {
+        success: false,
+        error:
+          itemError.code === 'PGRST116'
+            ? 'You do not have permission to update this item'
+            : 'Failed to update itinerary item',
+      }
+    }
+
+    // Update participants if provided
+    if (input.participantIds !== undefined) {
+      // First, remove all existing participants
+      await supabase.from('itinerary_item_participants').delete().eq('itinerary_item_id', input.id)
+
+      // Then add new participants if any
+      if (input.participantIds.length > 0) {
+        const participantInserts = input.participantIds.map(userId => ({
+          itinerary_item_id: input.id,
+          user_id: userId,
+        }))
+
+        const { error: participantError } = await supabase
+          .from('itinerary_item_participants')
+          .insert(participantInserts)
+
+        if (participantError) {
+          console.error('Error updating participants:', participantError)
+          // Don't fail the whole operation
+        }
+      }
+    }
+
+    // Revalidate trip page
+    revalidatePath(`/trips/${existingItem.trip_id}`)
+
+    return {
+      success: true,
+      item,
+    }
+  } catch (error) {
+    console.error('Unexpected error updating itinerary item:', error)
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Delete an itinerary item
+ *
+ * Users can delete items they created or if they're the trip owner.
+ * RLS policy enforces these permissions.
+ */
+export async function deleteItineraryItem(itemId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Get the item to find the trip_id for revalidation
+    const { data: existingItem, error: fetchError } = await supabase
+      .from('itinerary_items')
+      .select('trip_id, created_by')
+      .eq('id', itemId)
+      .single()
+
+    if (fetchError || !existingItem) {
+      return {
+        success: false,
+        error: 'Itinerary item not found',
+      }
+    }
+
+    // Delete the item
+    // RLS policy will enforce permissions (creator or trip owner)
+    // CASCADE will automatically delete related participants
+    const { error: deleteError } = await supabase.from('itinerary_items').delete().eq('id', itemId)
+
+    if (deleteError) {
+      console.error('Error deleting itinerary item:', deleteError)
+      return {
+        success: false,
+        error:
+          deleteError.code === 'PGRST116'
+            ? 'You do not have permission to delete this item'
+            : 'Failed to delete itinerary item',
+      }
+    }
+
+    // Revalidate trip page
+    revalidatePath(`/trips/${existingItem.trip_id}`)
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    console.error('Unexpected error deleting itinerary item:', error)
     return {
       success: false,
       error: 'An unexpected error occurred',

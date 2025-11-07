@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '13.0.5'
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       access_requests: {
@@ -439,6 +464,42 @@ export type Database = {
           },
         ]
       }
+      itinerary_item_participants: {
+        Row: {
+          created_at: string
+          id: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          itinerary_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'itinerary_item_participants_itinerary_item_id_fkey'
+            columns: ['itinerary_item_id']
+            isOneToOne: false
+            referencedRelation: 'itinerary_items'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'itinerary_item_participants_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       itinerary_items: {
         Row: {
           created_at: string
@@ -446,7 +507,11 @@ export type Database = {
           description: string | null
           end_time: string | null
           id: string
+          is_all_day: boolean | null
+          links: Json | null
           location: string | null
+          metadata: Json | null
+          notes: string | null
           start_time: string
           title: string
           trip_id: string
@@ -459,7 +524,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time: string
           title: string
           trip_id: string
@@ -472,7 +541,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time?: string
           title?: string
           trip_id?: string
@@ -546,6 +619,24 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      migration_history: {
+        Row: {
+          applied_at: string
+          id: string
+          migration_name: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: string
+          migration_name: string
+        }
+        Update: {
+          applied_at?: string
+          id?: string
+          migration_name?: string
+        }
+        Relationships: []
       }
       pattern_weights: {
         Row: {
@@ -981,6 +1072,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
