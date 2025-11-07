@@ -2,23 +2,18 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
 
+import { createMissingSupabaseClient, getSupabaseEnv } from './env'
+
 let supabaseSingleton: SupabaseClient<Database> | null = null
 
-function getSupabaseEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+function initializeSupabaseClient() {
+  const env = getSupabaseEnv()
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables')
+  if (!env) {
+    return createMissingSupabaseClient()
   }
 
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-function initializeSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv()
-
-  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
