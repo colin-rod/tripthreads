@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1024" viewBox="0 0 1440 1024">
+  <defs>
+    <style>
+      .bg { fill: #F7F7F8; }
+      .panel { fill: #FFFFFF; stroke: #D7D7DB; }
+      .subtle { fill: #FAFAFB; stroke: #E6E6EA; }
+      .primary { fill: #2563EB; }
+      .muted { fill: #6B7280; }
+      .text { font-family: Inter, Arial, sans-serif; font-size: 14px; fill: #111827; }
+      .text-sm { font-family: Inter, Arial, sans-serif; font-size: 12px; fill: #374151; }
+      .text-muted { font-family: Inter, Arial, sans-serif; font-size: 12px; fill: #6B7280; }
+      .title { font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 600; fill: #111827; }
+      .h1 { font-family: Inter, Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; }
+      .chip { fill: #EEF2FF; stroke: #E0E7FF; }
+      .shadow { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.06)) drop-shadow(0 4px 6px rgba(0,0,0,0.10)); }
+      .btn { fill: #2563EB; }
+      .btn-text { font-family: Inter, Arial, sans-serif; font-size: 14px; fill: #FFFFFF; font-weight: 600; }
+      .badge-dot { fill: #EF4444; }
+      .iconline { fill: none; stroke: #6B7280; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1440" height="1024" />
+
+  <g>
+    <rect x="0" y="0" width="1440" height="64" class="panel" />
+    <text x="32" y="40" class="h1">TripThread</text>
+    <rect x="820" y="16" width="360" height="32" rx="8" class="subtle" />
+    <text x="840" y="36" class="text-muted">Search…</text>
+    <circle cx="1392" cy="32" r="16" class="subtle" />
+    <circle cx="1392" cy="32" r="6" class="muted" />
+    <text x="150" y="40" class="title">Home</text>
+  </g>
+<g class="shadow"><rect x="0" y="64" width="224" height="960" class="panel"/></g><rect x="16" y="96" width="192" height="36" rx="8" class="chip" /><text x="32" y="120" class="text title">Home</text><rect x="16" y="144" width="192" height="36" rx="8" class="bg" /><text x="32" y="168" class="text">Chat</text><rect x="16" y="192" width="192" height="36" rx="8" class="bg" /><text x="32" y="216" class="text">Plan</text><rect x="16" y="240" width="192" height="36" rx="8" class="bg" /><text x="32" y="264" class="text">Expenses</text><rect x="16" y="288" width="192" height="36" rx="8" class="bg" /><text x="32" y="312" class="text">Files</text><rect x="16" y="336" width="192" height="36" rx="8" class="bg" /><text x="32" y="360" class="text">Settings</text><text x="248" y="112" class="title">Upcoming Trips</text><g class="shadow"><rect x="248" y="136" width="300" height="200" rx="16" class="panel"/></g><rect x="264" y="152" width="268" height="96" rx="12" class="subtle" /><text x="264" y="276" class="text">Trip Name</text><text x="264" y="296" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="476" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 482 164 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="508" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 518 154 v 8 M 512 154 h 12" class="iconline"/></g><circle cx="272" cy="160" r="8" class="badge-dot"/><text x="268" y="164" class="btn-text" style="font-size:10px;">3</text><g class="shadow"><rect x="572" y="136" width="300" height="200" rx="16" class="panel"/></g><rect x="588" y="152" width="268" height="96" rx="12" class="subtle" /><text x="588" y="276" class="text">Trip Name</text><text x="588" y="296" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="800" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 806 164 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="832" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 842 154 v 8 M 836 154 h 12" class="iconline"/></g><circle cx="596" cy="160" r="8" class="badge-dot"/><text x="592" y="164" class="btn-text" style="font-size:10px;">3</text><g class="shadow"><rect x="896" y="136" width="300" height="200" rx="16" class="panel"/></g><rect x="912" y="152" width="268" height="96" rx="12" class="subtle" /><text x="912" y="276" class="text">Trip Name</text><text x="912" y="296" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="1124" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 1130 164 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="1156" y="148" width="24" height="24" rx="6" class="subtle" /><path d="M 1166 154 v 8 M 1160 154 h 12" class="iconline"/></g><g class="shadow"><rect x="248" y="360" width="300" height="200" rx="16" class="panel"/></g><rect x="264" y="376" width="268" height="96" rx="12" class="subtle" /><text x="264" y="500" class="text">Trip Name</text><text x="264" y="520" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="476" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 482 388 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="508" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 518 378 v 8 M 512 378 h 12" class="iconline"/></g><g class="shadow"><rect x="572" y="360" width="300" height="200" rx="16" class="panel"/></g><rect x="588" y="376" width="268" height="96" rx="12" class="subtle" /><text x="588" y="500" class="text">Trip Name</text><text x="588" y="520" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="800" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 806 388 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="832" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 842 378 v 8 M 836 378 h 12" class="iconline"/></g><g class="shadow"><rect x="896" y="360" width="300" height="200" rx="16" class="panel"/></g><rect x="912" y="376" width="268" height="96" rx="12" class="subtle" /><text x="912" y="500" class="text">Trip Name</text><text x="912" y="520" class="text-muted">12–18 Apr · Lisbon</text><g><rect x="1124" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 1130 388 l 10 -10 l 2 2 l -10 10 z" class="iconline"/></g><g><rect x="1156" y="372" width="24" height="24" rx="6" class="subtle" /><path d="M 1166 378 v 8 M 1160 378 h 12" class="iconline"/></g><text x="24" y="1008" class="text-muted">Updated 2025-11-06 · TripThread</text></svg>

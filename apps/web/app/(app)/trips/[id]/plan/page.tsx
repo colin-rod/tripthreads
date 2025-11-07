@@ -13,18 +13,19 @@ import { ItineraryInputWrapper } from '@/components/features/itinerary/Itinerary
 import { MapPin } from 'lucide-react'
 
 interface TripPlanPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function TripPlanPage({ params }: TripPlanPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   // Fetch trip data
   let trip
   try {
-    trip = await getTripById(supabase, params.id)
+    trip = await getTripById(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()

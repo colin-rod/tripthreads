@@ -20,18 +20,19 @@ import { TripNavigation } from '@/components/features/trips/TripNavigation'
 
 interface TripLayoutProps {
   children: React.ReactNode
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function TripLayout({ children, params }: TripLayoutProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   // Fetch trip data
   let trip
   try {
-    trip = await getTripById(supabase, params.id)
+    trip = await getTripById(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
@@ -57,7 +58,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
 
   return (
     <div className="flex h-screen">
-      <TripNavigation tripId={params.id} tripName={trip.name} />
+      <TripNavigation tripId={id} tripName={trip.name} />
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">{children}</main>

@@ -13,18 +13,19 @@ import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInput
 import { DollarSign } from 'lucide-react'
 
 interface TripExpensesPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function TripExpensesPage({ params }: TripExpensesPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   // Fetch trip data
   let trip
   try {
-    trip = await getTripById(supabase, params.id)
+    trip = await getTripById(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()

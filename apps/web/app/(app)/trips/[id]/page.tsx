@@ -28,9 +28,9 @@ import { ItineraryInputWrapper } from '@/components/features/itinerary/Itinerary
 import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
 
 interface TripDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
@@ -41,13 +41,14 @@ type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   let trip!: TripWithRelations
   let isOwner = false
 
   try {
-    trip = await getTripById(supabase, params.id)
-    isOwner = await isTripOwner(supabase, params.id)
+    trip = await getTripById(supabase, id)
+    isOwner = await isTripOwner(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()

@@ -14,22 +14,23 @@ import { TripActions } from '@/components/features/trips/TripActions'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 
 interface TripSettingsPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 type TripRole = 'owner' | 'participant' | 'viewer'
 
 export default async function TripSettingsPage({ params }: TripSettingsPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   // Fetch trip data
   let trip
   let isOwner = false
   try {
-    trip = await getTripById(supabase, params.id)
-    isOwner = await isTripOwner(supabase, params.id)
+    trip = await getTripById(supabase, id)
+    isOwner = await isTripOwner(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()

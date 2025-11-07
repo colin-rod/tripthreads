@@ -18,6 +18,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
+    "generate-types": "supabase gen types typescript --local > packages/shared/types/database.ts",
+    "generate-types:remote": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/shared/types/database.ts",
     "rl:analyze-patterns": "tsx scripts/rl-analyze-patterns.ts"
   },
   "lint-staged": {

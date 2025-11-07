@@ -18,18 +18,19 @@ import { ChatThread } from '@/components/features/chat/ChatThread'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface TripChatPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function TripChatPage({ params }: TripChatPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   // Fetch trip data
   let trip
   try {
-    trip = await getTripById(supabase, params.id)
+    trip = await getTripById(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
@@ -54,7 +55,7 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
   }
 
   // Fetch chat messages
-  const messagesResult = await getChatMessages(params.id, 100)
+  const messagesResult = await getChatMessages(id, 100)
 
   if (!messagesResult.success) {
     console.error('Error loading messages:', messagesResult.error)
@@ -69,7 +70,7 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
       <Card className="h-full flex flex-col">
         <CardContent className="flex-1 p-0 overflow-hidden">
           <ChatThread
-            tripId={params.id}
+            tripId={id}
             initialMessages={messagesResult.data || []}
             currentUserId={user.id}
             tripCurrency={tripCurrency}
