@@ -1,0 +1,276 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { ChatMessage, type ChatMessageData } from './ChatMessage'
+import { ChatInput } from './ChatInput'
+import { createMessage, createBotMessage, type ChatAttachment } from '@/app/actions/chat'
+import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
+import { parseChatMessage } from '@/lib/chat/parse-mentions'
+import { ParsedItemModal } from './ParsedItemModal'
+
+interface ChatThreadProps {
+  tripId: string
+  initialMessages: ChatMessageData[]
+  currentUserId: string | null
+  tripCurrency?: string
+}
+
+interface ParsedExpense {
+  amount: number
+  currency: string
+  description: string
+  category?: string
+  payer?: string
+  splitType?: 'equal' | 'custom' | 'shares'
+  splitCount?: number
+  participants?: string[]
+  date?: string
+}
+
+interface ParsedItinerary {
+  type: 'flight' | 'stay' | 'activity'
+  title: string
+  description?: string
+  startDate: string
+  endDate?: string
+  location?: string
+}
+
+interface ParsedCommand {
+  command: string
+  success: boolean
+  hasExpense: boolean
+  hasItinerary: boolean
+  expense?: ParsedExpense
+  itinerary?: ParsedItinerary
+  error?: string
+  latencyMs: number
+}
+
+export function ChatThread({
+  tripId,
+  initialMessages,
+  currentUserId,
+  tripCurrency = 'USD',
+}: ChatThreadProps) {
+  const [messages, setMessages] = useState<ChatMessageData[]>(initialMessages)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [parsedCommands, setParsedCommands] = useState<ParsedCommand[]>([])
+  const [currentModalIndex, setCurrentModalIndex] = useState(0)
+  const [showModal, setShowModal] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
+
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel(`chat:${tripId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `trip_id=eq.${tripId}`,
+        },
+        async payload => {
+          const newMessage = payload.new as ChatMessageData
+
+          // Fetch user data if it's a user message
+          if (newMessage.user_id) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('id, full_name, email, avatar_url')
+              .eq('id', newMessage.user_id)
+              .single()
+
+            if (userData) {
+              newMessage.user = userData
+            }
+          }
+
+          setMessages(prev => [...prev, newMessage])
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [tripId, supabase])
+
+  // Handle sending a message
+  const handleSendMessage = async (content: string, attachments: ChatAttachment[]) => {
+    if (!currentUserId) {
+      toast.error('You must be logged in to send messages')
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Check if message contains @TripThread mentions
+      const parseResult = await parseChatMessage(content, tripId, {
+        defaultCurrency: tripCurrency,
+        referenceDate: new Date().toISOString(),
+      })
+
+      if (parseResult.success && parseResult.results.length > 0) {
+        // Store parsed commands for modal flow
+        setParsedCommands(parseResult.results)
+        setCurrentModalIndex(0)
+
+        // Send the user's message first
+        await createMessage({
+          tripId,
+          content,
+          attachments,
+          metadata: {
+            hasTripThreadMention: true,
+            commandCount: parseResult.results.length,
+          },
+        })
+
+        // Show modal for first command
+        setShowModal(true)
+      } else {
+        // Regular message without AI parsing
+        await createMessage({
+          tripId,
+          content,
+          attachments,
+        })
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Handle modal confirmation
+  const handleModalConfirm = async () => {
+    const currentCommand = parsedCommands[currentModalIndex]
+
+    if (!currentCommand) {
+      setShowModal(false)
+      return
+    }
+
+    // Close current modal
+    setShowModal(false)
+
+    // Send bot confirmation message
+    const botMessage = formatBotMessage(currentCommand)
+    await createBotMessage({
+      tripId,
+      content: botMessage,
+      metadata: {
+        command: currentCommand.command,
+        hasExpense: currentCommand.hasExpense,
+        hasItinerary: currentCommand.hasItinerary,
+      },
+    })
+
+    // Move to next command if any
+    if (currentModalIndex < parsedCommands.length - 1) {
+      setCurrentModalIndex(currentModalIndex + 1)
+      setShowModal(true)
+    } else {
+      // All commands processed
+      setParsedCommands([])
+      setCurrentModalIndex(0)
+    }
+  }
+
+  // Handle modal cancel
+  const handleModalCancel = () => {
+    setShowModal(false)
+    setParsedCommands([])
+    setCurrentModalIndex(0)
+    toast.info('Cancelled')
+  }
+
+  // Format bot message based on what was created
+  const formatBotMessage = (command: ParsedCommand): string => {
+    const parts: string[] = []
+
+    if (command.hasExpense && command.expense) {
+      const { description, amount, currency } = command.expense
+      const formattedAmount = (amount / 100).toFixed(2)
+      parts.push(`Added expense: ${description} - ${currency}${formattedAmount}`)
+    }
+
+    if (command.hasItinerary && command.itinerary) {
+      const { title, type } = command.itinerary
+      parts.push(`Added ${type}: ${title}`)
+    }
+
+    return parts.length > 0 ? `✅ ${parts.join(' | ')}` : '✅ Done'
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-center">
+            <div className="max-w-md space-y-2">
+              <p className="text-lg font-medium text-muted-foreground">No messages yet</p>
+              <p className="text-sm text-muted-foreground">
+                Start a conversation or use @TripThread to add expenses and itinerary items
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {messages.map(message => (
+              <ChatMessage key={message.id} message={message} currentUserId={currentUserId} />
+            ))}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+
+        {isProcessing && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Processing...</span>
+          </div>
+        )}
+      </div>
+
+      {/* Input area */}
+      <ChatInput
+        tripId={tripId}
+        onSend={handleSendMessage}
+        disabled={isProcessing}
+        placeholder="Type a message or use @TripThread to add items..."
+      />
+
+      {/* Parsed Item Modal */}
+      {showModal && parsedCommands[currentModalIndex] && (
+        <ParsedItemModal
+          open={showModal}
+          onClose={handleModalCancel}
+          onConfirm={handleModalConfirm}
+          tripId={tripId}
+          parsedData={parsedCommands[currentModalIndex]}
+          currentIndex={currentModalIndex + 1}
+          totalCommands={parsedCommands.length}
+        />
+      )}
+    </div>
+  )
+}
