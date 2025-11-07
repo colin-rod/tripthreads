@@ -4,11 +4,12 @@
  * Tests the calendar event card component for displaying itinerary items in calendar view.
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, jest } from '@jest/globals'
+import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CalendarEventCard } from '@/components/features/itinerary/CalendarEventCard'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
 
 const mockTimedItem: ItineraryItemWithParticipants = {
   id: 'item-1',
@@ -134,7 +135,7 @@ describe('CalendarEventCard', () => {
   describe('Interactions', () => {
     it('should call onClick when clicked', async () => {
       const user = userEvent.setup()
-      const mockOnClick = vi.fn()
+      const mockOnClick = jest.fn()
 
       render(<CalendarEventCard item={mockTimedItem} isAllDay={false} onClick={mockOnClick} />)
 
@@ -146,7 +147,7 @@ describe('CalendarEventCard', () => {
 
     it('should be keyboard accessible', async () => {
       const user = userEvent.setup()
-      const mockOnClick = vi.fn()
+      const mockOnClick = jest.fn()
 
       render(<CalendarEventCard item={mockTimedItem} isAllDay={false} onClick={mockOnClick} />)
 

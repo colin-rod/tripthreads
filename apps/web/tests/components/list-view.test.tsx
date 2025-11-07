@@ -4,11 +4,12 @@
  * Tests the list view component for displaying itinerary items.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, jest, beforeEach } from '@jest/globals'
+import '@testing-library/jest-dom'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ListView } from '@/components/features/itinerary/ListView'
-import type { ItineraryItemWithParticipants } from '@/../../packages/shared/types/itinerary'
+import type { ItineraryItemWithParticipants } from '@tripthreads/shared/types/itinerary'
 
 const mockItems: ItineraryItemWithParticipants[] = [
   {
@@ -46,8 +47,16 @@ const mockItems: ItineraryItemWithParticipants[] = [
     created_at: '2025-06-01T10:00:00Z',
     updated_at: '2025-06-01T10:00:00Z',
     participants: [
-      { user_id: 'user-123', user: { full_name: 'Alice Smith' } },
-      { user_id: 'user-456', user: { full_name: 'Bob Jones' } },
+      {
+        id: 'participant-1',
+        user_id: 'user-123',
+        user: { id: 'user-123', full_name: 'Alice Smith', avatar_url: null },
+      },
+      {
+        id: 'participant-2',
+        user_id: 'user-456',
+        user: { id: 'user-456', full_name: 'Bob Jones', avatar_url: null },
+      },
     ],
   },
   {
@@ -89,12 +98,12 @@ const mockItems: ItineraryItemWithParticipants[] = [
 ]
 
 describe('ListView', () => {
-  const mockOnItemClick = vi.fn()
-  const mockOnEditItem = vi.fn()
-  const mockOnDeleteItem = vi.fn()
+  const mockOnItemClick = jest.fn()
+  const mockOnEditItem = jest.fn()
+  const mockOnDeleteItem = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('Empty State', () => {

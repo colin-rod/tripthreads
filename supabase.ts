@@ -355,6 +355,42 @@ export type Database = {
           },
         ]
       }
+      itinerary_item_participants: {
+        Row: {
+          created_at: string
+          id: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          itinerary_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'itinerary_item_participants_itinerary_item_id_fkey'
+            columns: ['itinerary_item_id']
+            isOneToOne: false
+            referencedRelation: 'itinerary_items'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'itinerary_item_participants_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       itinerary_items: {
         Row: {
           created_at: string
@@ -362,7 +398,11 @@ export type Database = {
           description: string | null
           end_time: string | null
           id: string
+          is_all_day: boolean | null
+          links: Json | null
           location: string | null
+          metadata: Json | null
+          notes: string | null
           start_time: string
           title: string
           trip_id: string
@@ -375,7 +415,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time: string
           title: string
           trip_id: string
@@ -388,7 +432,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time?: string
           title?: string
           trip_id?: string

@@ -26,6 +26,15 @@ import { toast } from 'sonner'
 import { createExpense } from '@/app/actions/expenses'
 import { createItineraryItem } from '@/app/actions/itinerary'
 import { Loader2 } from 'lucide-react'
+import type { ItineraryItemType } from '@tripthreads/shared/types/itinerary'
+
+type UiItineraryType = 'flight' | 'stay' | 'activity'
+
+const UI_TO_ITEM_TYPE_MAP: Record<UiItineraryType, ItineraryItemType> = {
+  flight: 'transport',
+  stay: 'accommodation',
+  activity: 'activity',
+}
 
 interface ParsedItemModalProps {
   open: boolean
@@ -111,7 +120,7 @@ export function ParsedItemModal({
   )
 
   // Itinerary state
-  const [itineraryType, setItineraryType] = useState<'flight' | 'stay' | 'activity'>(
+  const [itineraryType, setItineraryType] = useState<UiItineraryType>(
     parsedData.itinerary?.type || 'activity'
   )
   const [itineraryTitle, setItineraryTitle] = useState(parsedData.itinerary?.title || '')
@@ -213,7 +222,7 @@ export function ParsedItemModal({
       if (createItineraryChecked && parsedData.hasItinerary) {
         const result = await createItineraryItem({
           tripId,
-          type: itineraryType,
+          type: UI_TO_ITEM_TYPE_MAP[itineraryType],
           title: itineraryTitle,
           description: itineraryDescription || undefined,
           startTime: new Date(itineraryStartDate).toISOString(),
@@ -455,9 +464,7 @@ export function ParsedItemModal({
                     <Label htmlFor="itinerary-type">Type</Label>
                     <Select
                       value={itineraryType}
-                      onValueChange={value =>
-                        setItineraryType(value as 'flight' | 'stay' | 'activity')
-                      }
+                      onValueChange={value => setItineraryType(value as UiItineraryType)}
                       disabled={!createItineraryChecked}
                     >
                       <SelectTrigger id="itinerary-type">

@@ -54,12 +54,13 @@ describe('RLS Policy Security Tests', () => {
   // Helper to create authenticated client for a user
   async function getAuthenticatedClient(user: keyof typeof TEST_USERS) {
     const { email, password } = TEST_USERS[user]
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    if (error) throw new Error(`Failed to authenticate as ${user}: ${error.message}`)
+    if (signInError)
+      throw new Error(`Failed to authenticate as ${user}: ${signInError.message}`)
 
     return createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -87,23 +88,26 @@ describe('RLS Policy Security Tests', () => {
     it("TC1.2: User cannot modify trips they don't own", async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { error } = await benjiClient
+      const { error: updateError } = await benjiClient
         .from('trips')
         .update({ name: 'Hacked Trip Name' })
         .eq('id', PARIS_TRIP_ID)
 
       // Benji should not be able to update Alice's trip
-      expect(error).toBeTruthy()
-      expect(error?.message).toContain('permission denied')
+      expect(updateError).toBeTruthy()
+      expect(updateError?.message).toContain('permission denied')
     })
 
     it("TC1.3: User cannot delete other users' trips", async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { error } = await benjiClient.from('trips').delete().eq('id', PARIS_TRIP_ID)
+      const { error: deleteError } = await benjiClient
+        .from('trips')
+        .delete()
+        .eq('id', PARIS_TRIP_ID)
 
-      expect(error).toBeTruthy()
-      expect(error?.message).toContain('permission denied')
+      expect(deleteError).toBeTruthy()
+      expect(deleteError?.message).toContain('permission denied')
     })
 
     it('TC1.4: Participant can read but not modify trip details', async () => {
@@ -132,18 +136,22 @@ describe('RLS Policy Security Tests', () => {
       const bayleeClient = await getAuthenticatedClient('baylee')
 
       // Should be able to read trip
-      const { data } = await bayleeClient.from('trips').select('*').eq('id', PARIS_TRIP_ID).single()
+        const { data, error: viewerReadError } = await bayleeClient
+          .from('trips')
+          .select('*')
+          .eq('id', PARIS_TRIP_ID)
+          .single()
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
+        expect(viewerReadError).toBeNull()
+        expect(data).toBeTruthy()
 
       // Should not be able to update
-      const { error: updateError } = await bayleeClient
-        .from('trips')
-        .update({ name: 'Viewer Update Attempt' })
-        .eq('id', PARIS_TRIP_ID)
+        const { error: viewerUpdateError } = await bayleeClient
+          .from('trips')
+          .update({ name: 'Viewer Update Attempt' })
+          .eq('id', PARIS_TRIP_ID)
 
-      expect(updateError).toBeTruthy()
+        expect(viewerUpdateError).toBeTruthy()
     })
   })
 
@@ -163,41 +171,41 @@ describe('RLS Policy Security Tests', () => {
     it('TC2.2: Organizer can view all participants', async () => {
       const aliceClient = await getAuthenticatedClient('alice')
 
-      const { data } = await aliceClient
-        .from('trip_participants')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
+        const { data, error: participantListError } = await aliceClient
+          .from('trip_participants')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      expect(data!.length).toBeGreaterThan(0)
+        expect(participantListError).toBeNull()
+        expect(data).toBeTruthy()
+        expect(data!.length).toBeGreaterThan(0)
     })
 
     it('TC2.3: Participant can view other participants', async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { data } = await benjiClient
-        .from('trip_participants')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
+        const { data, error: participantReadError } = await benjiClient
+          .from('trip_participants')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      expect(data!.length).toBeGreaterThan(0)
+        expect(participantReadError).toBeNull()
+        expect(data).toBeTruthy()
+        expect(data!.length).toBeGreaterThan(0)
     })
 
     it('TC2.4: Cannot add self as participant without owner permission', async () => {
       const mayaClient = await getAuthenticatedClient('maya')
 
-      const { error } = await mayaClient.from('trip_participants').insert({
-        trip_id: PARIS_TRIP_ID,
-        user_id: TEST_USERS.maya.id,
-        role: 'participant',
-        invited_by: TEST_USERS.maya.id,
-      })
+        const { error: insertError } = await mayaClient.from('trip_participants').insert({
+          trip_id: PARIS_TRIP_ID,
+          user_id: TEST_USERS.maya.id,
+          role: 'participant',
+          invited_by: TEST_USERS.maya.id,
+        })
 
-      expect(error).toBeTruthy()
-      expect(error?.message).toContain('permission denied')
+        expect(insertError).toBeTruthy()
+        expect(insertError?.message).toContain('permission denied')
     })
   })
 
@@ -206,54 +214,54 @@ describe('RLS Policy Security Tests', () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
       // Benji joined on 2025-06-18, should not see items before that
-      const { data } = await benjiClient
-        .from('itinerary_items')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
-        .lt('start_time', '2025-06-18 00:00:00+00')
+        const { data, error: preJoinError } = await benjiClient
+          .from('itinerary_items')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
+          .lt('start_time', '2025-06-18 00:00:00+00')
 
-      expect(error).toBeNull()
-      expect(data).toEqual([]) // Should be empty
+        expect(preJoinError).toBeNull()
+        expect(data).toEqual([]) // Should be empty
     })
 
     it('TC3.2: Partial joiner sees itinerary from join date onward', async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { data } = await benjiClient
-        .from('itinerary_items')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
-        .gte('start_time', '2025-06-18 00:00:00+00')
+        const { data, error: postJoinError } = await benjiClient
+          .from('itinerary_items')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
+          .gte('start_time', '2025-06-18 00:00:00+00')
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      expect(data!.length).toBeGreaterThan(0)
+        expect(postJoinError).toBeNull()
+        expect(data).toBeTruthy()
+        expect(data!.length).toBeGreaterThan(0)
     })
 
     it('TC3.3: Organizer sees all itinerary regardless of dates', async () => {
       const aliceClient = await getAuthenticatedClient('alice')
 
-      const { data } = await aliceClient
-        .from('itinerary_items')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
+        const { data, error: organizerViewError } = await aliceClient
+          .from('itinerary_items')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      // Alice should see all 5 items
-      expect(data!.length).toBe(5)
+        expect(organizerViewError).toBeNull()
+        expect(data).toBeTruthy()
+        // Alice should see all 5 items
+        expect(data!.length).toBe(5)
     })
 
     it('TC3.4: Date-scoped queries return correct subset', async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { data } = await benjiClient
-        .from('itinerary_items')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
+        const { data, error: scopedQueryError } = await benjiClient
+          .from('itinerary_items')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
+        expect(scopedQueryError).toBeNull()
+        expect(data).toBeTruthy()
       // Benji should see 3 items (from join date onward)
       expect(data!.length).toBe(3)
     })
@@ -271,38 +279,41 @@ describe('RLS Policy Security Tests', () => {
     it('TC4.2: Organizer can see all trip expenses', async () => {
       const aliceClient = await getAuthenticatedClient('alice')
 
-      const { data } = await aliceClient.from('expenses').select('*').eq('trip_id', PARIS_TRIP_ID)
+        const { data, error: organizerExpenseError } = await aliceClient
+          .from('expenses')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      expect(data!.length).toBeGreaterThan(0)
+        expect(organizerExpenseError).toBeNull()
+        expect(data).toBeTruthy()
+        expect(data!.length).toBeGreaterThan(0)
     })
 
     it('TC4.3: Involved participants see expense', async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
-      const { data } = await benjiClient
-        .from('expenses')
-        .select('*')
-        .eq('trip_id', PARIS_TRIP_ID)
-        .gte('date', '2025-06-18 00:00:00+00')
+        const { data, error: participantExpenseError } = await benjiClient
+          .from('expenses')
+          .select('*')
+          .eq('trip_id', PARIS_TRIP_ID)
+          .gte('date', '2025-06-18 00:00:00+00')
 
-      expect(error).toBeNull()
-      expect(data).toBeTruthy()
-      expect(data!.length).toBeGreaterThan(0)
+        expect(participantExpenseError).toBeNull()
+        expect(data).toBeTruthy()
+        expect(data!.length).toBeGreaterThan(0)
     })
 
     it('TC4.4: Cannot modify expense payer or splits without permission', async () => {
       const benjiClient = await getAuthenticatedClient('benji')
 
       // Try to update an expense created by Alice
-      const { error } = await benjiClient
-        .from('expenses')
-        .update({ description: 'Hacked expense' })
-        .eq('trip_id', PARIS_TRIP_ID)
-        .eq('created_by', TEST_USERS.alice.id)
+        const { error: expenseUpdateError } = await benjiClient
+          .from('expenses')
+          .update({ description: 'Hacked expense' })
+          .eq('trip_id', PARIS_TRIP_ID)
+          .eq('created_by', TEST_USERS.alice.id)
 
-      expect(error).toBeTruthy()
+        expect(expenseUpdateError).toBeTruthy()
     })
 
     it('TC4.5: Viewer cannot see expenses', async () => {
@@ -319,10 +330,14 @@ describe('RLS Policy Security Tests', () => {
       const aliceClient = await getAuthenticatedClient('alice')
 
       // Alice tries to access Maya's Tokyo trip
-      const { data } = await aliceClient.from('trips').select('*').eq('id', TOKYO_TRIP_ID).single()
+        const { data, error: enumerationError } = await aliceClient
+          .from('trips')
+          .select('*')
+          .eq('id', TOKYO_TRIP_ID)
+          .single()
 
-      expect(data).toBeNull()
-      expect(error).toBeTruthy()
+        expect(data).toBeNull()
+        expect(enumerationError).toBeTruthy()
     })
 
     it('TC5.4: Deleted user cannot access old trips', async () => {

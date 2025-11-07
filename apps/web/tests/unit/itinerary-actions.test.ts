@@ -4,7 +4,7 @@
  * Tests the server action functions for creating, updating, and deleting itinerary items.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, jest, beforeEach } from '@jest/globals'
 import {
   createItineraryItem,
   updateItineraryItem,
@@ -12,26 +12,31 @@ import {
 } from '@/app/actions/itinerary'
 
 // Mock Supabase client
-const mockSupabaseClient = {
+const createMock = <Fn extends (...args: any[]) => any = (...args: any[]) => any>() =>
+  jest.fn<Fn>()
+const createAsyncMock = <Return = unknown>() =>
+  jest.fn<() => Promise<Return>>(() => Promise.resolve(undefined as Return))
+
+const mockSupabaseClient: any = {
   auth: {
-    getUser: vi.fn(),
+    getUser: createAsyncMock(),
   },
-  from: vi.fn(),
+  from: createMock(),
 }
 
 // Mock createClient
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(() => mockSupabaseClient),
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(() => mockSupabaseClient),
 }))
 
 // Mock revalidatePath
-vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+jest.mock('next/cache', () => ({
+  revalidatePath: jest.fn(),
 }))
 
 describe('createItineraryItem', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should create itinerary item successfully', async () => {
@@ -49,22 +54,22 @@ describe('createItineraryItem', () => {
       error: null,
     })
 
-    const mockSelect = vi.fn().mockReturnValue({
-      single: vi.fn().mockResolvedValue({
+    const mockSelect = createMock().mockReturnValue({
+      single: createAsyncMock().mockResolvedValue({
         data: mockItem,
         error: null,
       }),
     })
 
-    const mockInsert = vi.fn().mockReturnValue({
+    const mockInsert = createMock().mockReturnValue({
       select: mockSelect,
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          eq: createMock().mockReturnValue({
+            single: createAsyncMock().mockResolvedValue({
               data: { id: 'participant-123', role: 'owner' },
               error: null,
             }),
@@ -112,10 +117,10 @@ describe('createItineraryItem', () => {
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          eq: createMock().mockReturnValue({
+            single: createAsyncMock().mockResolvedValue({
               data: { id: 'participant-123', role: 'viewer' },
               error: null,
             }),
@@ -150,24 +155,24 @@ describe('createItineraryItem', () => {
       error: null,
     })
 
-    const mockSelect = vi.fn().mockReturnValue({
-      single: vi.fn().mockResolvedValue({
+    const mockSelect = createMock().mockReturnValue({
+      single: createAsyncMock().mockResolvedValue({
         data: mockItem,
         error: null,
       }),
     })
 
-    const mockInsert = vi.fn().mockReturnValue({
+    const mockInsert = createMock().mockReturnValue({
       select: mockSelect,
     })
 
     mockSupabaseClient.from.mockImplementation((table: string) => {
       if (table === 'trip_participants') {
         return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
+          select: createMock().mockReturnValue({
+            eq: createMock().mockReturnValue({
+              eq: createMock().mockReturnValue({
+                single: createAsyncMock().mockResolvedValue({
                   data: { role: 'owner' },
                   error: null,
                 }),
@@ -210,15 +215,15 @@ describe('createItineraryItem', () => {
       error: null,
     })
 
-    const mockParticipantInsert = vi.fn().mockResolvedValue({ error: null })
+    const mockParticipantInsert = createAsyncMock().mockResolvedValue({ error: null })
 
     mockSupabaseClient.from.mockImplementation((table: string) => {
       if (table === 'trip_participants') {
         return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
+          select: createMock().mockReturnValue({
+            eq: createMock().mockReturnValue({
+              eq: createMock().mockReturnValue({
+                single: createAsyncMock().mockResolvedValue({
                   data: { role: 'owner' },
                   error: null,
                 }),
@@ -229,9 +234,9 @@ describe('createItineraryItem', () => {
       }
       if (table === 'itinerary_items') {
         return {
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
+          insert: createMock().mockReturnValue({
+            select: createMock().mockReturnValue({
+              single: createAsyncMock().mockResolvedValue({
                 data: mockItem,
                 error: null,
               }),
@@ -261,7 +266,7 @@ describe('createItineraryItem', () => {
 
 describe('updateItineraryItem', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should update itinerary item successfully', async () => {
@@ -277,10 +282,10 @@ describe('updateItineraryItem', () => {
       error: null,
     })
 
-    const mockUpdate = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+    const mockUpdate = createMock().mockReturnValue({
+      eq: createMock().mockReturnValue({
+        select: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: mockItem,
             error: null,
           }),
@@ -289,9 +294,9 @@ describe('updateItineraryItem', () => {
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: { trip_id: 'trip-123' },
             error: null,
           }),
@@ -320,9 +325,9 @@ describe('updateItineraryItem', () => {
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: null,
             error: { message: 'Not found' },
           }),
@@ -347,10 +352,10 @@ describe('updateItineraryItem', () => {
       error: null,
     })
 
-    const mockUpdate = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+    const mockUpdate = createMock().mockReturnValue({
+      eq: createMock().mockReturnValue({
+        select: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: { id: 'item-123' },
             error: null,
           }),
@@ -359,9 +364,9 @@ describe('updateItineraryItem', () => {
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: { trip_id: 'trip-123' },
             error: null,
           }),
@@ -385,7 +390,7 @@ describe('updateItineraryItem', () => {
 
 describe('deleteItineraryItem', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should delete itinerary item successfully', async () => {
@@ -396,14 +401,14 @@ describe('deleteItineraryItem', () => {
       error: null,
     })
 
-    const mockDelete = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ error: null }),
+    const mockDelete = createMock().mockReturnValue({
+      eq: createAsyncMock().mockResolvedValue({ error: null }),
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: { trip_id: 'trip-123', created_by: 'user-123' },
             error: null,
           }),
@@ -427,9 +432,9 @@ describe('deleteItineraryItem', () => {
     })
 
     mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+      select: createMock().mockReturnValue({
+        eq: createMock().mockReturnValue({
+          single: createAsyncMock().mockResolvedValue({
             data: null,
             error: { message: 'Not found' },
           }),

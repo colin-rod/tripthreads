@@ -5,9 +5,9 @@
  * with proper RLS enforcement for different user roles.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/../../packages/shared/types/database'
+import type { Database } from '@tripthreads/shared/types/database'
 
 // Test configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
