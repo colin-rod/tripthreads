@@ -10,39 +10,46 @@ export type Database = {
     Tables: {
       access_requests: {
         Row: {
+          created_at: string | null
           id: string
-          trip_id: string
-          user_id: string
-          status: 'pending' | 'approved' | 'rejected'
-          requested_at: string
+          requested_at: string | null
           responded_at: string | null
           responded_by: string | null
-          created_at: string
-          updated_at: string
+          status: string
+          trip_id: string
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          trip_id: string
-          user_id: string
-          status?: 'pending' | 'approved' | 'rejected'
-          requested_at?: string
+          requested_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
-          created_at?: string
-          updated_at?: string
+          status?: string
+          trip_id: string
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          trip_id?: string
-          user_id?: string
-          status?: 'pending' | 'approved' | 'rejected'
-          requested_at?: string
+          requested_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
-          created_at?: string
-          updated_at?: string
+          status?: string
+          trip_id?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'access_requests_responded_by_fkey'
+            columns: ['responded_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'access_requests_trip_id_fkey'
             columns: ['trip_id']
@@ -57,11 +64,171 @@ export type Database = {
             referencedRelation: 'users'
             referencedColumns: ['id']
           },
+        ]
+      }
+      analysis_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          patterns_analyzed: number | null
+          patterns_created: number | null
+          patterns_updated: number | null
+          signals_end_time: string | null
+          signals_processed: number | null
+          signals_start_time: string | null
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          patterns_analyzed?: number | null
+          patterns_created?: number | null
+          patterns_updated?: number | null
+          signals_end_time?: string | null
+          signals_processed?: number | null
+          signals_start_time?: string | null
+          started_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          patterns_analyzed?: number | null
+          patterns_created?: number | null
+          patterns_updated?: number | null
+          signals_end_time?: string | null
+          signals_processed?: number | null
+          signals_start_time?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          trip_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json | null
+          trip_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          trip_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: 'access_requests_responded_by_fkey'
-            columns: ['responded_by']
+            foreignKeyName: 'chat_messages_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chat_messages_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      daily_metrics: {
+        Row: {
+          analysis_run_id: string | null
+          avg_confidence: number
+          avg_reward: number
+          avg_time_to_confirm: number | null
+          created_at: string
+          date: string
+          id: string
+          instant_confirms: number
+          major_edits: number
+          minor_edits: number
+          parser_version: string
+          patterns_discovered: number
+          patterns_updated: number
+          rejects: number
+          speed_bonus_rate: number | null
+          total_signals: number
+          updated_at: string
+        }
+        Insert: {
+          analysis_run_id?: string | null
+          avg_confidence?: number
+          avg_reward?: number
+          avg_time_to_confirm?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          instant_confirms?: number
+          major_edits?: number
+          minor_edits?: number
+          parser_version?: string
+          patterns_discovered?: number
+          patterns_updated?: number
+          rejects?: number
+          speed_bonus_rate?: number | null
+          total_signals?: number
+          updated_at?: string
+        }
+        Update: {
+          analysis_run_id?: string | null
+          avg_confidence?: number
+          avg_reward?: number
+          avg_time_to_confirm?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          instant_confirms?: number
+          major_edits?: number
+          minor_edits?: number
+          parser_version?: string
+          patterns_discovered?: number
+          patterns_updated?: number
+          rejects?: number
+          speed_bonus_rate?: number | null
+          total_signals?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'daily_metrics_analysis_run_id_fkey'
+            columns: ['analysis_run_id']
+            isOneToOne: false
+            referencedRelation: 'analysis_runs'
             referencedColumns: ['id']
           },
         ]
@@ -174,6 +341,71 @@ export type Database = {
           },
           {
             foreignKeyName: 'expenses_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      feedback_signals: {
+        Row: {
+          context: Json | null
+          corrected_values: Json | null
+          correction_details: Json | null
+          created_at: string
+          edited_fields: string[] | null
+          failure_classification: string | null
+          id: string
+          matched_patterns: string[] | null
+          message: string
+          parsed_output: Json
+          parser_version: string
+          reward: number
+          time_to_confirm: number | null
+          trip_id: string | null
+          user_action: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          corrected_values?: Json | null
+          correction_details?: Json | null
+          created_at?: string
+          edited_fields?: string[] | null
+          failure_classification?: string | null
+          id?: string
+          matched_patterns?: string[] | null
+          message: string
+          parsed_output: Json
+          parser_version?: string
+          reward: number
+          time_to_confirm?: number | null
+          trip_id?: string | null
+          user_action: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          corrected_values?: Json | null
+          correction_details?: Json | null
+          created_at?: string
+          edited_fields?: string[] | null
+          failure_classification?: string | null
+          id?: string
+          matched_patterns?: string[] | null
+          message?: string
+          parsed_output?: Json
+          parser_version?: string
+          reward?: number
+          time_to_confirm?: number | null
+          trip_id?: string | null
+          user_action?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'feedback_signals_trip_id_fkey'
             columns: ['trip_id']
             isOneToOne: false
             referencedRelation: 'trips'
@@ -311,6 +543,65 @@ export type Database = {
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pattern_weights: {
+        Row: {
+          analysis_run_id: string | null
+          avg_reward: number
+          created_at: string
+          failure_count: number
+          id: string
+          last_analyzed_at: string | null
+          last_used_at: string | null
+          parser_version: string
+          pattern_regex: string
+          pattern_type: string
+          success_count: number
+          total_uses: number
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          analysis_run_id?: string | null
+          avg_reward?: number
+          created_at?: string
+          failure_count?: number
+          id?: string
+          last_analyzed_at?: string | null
+          last_used_at?: string | null
+          parser_version?: string
+          pattern_regex: string
+          pattern_type: string
+          success_count?: number
+          total_uses?: number
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          analysis_run_id?: string | null
+          avg_reward?: number
+          created_at?: string
+          failure_count?: number
+          id?: string
+          last_analyzed_at?: string | null
+          last_used_at?: string | null
+          parser_version?: string
+          pattern_regex?: string
+          pattern_type?: string
+          success_count?: number
+          total_uses?: number
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pattern_weights_analysis_run_id_fkey'
+            columns: ['analysis_run_id']
+            isOneToOne: false
+            referencedRelation: 'analysis_runs'
             referencedColumns: ['id']
           },
         ]
