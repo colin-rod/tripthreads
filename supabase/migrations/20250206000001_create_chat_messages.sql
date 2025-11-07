@@ -75,3 +75,5 @@ COMMENT ON TABLE chat_messages IS 'Stores chat messages for trip group conversat
 COMMENT ON COLUMN chat_messages.message_type IS 'Type of message: user (from participant), bot (from TripThread AI), system (notifications)';
 COMMENT ON COLUMN chat_messages.attachments IS 'Array of attachment objects with {url, type, name, size}';
 COMMENT ON COLUMN chat_messages.metadata IS 'Additional data like parsed expense/itinerary IDs, AI parsing details';
+
+-- Trigger type generation workflow
