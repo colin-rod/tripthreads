@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type React from 'react'
 
 import type { CreateTripDialog as CreateTripDialogType } from '@/components/features/trips/CreateTripDialog'
 
@@ -21,9 +22,11 @@ const calendarMocks: Array<{
 }> = []
 
 jest.mock('@/components/ui/calendar', () => {
-  const React = require('react')
   return {
-    Calendar: (props: any) => {
+    Calendar: (props: {
+      disabled?: (date: Date) => boolean
+      onSelect?: (date: Date | undefined) => void
+    }) => {
       calendarMocks.push({ disabled: props.disabled, onSelect: props.onSelect })
       return <div data-testid={`calendar-mock-${calendarMocks.length}`} />
     },
@@ -31,8 +34,13 @@ jest.mock('@/components/ui/calendar', () => {
 })
 
 jest.mock('@/components/ui/popover', () => {
-  const React = require('react')
-  const passthrough = ({ children, ...rest }: any) => (
+  const passthrough = ({
+    children,
+    ...rest
+  }: {
+    children?: React.ReactNode
+    [key: string]: unknown
+  }) => (
     <div data-testid="popover-mock" {...rest}>
       {children}
     </div>
@@ -72,7 +80,11 @@ jest.mock('@tripthreads/core', () => {
         .min(1, 'Trip name is required')
         .max(100, 'Trip name must be less than 100 characters')
         .trim(),
-      description: z.string().max(500, 'Description must be less than 500 characters').optional().nullable(),
+      description: z
+        .string()
+        .max(500, 'Description must be less than 500 characters')
+        .optional()
+        .nullable(),
       start_date: z
         .string()
         .datetime('Invalid start date format')
@@ -115,9 +127,14 @@ jest.mock('@/lib/supabase/client', () => ({
   createClient: createClientMock,
 }))
 
-const { CreateTripDialog } = require('@/components/features/trips/CreateTripDialog') as {
-  CreateTripDialog: typeof CreateTripDialogType
-}
+// Import after mocks are set up
+let CreateTripDialog: typeof CreateTripDialogType
+beforeEach(async () => {
+  if (!CreateTripDialog) {
+    const module = await import('@/components/features/trips/CreateTripDialog')
+    CreateTripDialog = module.CreateTripDialog
+  }
+})
 
 type SupabaseAuthResponse = {
   data: { user: { id: string } | null }
@@ -193,10 +210,14 @@ describe('CreateTripDialog', () => {
       await createTripPromise
     })
 
-    await waitFor(() => expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Trip created!',
-      description: `${tripResult.name} has been created successfully.`,
-    })))
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Trip created!',
+          description: `${tripResult.name} has been created successfully.`,
+        })
+      )
+    )
 
     expect(createTripMock).toHaveBeenCalledWith(
       supabase,
@@ -258,10 +279,12 @@ describe('CreateTripDialog', () => {
     await waitFor(() => expect(mockGetUser).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(mockToast).toHaveBeenCalled())
 
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Error creating trip',
-      variant: 'destructive',
-    }))
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Error creating trip',
+        variant: 'destructive',
+      })
+    )
 
     expect(createTripMock).not.toHaveBeenCalled()
     expect(mockRouterPush).not.toHaveBeenCalled()

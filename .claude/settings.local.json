@@ -12,7 +12,10 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfix(deps): resolve Vercel build errors\n\n- Update packageManager to npm@10.9.2\n- Regenerate package-lock.json with correct npm version\n- Add missing @radix-ui/number dependency required by @radix-ui/react-select\n- Verify build works locally before push\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix(lint): resolve ESLint errors in test files\n\n- Replace require() imports with ES6 imports in test mocks\n- Remove unused React imports from mock components\n- Fix unused variable in TripsListClient.test.tsx\n- Use createElement from react instead of require(''react'')\n\nRemaining warnings for ''any'' types are acceptable and can be addressed separately.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

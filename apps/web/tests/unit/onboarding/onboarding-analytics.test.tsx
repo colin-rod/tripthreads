@@ -26,9 +26,14 @@ jest.mock('@/lib/onboarding/storage', () => ({
 }))
 
 jest.mock('@/components/features/onboarding/PlatformOnboardingScreen', () => {
-  const React = require('react')
   return {
-    PlatformOnboardingScreen: ({ onContinue, onSkip }: { onContinue: () => void; onSkip: () => void }) => (
+    PlatformOnboardingScreen: ({
+      onContinue,
+      onSkip,
+    }: {
+      onContinue: () => void
+      onSkip: () => void
+    }) => (
       <div>
         <button data-testid="welcome-continue" onClick={onContinue}>
           Continue
@@ -42,7 +47,6 @@ jest.mock('@/components/features/onboarding/PlatformOnboardingScreen', () => {
 })
 
 jest.mock('@/components/features/onboarding/RoleExplainer', () => {
-  const React = require('react')
   return {
     RoleExplainer: ({
       onContinue,
@@ -69,7 +73,6 @@ jest.mock('@/components/features/onboarding/RoleExplainer', () => {
 })
 
 jest.mock('@/components/features/onboarding/FeatureHighlights', () => {
-  const React = require('react')
   return {
     FeatureHighlights: ({
       onContinue,
@@ -130,7 +133,7 @@ describe('Onboarding analytics', () => {
 
     await waitFor(() => expect(updateOnboardingStepMock).toHaveBeenCalledWith('roles'))
     await waitFor(() =>
-      expect(posthogCapture).toHaveBeenCalledWith('onboarding_step_viewed', { step: 'roles' }),
+      expect(posthogCapture).toHaveBeenCalledWith('onboarding_step_viewed', { step: 'roles' })
     )
   })
 
@@ -166,7 +169,7 @@ describe('Onboarding analytics', () => {
 
     await waitFor(() => expect(skipOnboardingMock).toHaveBeenCalled())
     await waitFor(() =>
-      expect(posthogCapture).toHaveBeenCalledWith('onboarding_skipped', { step: 'welcome' }),
+      expect(posthogCapture).toHaveBeenCalledWith('onboarding_skipped', { step: 'welcome' })
     )
   })
 })

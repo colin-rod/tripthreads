@@ -27,14 +27,12 @@ jest.mock('@/lib/tour/storage', () => ({
 }))
 
 jest.mock('@/components/features/tour/TourSpotlight', () => {
-  const React = require('react')
   return {
     TourSpotlight: () => <div data-testid="tour-spotlight" />,
   }
 })
 
 jest.mock('@/components/features/tour/TourTooltip', () => {
-  const React = require('react')
   return {
     TourTooltip: ({
       onNext,
@@ -117,14 +115,18 @@ describe('Tour analytics', () => {
     render(<Tour config={config} />)
 
     await waitFor(() => expect(startTourMock).toHaveBeenCalledWith(config.id))
-    await waitFor(() => expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id }))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id })
+    )
   })
 
   it('captures step advancement when moving forward', async () => {
     render(<Tour config={config} />)
 
     await waitFor(() => expect(screen.getByTestId('tour-next')).toBeInTheDocument())
-    await waitFor(() => expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id }))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id })
+    )
 
     posthogCapture.mockClear()
     updateTourStepMock.mockClear()
@@ -137,7 +139,7 @@ describe('Tour analytics', () => {
         tour_id: config.id,
         step: 1,
         step_id: 'step-two',
-      }),
+      })
     )
   })
 
@@ -145,7 +147,9 @@ describe('Tour analytics', () => {
     render(<Tour config={config} />)
 
     await waitFor(() => expect(screen.getByTestId('tour-next')).toBeInTheDocument())
-    await waitFor(() => expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id }))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id })
+    )
 
     fireEvent.click(screen.getByTestId('tour-next'))
     await waitFor(() => expect(updateTourStepMock).toHaveBeenCalledWith(config.id, 1))
@@ -156,14 +160,18 @@ describe('Tour analytics', () => {
     fireEvent.click(screen.getByTestId('tour-next'))
 
     await waitFor(() => expect(completeTourMock).toHaveBeenCalledWith(config.id))
-    await waitFor(() => expect(posthogCapture).toHaveBeenCalledWith('tour_completed', { tour_id: config.id }))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_completed', { tour_id: config.id })
+    )
   })
 
   it('captures skip event with current step index', async () => {
     render(<Tour config={config} />)
 
     await waitFor(() => expect(screen.getByTestId('tour-skip')).toBeInTheDocument())
-    await waitFor(() => expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id }))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id })
+    )
 
     posthogCapture.mockClear()
     dismissTourMock.mockClear()
@@ -172,7 +180,7 @@ describe('Tour analytics', () => {
 
     await waitFor(() => expect(dismissTourMock).toHaveBeenCalledWith(config.id))
     await waitFor(() =>
-      expect(posthogCapture).toHaveBeenCalledWith('tour_skipped', { tour_id: config.id, step: 0 }),
+      expect(posthogCapture).toHaveBeenCalledWith('tour_skipped', { tour_id: config.id, step: 0 })
     )
   })
 })

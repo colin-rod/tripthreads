@@ -2,30 +2,41 @@ import '@testing-library/jest-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { Trip } from '@/lib/utils/trip-utils'
 import { TripCard } from '@/components/features/trips/TripCard'
+import { createElement } from 'react'
 
 const navigateCalls: Array<string | undefined> = []
-;(globalThis as unknown as { __navigateCalls: typeof navigateCalls }).__navigateCalls = navigateCalls
+;(globalThis as unknown as { __navigateCalls: typeof navigateCalls }).__navigateCalls =
+  navigateCalls
 
 jest.mock('next/link', () => {
-  const React = require('react')
-
-  const Link = ({ href, children, ...props }: any) =>
-    React.createElement(
+  const Link = ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname: string }
+    children: React.ReactNode
+    onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void
+    [key: string]: unknown
+  }) => {
+    return createElement(
       'a',
       {
         ...props,
-        href: typeof href === 'string' ? href : href?.pathname ?? '/',
+        href: typeof href === 'string' ? href : (href?.pathname ?? '/'),
         onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
           props.onClick?.(event)
 
           if (!event.defaultPrevented) {
-            const calls = (globalThis as unknown as { __navigateCalls: typeof navigateCalls }).__navigateCalls
+            const calls = (globalThis as unknown as { __navigateCalls: typeof navigateCalls })
+              .__navigateCalls
             calls.push(typeof href === 'string' ? href : href?.pathname)
           }
         },
       },
-      children,
+      children
     )
+  }
 
   return { __esModule: true, default: Link }
 })

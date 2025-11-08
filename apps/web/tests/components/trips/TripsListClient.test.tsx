@@ -23,9 +23,8 @@ jest.mock('@/lib/utils/trip-utils', () => {
   }
 })
 
-const actualTripUtils = jest.requireActual('@/lib/utils/trip-utils')
 const filterAndCategorizeTripsMock = filterAndCategorizeTrips as jest.MockedFunction<
-  typeof actualTripUtils.filterAndCategorizeTrips
+  typeof filterAndCategorizeTrips
 >
 
 afterEach(() => {
@@ -79,7 +78,7 @@ describe('TripsListClient', () => {
 
     expect(screen.getByText('No trips found')).toBeInTheDocument()
     expect(
-      screen.getByText('No trips match your search "desert". Try a different search term.'),
+      screen.getByText('No trips match your search "desert". Try a different search term.')
     ).toBeInTheDocument()
   })
 })

@@ -5,7 +5,13 @@ import { TripsPageWrapper } from '@/components/features/trips/TripsPageWrapper'
 
 jest.mock('@/components/layouts/TopNavBar', () => ({
   __esModule: true,
-  TopNavBar: ({ searchQuery, onSearchChange }: { searchQuery: string; onSearchChange: (value: string) => void }) => (
+  TopNavBar: ({
+    searchQuery,
+    onSearchChange,
+  }: {
+    searchQuery: string
+    onSearchChange: (value: string) => void
+  }) => (
     <div>
       <label htmlFor="search">Search</label>
       <input
@@ -24,7 +30,6 @@ jest.mock('@/components/features/trips/CreateTripButton', () => ({
 }))
 
 jest.mock('@/components/features/trips/TripsListClient', () => {
-  const React = require('react')
   return {
     __esModule: true,
     TripsListClient: ({ searchQuery, trips }: { searchQuery: string; trips: Trip[] }) => (
