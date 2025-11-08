@@ -6,16 +6,17 @@
  * Modal dialog for creating and editing expenses.
  * Features:
  * - Form validation with Zod
- * - Basic fields only (no split editing for MVP)
- * - Default equal split among all trip participants
+ * - Interactive split configuration (equal/percentage/custom)
+ * - Participant selection
+ * - Real-time split preview
  * - Real-time error messages
  * - Loading state during submission
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Loader2, DollarSign } from 'lucide-react'
+import { Loader2, DollarSign, Upload } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
@@ -51,12 +52,18 @@ import { cn } from '@tripthreads/core'
 import { createExpenseSchema, CURRENCY_CODES, type CreateExpenseFormData } from '@tripthreads/core'
 import { createExpense, type CreateExpenseInput } from '@/app/actions/expenses'
 import type { ExpenseWithDetails } from '@tripthreads/core'
+import { SplitTypeSelector, type SplitMode } from './SplitTypeSelector'
+import { ParticipantPicker } from './ParticipantPicker'
+import { PercentageSplitInput } from './PercentageSplitInput'
+import { CustomAmountInput } from './CustomAmountInput'
+import { SplitPreview } from './SplitPreview'
+import { Separator } from '@/components/ui/separator'
 
 interface ExpenseFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   tripId: string
-  tripParticipants: { id: string; name: string }[]
+  tripParticipants: { id: string; name: string; avatar_url?: string }[]
   expense?: ExpenseWithDetails // For edit mode
   onSuccess?: () => void
 }
@@ -73,6 +80,12 @@ export function ExpenseFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const isEditMode = !!expense
 
+  // Split configuration state
+  const [splitType, setSplitType] = useState<SplitMode>('equal')
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
+  const [percentageSplits, setPercentageSplits] = useState<Record<string, number>>({})
+  const [customAmounts, setCustomAmounts] = useState<Record<string, number>>({})
+
   const form = useForm<CreateExpenseFormData>({
     resolver: zodResolver(createExpenseSchema),
     defaultValues: {
@@ -85,6 +98,18 @@ export function ExpenseFormDialog({
     },
   })
 
+  // Initialize split state when dialog opens
+  useEffect(() => {
+    if (open && !expense) {
+      // Default: all participants selected, payer included
+      const allParticipantIds = tripParticipants.map(p => p.id)
+      setSelectedParticipants(allParticipantIds)
+      setSplitType('equal')
+      setPercentageSplits({})
+      setCustomAmounts({})
+    }
+  }, [open, expense, tripParticipants])
+
   // Load expense data in edit mode
   useEffect(() => {
     if (expense && open) {
@@ -96,6 +121,7 @@ export function ExpenseFormDialog({
         payer_id: expense.payer_id,
         date: expense.date,
       })
+      // TODO: Load split configuration from expense participants
     } else if (!expense && open) {
       // Reset to defaults for create mode
       form.reset({
@@ -109,31 +135,181 @@ export function ExpenseFormDialog({
     }
   }, [expense, open, form, tripParticipants])
 
+  // Ensure payer is included in participants by default
+  useEffect(() => {
+    const payerId = form.watch('payer_id')
+    if (payerId && !selectedParticipants.includes(payerId)) {
+      setSelectedParticipants(prev => [...prev, payerId])
+    }
+  }, [form.watch('payer_id'), selectedParticipants])
+
+  // Split validation
+  const isSplitValid = useMemo(() => {
+    if (selectedParticipants.length === 0) return false
+
+    if (splitType === 'equal') {
+      return true // Equal split is always valid if participants selected
+    }
+
+    if (splitType === 'percentage') {
+      const total = Object.values(percentageSplits).reduce((sum, val) => sum + val, 0)
+      return Math.abs(total - 100) < 0.01 // Allow small floating point errors
+    }
+
+    if (splitType === 'amount') {
+      const total = Object.values(customAmounts).reduce((sum, val) => sum + val, 0)
+      const expenseAmount = form.watch('amount')
+      return Math.abs(total - expenseAmount) < 0.01
+    }
+
+    return false
+  }, [splitType, selectedParticipants, percentageSplits, customAmounts, form.watch('amount')])
+
+  // Calculate preview data
+  const splitPreviewData = useMemo(() => {
+    const amount = form.watch('amount')
+
+    return selectedParticipants
+      .map(participantId => {
+        const participant = tripParticipants.find(p => p.id === participantId)
+        if (!participant) return null
+
+        let shareAmount = 0
+        let sharePercentage = 0
+
+        if (splitType === 'equal') {
+          shareAmount = amount / selectedParticipants.length
+          sharePercentage = 100 / selectedParticipants.length
+        } else if (splitType === 'percentage') {
+          sharePercentage = percentageSplits[participantId] || 0
+          shareAmount = (amount * sharePercentage) / 100
+        } else if (splitType === 'amount') {
+          shareAmount = customAmounts[participantId] || 0
+          sharePercentage = amount > 0 ? (shareAmount / amount) * 100 : 0
+        }
+
+        return {
+          id: participantId,
+          name: participant.name,
+          avatar_url: participant.avatar_url,
+          amount: shareAmount,
+          percentage: sharePercentage,
+        }
+      })
+      .filter(Boolean) as Array<{
+      id: string
+      name: string
+      avatar_url?: string
+      amount: number
+      percentage: number
+    }>
+  }, [
+    form.watch('amount'),
+    form.watch('currency'),
+    splitType,
+    selectedParticipants,
+    percentageSplits,
+    customAmounts,
+    tripParticipants,
+  ])
+
   async function onSubmit(values: CreateExpenseFormData) {
+    // Validate split configuration
+    if (!isSplitValid) {
+      toast({
+        title: 'Invalid split configuration',
+        description:
+          splitType === 'percentage'
+            ? 'Percentages must add up to 100%'
+            : 'Custom amounts must equal the total expense amount',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (selectedParticipants.length === 0) {
+      toast({
+        title: 'No participants selected',
+        description: 'Please select at least one participant for this expense',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       // Convert amount from major units to cents
       const amountInCents = Math.round(values.amount * 100)
 
-      // Get all participant IDs for equal split
-      const participantIds = tripParticipants.map(p => p.id)
+      // Build split configuration
+      let input: CreateExpenseInput
 
-      const input: CreateExpenseInput = {
-        tripId,
-        amount: amountInCents,
-        currency: values.currency,
-        description: values.description,
-        category: values.category,
-        payer: values.payer_id,
-        splitType: 'equal',
-        splitCount: participantIds.length,
-        participants: participantIds,
-        customSplits: null,
-        date: values.date,
+      if (splitType === 'equal') {
+        input = {
+          tripId,
+          amount: amountInCents,
+          currency: values.currency,
+          description: values.description,
+          category: values.category,
+          payer: values.payer_id,
+          splitType: 'equal',
+          splitCount: selectedParticipants.length,
+          participants: selectedParticipants,
+          customSplits: null,
+          percentageSplits: null,
+          date: values.date,
+        }
+      } else if (splitType === 'percentage') {
+        input = {
+          tripId,
+          amount: amountInCents,
+          currency: values.currency,
+          description: values.description,
+          category: values.category,
+          payer: values.payer_id,
+          splitType: 'percentage',
+          splitCount: null,
+          participants: null,
+          customSplits: null,
+          percentageSplits: selectedParticipants.map(id => {
+            const participant = tripParticipants.find(p => p.id === id)
+            return {
+              name: participant?.name || id,
+              percentage: percentageSplits[id] || 0,
+            }
+          }),
+          date: values.date,
+        }
+      } else {
+        // Custom amounts
+        input = {
+          tripId,
+          amount: amountInCents,
+          currency: values.currency,
+          description: values.description,
+          category: values.category,
+          payer: values.payer_id,
+          splitType: 'custom',
+          splitCount: null,
+          participants: null,
+          customSplits: selectedParticipants.map(id => {
+            const participant = tripParticipants.find(p => p.id === id)
+            return {
+              name: participant?.name || id,
+              amount: Math.round((customAmounts[id] || 0) * 100), // Convert to cents
+            }
+          }),
+          percentageSplits: null,
+          date: values.date,
+        }
       }
 
-      await createExpense(input)
+      const result = await createExpense(input)
+
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
       toast({
         title: isEditMode ? 'Expense updated!' : 'Expense created!',
@@ -158,13 +334,13 @@ export function ExpenseFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? 'Update the expense details below.'
-              : 'Track a new expense for this trip. Split details can be adjusted later.'}
+              ? 'Update the expense details and split configuration.'
+              : 'Track a new expense and configure how it should be split among participants.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -348,6 +524,92 @@ export function ExpenseFormDialog({
               )}
             />
 
+            {/* Split Configuration Section */}
+            <Separator className="my-6" />
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold">Split Configuration</h4>
+
+              {/* Split Type Selector */}
+              <SplitTypeSelector value={splitType} onChange={setSplitType} />
+
+              {/* Participant Picker */}
+              <ParticipantPicker
+                participants={tripParticipants.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  avatar_url: p.avatar_url,
+                }))}
+                selectedIds={selectedParticipants}
+                onChange={setSelectedParticipants}
+                payerId={form.watch('payer_id')}
+              />
+
+              {/* Percentage Split Input */}
+              {splitType === 'percentage' && selectedParticipants.length > 0 && (
+                <PercentageSplitInput
+                  participants={selectedParticipants
+                    .map(id => tripParticipants.find(p => p.id === id))
+                    .filter(Boolean)
+                    .map(p => ({
+                      id: p!.id,
+                      name: p!.name,
+                      avatar_url: p!.avatar_url,
+                    }))}
+                  values={percentageSplits}
+                  onChange={setPercentageSplits}
+                  isValid={isSplitValid}
+                />
+              )}
+
+              {/* Custom Amount Input */}
+              {splitType === 'amount' && selectedParticipants.length > 0 && (
+                <CustomAmountInput
+                  participants={selectedParticipants
+                    .map(id => tripParticipants.find(p => p.id === id))
+                    .filter(Boolean)
+                    .map(p => ({
+                      id: p!.id,
+                      name: p!.name,
+                      avatar_url: p!.avatar_url,
+                    }))}
+                  totalAmount={form.watch('amount')}
+                  currency={form.watch('currency')}
+                  values={customAmounts}
+                  onChange={setCustomAmounts}
+                  isValid={isSplitValid}
+                />
+              )}
+
+              {/* Split Preview */}
+              {selectedParticipants.length > 0 && form.watch('amount') > 0 && (
+                <SplitPreview
+                  totalAmount={form.watch('amount')}
+                  currency={form.watch('currency')}
+                  splitType={splitType}
+                  participants={splitPreviewData}
+                />
+              )}
+
+              {/* Receipt Upload Placeholder */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="w-full"
+                  data-testid="receipt-upload-button"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Receipt (Coming Soon)
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  Receipt upload will be available in a future update
+                </p>
+              </div>
+            </div>
+
             <DialogFooter>
               <Button
                 type="button"
@@ -357,7 +619,11 @@ export function ExpenseFormDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting || !isSplitValid}
+                data-testid="submit-expense"
+              >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'Update' : 'Create'} Expense
               </Button>

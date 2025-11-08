@@ -88,32 +88,6 @@ function calculateShares(
       break
     }
 
-    case 'shares': {
-      const totalShares = participants.reduce((acc, p) => acc + (p.shareValue || 1), 0)
-      let totalAssigned = 0
-
-      participants.forEach((p, index) => {
-        const shares = p.shareValue || 1
-        let shareAmount: number
-
-        // For last participant, assign remaining to avoid rounding
-        if (index === participants.length - 1) {
-          shareAmount = totalAmount - totalAssigned
-        } else {
-          shareAmount = Math.floor((totalAmount * shares) / totalShares)
-          totalAssigned += shareAmount
-        }
-
-        result.push({
-          userId: p.userId,
-          shareAmount,
-          shareType: 'shares',
-          shareValue: shares,
-        })
-      })
-      break
-    }
-
     default:
       throw new Error(`Unknown split type: ${splitType}`)
   }

@@ -17,7 +17,7 @@ export interface CreateExpenseInput {
   description: string
   category: string | null
   payer: string | null // Name or user_id of payer
-  splitType: 'equal' | 'custom' | 'shares' | 'percentage' | 'none'
+  splitType: 'equal' | 'custom' | 'percentage' | 'none'
   splitCount: number | null
   participants: string[] | null // Names or user_ids of participants
   customSplits: { name: string; amount: number }[] | null
@@ -281,43 +281,6 @@ export async function createExpense(input: CreateExpenseInput) {
           share_amount: split.amount,
           share_type: 'amount',
           share_value: split.amount,
-        })
-      }
-    } else if (input.splitType === 'shares' && input.participants) {
-      // Shares-based split (equal shares value)
-      const totalShares = input.participants.length
-      let totalAssigned = 0
-
-      for (let i = 0; i < input.participants.length; i++) {
-        const userId = await resolveParticipantId(
-          supabase,
-          input.tripId,
-          input.participants[i],
-          tripParticipants
-        )
-
-        if (!userId) {
-          await supabase.from('expenses').delete().eq('id', expense.id)
-          return {
-            success: false,
-            error: `Participant "${input.participants[i]}" is not in this trip`,
-          }
-        }
-
-        let shareAmount: number
-        if (i === input.participants.length - 1) {
-          shareAmount = input.amount - totalAssigned
-        } else {
-          shareAmount = Math.floor(input.amount / totalShares)
-          totalAssigned += shareAmount
-        }
-
-        expenseParticipants.push({
-          expense_id: expense.id,
-          user_id: userId,
-          share_amount: shareAmount,
-          share_type: 'shares',
-          share_value: 1, // One share each
         })
       }
     }

@@ -18,7 +18,7 @@ export type ExpenseParticipantInsert =
 /**
  * Split type determines how an expense is divided among participants
  */
-export type SplitType = 'equal' | 'percentage' | 'amount' | 'shares'
+export type SplitType = 'equal' | 'percentage' | 'amount'
 
 /**
  * Expense category for organization and filtering
@@ -92,7 +92,7 @@ export interface ExpenseWithDetails extends Expense {
 export interface CreateExpenseParticipantInput {
   userId: string
   shareType: SplitType
-  shareValue?: number // For percentage, shares, or custom amount
+  shareValue?: number // For percentage or custom amount
   shareAmount?: number // Pre-calculated amount (optional)
 }
 

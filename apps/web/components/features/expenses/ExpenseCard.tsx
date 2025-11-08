@@ -63,10 +63,6 @@ function getSplitLabel(expense: ExpenseWithDetails): string {
     return 'Percentage split'
   }
 
-  if (allSameType && firstType === 'shares') {
-    return 'Shares split'
-  }
-
   return 'Custom split'
 }
 

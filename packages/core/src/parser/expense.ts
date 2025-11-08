@@ -137,7 +137,7 @@ function calculateConfidence(factors: {
   hasSplitCount: boolean
   hasParticipants: boolean
   hasCategory: boolean
-  splitType: 'equal' | 'custom' | 'shares' | 'none'
+  splitType: 'equal' | 'custom' | 'percentage' | 'none'
 }): number {
   let score = 0
 

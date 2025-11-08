@@ -116,11 +116,11 @@ export interface ParsedExpense {
   /**
    * Type of split
    * - 'equal': Split equally among participants
+   * - 'percentage': Split by percentage (e.g., 60/40)
    * - 'custom': Custom amounts per person
-   * - 'shares': Based on shares/percentages
    * - 'none': No split (one person pays all)
    */
-  splitType: 'equal' | 'custom' | 'shares' | 'none'
+  splitType: 'equal' | 'percentage' | 'custom' | 'none'
 
   /**
    * Number of people to split among (for equal splits)
@@ -142,6 +142,16 @@ export interface ParsedExpense {
   customSplits?: Array<{
     name: string
     amount: number
+  }>
+
+  /**
+   * Percentage split per participant
+   * Used when splitType is 'percentage'
+   * Example: "Alice 60%, Bob 40%" → [{name: 'Alice', percentage: 60}, {name: 'Bob', percentage: 40}]
+   */
+  percentageSplits?: Array<{
+    name: string
+    percentage: number
   }>
 
   /**

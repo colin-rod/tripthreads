@@ -29,10 +29,11 @@ interface ExpenseInputProps {
     description: string
     category: string | null
     payer: string | null
-    splitType: 'equal' | 'custom' | 'shares' | 'none'
+    splitType: 'equal' | 'custom' | 'percentage' | 'none'
     splitCount: number | null
     participants: string[] | null
     customSplits: { name: string; amount: number }[] | null
+    percentageSplits?: { name: string; percentage: number }[] | null
   }) => Promise<void>
 }
 
@@ -91,6 +92,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
         splitCount: parsedResult.splitCount ?? null,
         participants: parsedResult.participants ?? null,
         customSplits: parsedResult.customSplits ?? null,
+        percentageSplits: parsedResult.percentageSplits ?? null,
       })
 
       // Reset form on success
