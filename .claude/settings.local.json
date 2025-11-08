@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node verify-fx-data.js:*)"
+      "Bash(node verify-fx-data.js:*)",
+      "Bash(cat:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix(deps): resolve Vercel build errors\n\n- Update packageManager to npm@10.9.2\n- Regenerate package-lock.json with correct npm version\n- Add missing @radix-ui/number dependency required by @radix-ui/react-select\n- Verify build works locally before push\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
