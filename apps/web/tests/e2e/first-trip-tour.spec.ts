@@ -24,7 +24,7 @@ test.describe('First Trip Creation Tour', () => {
     // This will require proper auth setup in E2E environment
   })
 
-  test('shows tour for new user with no trips', async ({ page }) => {
+  test('@smoke shows tour for new user with no trips', async ({ page }) => {
     await page.goto('/trips')
 
     // Wait for tour to appear

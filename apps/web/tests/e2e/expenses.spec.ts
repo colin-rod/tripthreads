@@ -60,7 +60,7 @@ test.describe('Expense Management', () => {
     await page.waitForURL('/trips')
   })
 
-  test('should create expense with equal split', async ({ page }) => {
+  test('@smoke should create expense with equal split', async ({ page }) => {
     const tripId = await createTestTrip(page)
 
     try {
