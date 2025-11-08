@@ -112,7 +112,7 @@ async function seedTrip({
   insertedTripIds.push(trip.id)
 
   if (participants.length > 0) {
-    const participantRows = participants.map((participant) => ({
+    const participantRows = participants.map(participant => ({
       trip_id: trip.id,
       user_id: participant.userId,
       role: participant.role ?? 'participant',
@@ -140,7 +140,10 @@ async function seedTrip({
 async function cleanupTrips() {
   if (insertedTripIds.length === 0) return
 
-  await adminClient.from('trips').delete().in('id', [...insertedTripIds])
+  await adminClient
+    .from('trips')
+    .delete()
+    .in('id', [...insertedTripIds])
   insertedTripIds.length = 0
 }
 
@@ -157,16 +160,16 @@ describe('getUserTrips', () => {
     const aliceClient = getAuthenticatedClient(ALICE_ID)
     const trips = await getUserTrips(aliceClient)
 
-    const insertedTrips = trips.filter((result) => insertedTripIds.includes(result.id))
+    const insertedTrips = trips.filter(result => insertedTripIds.includes(result.id))
     expect(insertedTrips).toHaveLength(1)
     const [ownerTrip] = insertedTrips
     expect(ownerTrip.id).toBe(trip.id)
     expect(ownerTrip.owner.id).toBe(ALICE_ID)
+    expect(ownerTrip.trip_participants?.some(participant => participant.user.id === BENJI_ID)).toBe(
+      true
+    )
     expect(
-      ownerTrip.trip_participants?.some((participant) => participant.user.id === BENJI_ID)
-    ).toBe(true)
-    expect(
-      ownerTrip.trip_participants?.some((participant) => participant.user.id === BAYLEE_ID)
+      ownerTrip.trip_participants?.some(participant => participant.user.id === BAYLEE_ID)
     ).toBe(true)
   })
 
@@ -180,7 +183,7 @@ describe('getUserTrips', () => {
     const benjiClient = getAuthenticatedClient(BENJI_ID)
     const trips = await getUserTrips(benjiClient)
 
-    const insertedTrips = trips.filter((result) => insertedTripIds.includes(result.id))
+    const insertedTrips = trips.filter(result => insertedTripIds.includes(result.id))
     expect(insertedTrips).toHaveLength(1)
     expect(insertedTrips[0].id).toBe(participantTrip.id)
   })
@@ -195,7 +198,7 @@ describe('getUserTrips', () => {
     const bayleeClient = getAuthenticatedClient(BAYLEE_ID)
     const trips = await getUserTrips(bayleeClient)
 
-    const insertedTrips = trips.filter((result) => insertedTripIds.includes(result.id))
+    const insertedTrips = trips.filter(result => insertedTripIds.includes(result.id))
     expect(insertedTrips).toHaveLength(1)
     expect(insertedTrips[0].id).toBe(viewerTrip.id)
   })
@@ -213,7 +216,9 @@ describe('getTripById', () => {
 
     expect(result.id).toBe(trip.id)
     expect(result.owner.id).toBe(ALICE_ID)
-    expect(result.trip_participants?.some((participant) => participant.user.id === BENJI_ID)).toBe(true)
+    expect(result.trip_participants?.some(participant => participant.user.id === BENJI_ID)).toBe(
+      true
+    )
   })
 
   it('should throw an error when the user is not a participant', async () => {
@@ -247,20 +252,24 @@ describe('createTrip', () => {
 
     expect(error).toBeNull()
     expect(
-      participants?.some((participant) => participant.user_id === ALICE_ID && participant.role === 'owner')
+      participants?.some(
+        participant => participant.user_id === ALICE_ID && participant.role === 'owner'
+      )
     ).toBe(true)
   })
 
   it('should rollback the trip when participant insertion fails', async () => {
-    const deleteEqMock = jest.fn().mockResolvedValue({ error: null })
+    const deleteEqMock = jest
+      .fn<() => Promise<{ error: null }>>()
+      .mockResolvedValue({ error: null })
     const tripsSingleMock = jest
-      .fn<Promise<{ data: { id: string; owner_id: string } | null; error: null }>, []>()
+      .fn<() => Promise<{ data: { id: string; owner_id: string } | null; error: null }>>()
       .mockResolvedValue({ data: { id: 'trip-rollback', owner_id: ALICE_ID }, error: null })
     const tripsSelectMock = jest.fn(() => ({ single: tripsSingleMock }))
     const tripsInsertMock = jest.fn(() => ({ select: tripsSelectMock }))
     const tripsDeleteMock = jest.fn(() => ({ eq: deleteEqMock }))
     const participantsInsertMock = jest
-      .fn()
+      .fn<() => Promise<{ error: { message: string } }>>()
       .mockResolvedValue({ error: { message: 'Participant insert failed' } })
 
     const supabaseMock = {
