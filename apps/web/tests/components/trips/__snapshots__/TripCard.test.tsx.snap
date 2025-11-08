@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`TripCard renders avatar fallbacks and status badge consistently 3`] = `
+<div
+  class="flex -space-x-2"
+>
+  <span
+    class="relative flex shrink-0 overflow-hidden rounded-full h-7 w-7 border-2 border-background"
+  >
+    <span
+      class="flex h-full w-full items-center justify-center rounded-full bg-muted text-xs"
+    >
+      JD
+    </span>
+  </span>
+  <span
+    class="relative flex shrink-0 overflow-hidden rounded-full h-7 w-7 border-2 border-background"
+  >
+    <span
+      class="flex h-full w-full items-center justify-center rounded-full bg-muted text-xs"
+    >
+      AS
+    </span>
+  </span>
+</div>
+`;
