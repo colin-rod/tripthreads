@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -57,6 +58,27 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('Error uploading attachment:', uploadError)
+
+      // Log to Sentry
+      Sentry.captureException(uploadError, {
+        tags: {
+          feature: 'storage',
+          operation: 'upload_attachment',
+        },
+        contexts: {
+          file: {
+            tripId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          },
+          storage: {
+            bucket: 'chat-attachments',
+            path: fileName,
+          },
+        },
+      })
+
       return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 })
     }
 
@@ -72,6 +94,16 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Unexpected error uploading attachment:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'storage',
+        operation: 'upload_attachment',
+        errorType: 'unexpected',
+      },
+    })
+
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
   }
 }

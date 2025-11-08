@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import {
@@ -161,6 +162,23 @@ export async function POST(request: NextRequest) {
 
       if (error.name === 'AbortError') {
         console.log('[OpenAI API] Request timed out after', TIMEOUT_MS, 'ms')
+
+        // Log timeout to Sentry
+        Sentry.captureMessage(`OpenAI API timeout after ${TIMEOUT_MS}ms`, {
+          level: 'warning',
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            parserType,
+          },
+          contexts: {
+            request: {
+              input: input.substring(0, 100), // First 100 chars only
+              model,
+            },
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -177,6 +195,15 @@ export async function POST(request: NextRequest) {
 
       // OpenAI API error
       if ('status' in error && error.status === 401) {
+        // Log auth error to Sentry
+        Sentry.captureException(error, {
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            errorType: 'auth',
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -192,6 +219,22 @@ export async function POST(request: NextRequest) {
       }
 
       if ('status' in error && error.status === 429) {
+        // Log rate limit to Sentry
+        Sentry.captureMessage('OpenAI rate limit exceeded', {
+          level: 'warning',
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            errorType: 'rate_limit',
+          },
+          contexts: {
+            request: {
+              model,
+              parserType,
+            },
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -211,6 +254,22 @@ export async function POST(request: NextRequest) {
   } catch (outerError: unknown) {
     const error = outerError as Error
     console.error('[OpenAI API] Unhandled error:', error)
+
+    // Log unexpected error to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'openai',
+        operation: 'parse',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        request: {
+          hasApiKey: !!OPENAI_API_KEY,
+          model: DEFAULT_MODEL,
+        },
+      },
+    })
+
     return NextResponse.json<LLMParserResult>(
       {
         success: false,

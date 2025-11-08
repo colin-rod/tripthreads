@@ -1031,24 +1031,46 @@ EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
 
 ### Sentry (Error Monitoring)
 
+**Status:** ✅ **Integrated** (Phase 1)
+
+**Setup:**
+
+- `@sentry/nextjs` installed and configured
+- Client-side (`sentry.client.config.ts`), server-side (`sentry.server.config.ts`), and edge runtime (`sentry.edge.config.ts`) configs
+- Next.js instrumentation enabled (`instrumentation.ts`)
+- Source maps configured for production (via `next.config.ts`)
+
 **Error Tracking:**
 
-- Client-side errors (web + mobile)
-- API errors (Supabase, Stripe)
-- Offline sync failures
-- Payment processing errors
+- ✅ Client-side React errors (via ErrorBoundary component)
+- ✅ Server action errors (expenses, chat)
+- ✅ API route errors (OpenAI, file uploads)
+- ✅ FX rate lookup failures and warnings
+- ✅ Supabase RLS permission errors
+- 🔜 Offline sync failures (Phase 2)
+- 🔜 Payment processing errors (Phase 3)
+
+**Context Captured:**
+
+- Feature tags (e.g., `feature: expenses`, `feature: chat`)
+- Operation tags (e.g., `operation: create_expense`)
+- User context (user ID, email)
+- Request metadata (trip ID, file sizes, currency pairs)
+- Supabase error codes, details, and hints
+- React component stacks
 
 **Performance Monitoring:**
 
-- Page load times
-- API response times
-- Offline sync duration
-- FX rate fetch latency
+- Page load times (automatic via Sentry)
+- API response times (via performance instrumentation)
+- Offline sync duration (Phase 2)
+- FX rate fetch latency (tracked in FX utilities)
 
 **Release Tracking:**
 
 - Tag releases with Git commit SHA
 - Link errors to specific deployments
+- Automatic Vercel Cron monitoring
 
 ### Vercel Analytics (Web Performance)
 

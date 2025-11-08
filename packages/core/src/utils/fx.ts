@@ -10,6 +10,7 @@
  * - If API fails, return null (graceful degradation)
  */
 
+import * as Sentry from '@sentry/nextjs'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
 
@@ -168,13 +169,39 @@ export async function getFxRate(
       }
     } catch (error) {
       console.error('On-demand FX fetch failed:', error)
-      // TODO: Log to Sentry in production
+
+      // Log to Sentry
+      Sentry.captureException(error, {
+        tags: {
+          feature: 'fx_rates',
+          operation: 'on_demand_fetch',
+        },
+        contexts: {
+          fx: {
+            fromCurrency,
+            toCurrency,
+            date,
+          },
+        },
+      })
+
       // Continue and return null (graceful degradation)
     }
   }
 
-  // No rate available
+  // No rate available - log warning to Sentry
   console.warn(`FX rate unavailable for ${fromCurrency}→${toCurrency} on ${date}`)
+
+  Sentry.captureMessage(`FX rate unavailable: ${fromCurrency}→${toCurrency} on ${date}`, {
+    level: 'warning',
+    tags: {
+      feature: 'fx_rates',
+      fromCurrency,
+      toCurrency,
+      date,
+    },
+  })
+
   return null
 }
 

@@ -1,8 +1,15 @@
 {
   "permissions": {
     "allow": [
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(npm test:*)",
       "Bash(npm run type-check:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfix(types): resolve TypeScript errors in core package tests\n\n- Fix Jest mock type annotations in trips.test.ts\n- Change from 2-argument jest.fn<ReturnType, Args> to 1-argument jest.fn<() => ReturnType>\n- Properly type mockResolvedValue calls to avoid ''never'' type errors\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(npx tsc:*)",
+      "Bash(npx turbo run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

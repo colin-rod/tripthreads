@@ -7,6 +7,7 @@
  * Messages are permanent (no update or delete actions).
  */
 
+import * as Sentry from '@sentry/nextjs'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
@@ -88,6 +89,26 @@ export async function createMessage(input: CreateMessageInput) {
 
     if (messageError) {
       console.error('Error creating message:', messageError)
+
+      // Log to Sentry
+      Sentry.captureException(messageError, {
+        tags: {
+          feature: 'chat',
+          operation: 'create_message',
+        },
+        contexts: {
+          message: {
+            tripId: input.tripId,
+            hasAttachments: !!input.attachments?.length,
+          },
+          supabase: {
+            code: messageError.code,
+            details: messageError.details,
+            hint: messageError.hint,
+          },
+        },
+      })
+
       return {
         success: false,
         error: 'Failed to send message',
@@ -103,6 +124,21 @@ export async function createMessage(input: CreateMessageInput) {
     }
   } catch (error) {
     console.error('Unexpected error creating message:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'create_message',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        message: {
+          tripId: input.tripId,
+        },
+      },
+    })
+
     return {
       success: false,
       error: 'An unexpected error occurred',
@@ -135,6 +171,26 @@ export async function createBotMessage(input: CreateBotMessageInput) {
 
     if (messageError) {
       console.error('Error creating bot message:', messageError)
+
+      // Log to Sentry
+      Sentry.captureException(messageError, {
+        tags: {
+          feature: 'chat',
+          operation: 'create_bot_message',
+        },
+        contexts: {
+          message: {
+            tripId: input.tripId,
+            metadata: input.metadata,
+          },
+          supabase: {
+            code: messageError.code,
+            details: messageError.details,
+            hint: messageError.hint,
+          },
+        },
+      })
+
       return {
         success: false,
         error: 'Failed to send bot message',
@@ -150,6 +206,21 @@ export async function createBotMessage(input: CreateBotMessageInput) {
     }
   } catch (error) {
     console.error('Unexpected error creating bot message:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'create_bot_message',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        message: {
+          tripId: input.tripId,
+        },
+      },
+    })
+
     return {
       success: false,
       error: 'An unexpected error occurred',
@@ -216,6 +287,26 @@ export async function getChatMessages(tripId: string, limit = 50) {
 
     if (messagesError) {
       console.error('Error fetching messages:', messagesError)
+
+      // Log to Sentry
+      Sentry.captureException(messagesError, {
+        tags: {
+          feature: 'chat',
+          operation: 'fetch_messages',
+        },
+        contexts: {
+          query: {
+            tripId,
+            limit,
+          },
+          supabase: {
+            code: messagesError.code,
+            details: messagesError.details,
+            hint: messagesError.hint,
+          },
+        },
+      })
+
       return {
         success: false as const,
         error: 'Failed to fetch messages' as const,
@@ -230,6 +321,22 @@ export async function getChatMessages(tripId: string, limit = 50) {
     }
   } catch (error) {
     console.error('Unexpected error fetching messages:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'fetch_messages',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        query: {
+          tripId,
+          limit,
+        },
+      },
+    })
+
     return {
       success: false as const,
       error: 'An unexpected error occurred' as const,
@@ -275,6 +382,26 @@ export async function uploadAttachment(
 
     if (uploadError) {
       console.error('Error uploading attachment:', uploadError)
+
+      // Log to Sentry
+      Sentry.captureException(uploadError, {
+        tags: {
+          feature: 'chat',
+          operation: 'upload_attachment',
+        },
+        contexts: {
+          file: {
+            tripId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          },
+          supabase: {
+            code: uploadError.message,
+          },
+        },
+      })
+
       return {
         success: false,
         error: 'Failed to upload attachment',
@@ -292,6 +419,24 @@ export async function uploadAttachment(
     }
   } catch (error) {
     console.error('Unexpected error uploading attachment:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'upload_attachment',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        file: {
+          tripId,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        },
+      },
+    })
+
     return {
       success: false,
       error: 'An unexpected error occurred',
