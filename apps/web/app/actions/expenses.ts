@@ -71,9 +71,13 @@ async function getTripParticipants(
     throw new Error(`Failed to fetch trip participants: ${error.message}`)
   }
 
+  if (!data) {
+    return []
+  }
+
   return data.map(p => ({
     user_id: p.user_id,
-    full_name: (p.users as { full_name: string }).full_name,
+    full_name: p.users?.full_name ?? '',
   }))
 }
 

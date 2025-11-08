@@ -3,7 +3,7 @@ import {
   hasTripThreadMention,
   extractCommands,
   removeTripThreadMentions,
-} from '../parse-mentions'
+} from '@/lib/chat/parse-mentions'
 
 describe('parse-mentions', () => {
   describe('detectTripThreadMentions', () => {

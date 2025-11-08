@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { ChatMessage } from '../ChatMessage'
+import { ChatMessage } from '@/components/features/chat/ChatMessage'
 import type { ChatMessageData } from '@/app/actions/chat'
 
 // Mock date-fns format function
