@@ -413,6 +413,33 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          date: string
+          id: string
+          rate: number
+          target_currency: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          date: string
+          id?: string
+          rate: number
+          target_currency: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          date?: string
+          id?: string
+          rate?: number
+          target_currency?: string
+        }
+        Relationships: []
+      }
       invite_rate_limits: {
         Row: {
           date: string
@@ -789,6 +816,7 @@ export type Database = {
       }
       trips: {
         Row: {
+          base_currency: string
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -800,6 +828,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -811,6 +840,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
