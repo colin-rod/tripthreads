@@ -5,7 +5,7 @@
  * These tests verify the end-to-end flow from expense creation to FX rate storage.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
 import { createExpense } from '@/app/actions/expenses'
 import type { Database } from '@/types/database'
@@ -119,6 +119,10 @@ describe('Expense FX Integration', () => {
     expect(result.success).toBe(true)
     expect(result.expense).toBeDefined()
 
+    if (!result.expense) {
+      throw new Error('Expense not created')
+    }
+
     // Verify FX rate was stored
     const { data: expense } = await supabase
       .from('expenses')
@@ -155,6 +159,10 @@ describe('Expense FX Integration', () => {
     expect(result.success).toBe(true)
     expect(result.expense).toBeDefined()
 
+    if (!result.expense) {
+      throw new Error('Expense not created')
+    }
+
     // Verify FX rate is null for same currency
     const { data: expense } = await supabase
       .from('expenses')
@@ -190,6 +198,10 @@ describe('Expense FX Integration', () => {
 
     expect(result.success).toBe(true)
     expect(result.expense).toBeDefined()
+
+    if (!result.expense) {
+      throw new Error('Expense not created')
+    }
 
     // Expense should still be created even without FX rate
     const { data: expense } = await supabase
@@ -229,6 +241,10 @@ describe('Expense FX Integration', () => {
     })
 
     expect(result.success).toBe(true)
+
+    if (!result.expense) {
+      throw new Error('Expense not created')
+    }
 
     const originalFxRate = result.expense.fx_rate
 

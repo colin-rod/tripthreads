@@ -7,11 +7,17 @@
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'
 import '@testing-library/jest-dom'
+import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type React from 'react'
 
 import type { CreateTripDialog as CreateTripDialogType } from '@/components/features/trips/CreateTripDialog'
+
+declare module '@jest/globals' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
+}
 
 const createTripMock = jest.fn()
 const createClientMock = jest.fn()
@@ -71,8 +77,8 @@ jest.mock('@/components/ui/use-toast', () => ({
 }))
 
 jest.mock('@tripthreads/core', () => {
-  const actual = jest.requireActual('@tripthreads/core')
-  const { z } = jest.requireActual('zod')
+  const actual = jest.requireActual('@tripthreads/core') as Record<string, unknown>
+  const { z } = jest.requireActual('zod') as { z: typeof import('zod').z }
   const relaxedCreateTripSchema = z
     .object({
       name: z
@@ -89,7 +95,7 @@ jest.mock('@tripthreads/core', () => {
         .string()
         .datetime('Invalid start date format')
         .refine(
-          date => {
+          (date: string) => {
             const startDate = new Date(date)
             const today = new Date()
             today.setHours(0, 0, 0, 0)
@@ -104,7 +110,7 @@ jest.mock('@tripthreads/core', () => {
       cover_image_url: z.string().url('Invalid image URL').optional().nullable(),
     })
     .refine(
-      data => {
+      (data: { start_date: string; end_date: string }) => {
         const startDate = new Date(data.start_date)
         const endDate = new Date(data.end_date)
         return endDate >= startDate
@@ -200,9 +206,12 @@ describe('CreateTripDialog', () => {
     await waitFor(() => expect(createTripMock).toHaveBeenCalledTimes(1))
 
     await waitFor(() => {
-      expect(submitButton).toBeDisabled()
-      expect(cancelButton).toBeDisabled()
-      expect(nameInput).toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(submitButton) as any).toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(cancelButton) as any).toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(nameInput) as any).toBeDisabled()
     })
 
     await act(async () => {
@@ -233,10 +242,14 @@ describe('CreateTripDialog', () => {
     await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith(`/trips/${tripResult.id}`))
 
     await waitFor(() => {
-      expect(submitButton).not.toBeDisabled()
-      expect(cancelButton).not.toBeDisabled()
-      expect(nameInput).not.toBeDisabled()
-      expect(nameInput).toHaveValue('')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(submitButton) as any).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(cancelButton) as any).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(nameInput) as any).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(nameInput) as any).toHaveValue('')
     })
   })
 
@@ -291,9 +304,12 @@ describe('CreateTripDialog', () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
 
     await waitFor(() => {
-      expect(submitButton).not.toBeDisabled()
-      expect(cancelButton).not.toBeDisabled()
-      expect(nameInput).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(submitButton) as any).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(cancelButton) as any).not.toBeDisabled()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(expect(nameInput) as any).not.toBeDisabled()
     })
   })
 
