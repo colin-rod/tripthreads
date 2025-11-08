@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import { posthog } from '@/lib/analytics/posthog'
 import { TourSpotlight } from './TourSpotlight'
 import { TourTooltip } from './TourTooltip'
 import type { TourConfig } from '@/lib/tour/types'
@@ -70,9 +71,7 @@ export function Tour({ config, onComplete, onDismiss, autoStart = true }: TourPr
   // Track analytics when tour starts
   useEffect(() => {
     if (isActive && isMounted && currentStepIndex === 0) {
-      // TODO: Track with PostHog when integrated
-      // posthog.capture('tour_started', { tour_id: config.id })
-      console.log('[Tour Analytics] tour_started:', config.id)
+      posthog.capture('tour_started', { tour_id: config.id })
     }
   }, [isActive, currentStepIndex, config.id, isMounted])
 
@@ -86,9 +85,7 @@ export function Tour({ config, onComplete, onDismiss, autoStart = true }: TourPr
       completeTour(config.id)
       setIsActive(false)
 
-      // Track completion
-      console.log('[Tour Analytics] tour_completed:', config.id)
-      // TODO: posthog.capture('tour_completed', { tour_id: config.id })
+      posthog.capture('tour_completed', { tour_id: config.id })
 
       onComplete?.()
     } else {
@@ -96,8 +93,7 @@ export function Tour({ config, onComplete, onDismiss, autoStart = true }: TourPr
       setCurrentStepIndex(nextIndex)
       updateTourStep(config.id, nextIndex)
 
-      // Track step progression
-      console.log('[Tour Analytics] tour_step_advanced:', {
+      posthog.capture('tour_step_advanced', {
         tour_id: config.id,
         step: nextIndex,
         step_id: config.steps[nextIndex].id,
@@ -115,12 +111,10 @@ export function Tour({ config, onComplete, onDismiss, autoStart = true }: TourPr
     dismissTour(config.id)
     setIsActive(false)
 
-    // Track skip
-    console.log('[Tour Analytics] tour_skipped:', {
+    posthog.capture('tour_skipped', {
       tour_id: config.id,
       step: currentStepIndex,
     })
-    // TODO: posthog.capture('tour_skipped', { tour_id: config.id, step: currentStepIndex })
 
     onDismiss?.()
   }, [config.id, currentStepIndex, onDismiss])

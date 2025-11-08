@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { posthog } from '@/lib/analytics/posthog'
 import { WebHero } from './WebHero'
 import { MobileSlides } from './MobileSlides'
 import { isMobile } from '@/lib/utils/platform'
@@ -32,14 +33,13 @@ export function PlatformOnboardingScreen({
   // Detect platform on client side only
   useEffect(() => {
     setIsMounted(true)
-    setPlatform(isMobile() ? 'mobile' : 'web')
+    const detectedPlatform = isMobile() ? 'mobile' : 'web'
+    setPlatform(detectedPlatform)
 
-    // Track platform detection
-    console.log('[Onboarding Analytics] platform_detected:', {
-      platform: isMobile() ? 'mobile' : 'web',
+    posthog.capture('onboarding_platform_detected', {
+      platform: detectedPlatform,
       variant,
     })
-    // TODO: posthog.capture('onboarding_platform_detected', { platform, variant })
   }, [variant])
 
   // Don't render during SSR
