@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import { posthog } from '@/lib/analytics/posthog'
 import { PlatformOnboardingScreen } from './PlatformOnboardingScreen'
 import { RoleExplainer } from './RoleExplainer'
 import { FeatureHighlights } from './FeatureHighlights'
@@ -56,9 +57,7 @@ export function Onboarding({ onComplete, onSkip, autoStart = true }: OnboardingP
       startOnboarding()
       setCurrentStep('welcome')
 
-      // Track analytics
-      console.log('[Onboarding Analytics] onboarding_started')
-      // TODO: posthog.capture('onboarding_started')
+      posthog.capture('onboarding_started')
     }
   }, [autoStart, isMounted])
 
@@ -66,18 +65,14 @@ export function Onboarding({ onComplete, onSkip, autoStart = true }: OnboardingP
     setCurrentStep(step)
     updateOnboardingStep(step)
 
-    // Track step navigation
-    console.log('[Onboarding Analytics] onboarding_step_viewed:', step)
-    // TODO: posthog.capture('onboarding_step_viewed', { step })
+    posthog.capture('onboarding_step_viewed', { step })
   }, [])
 
   const handleComplete = useCallback(() => {
     completeOnboarding()
     setCurrentStep('completed')
 
-    // Track completion
-    console.log('[Onboarding Analytics] onboarding_completed')
-    // TODO: posthog.capture('onboarding_completed')
+    posthog.capture('onboarding_completed')
 
     onComplete?.()
   }, [onComplete])
@@ -86,9 +81,7 @@ export function Onboarding({ onComplete, onSkip, autoStart = true }: OnboardingP
     skipOnboarding()
     setCurrentStep(null)
 
-    // Track skip
-    console.log('[Onboarding Analytics] onboarding_skipped:', { step: currentStep })
-    // TODO: posthog.capture('onboarding_skipped', { step: currentStep })
+    posthog.capture('onboarding_skipped', { step: currentStep })
 
     onSkip?.()
   }, [currentStep, onSkip])
