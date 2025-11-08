@@ -99,7 +99,7 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Install Playwright Browsers
+      - name: Install Playwright Browserss
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
       - name: Build Next.js app

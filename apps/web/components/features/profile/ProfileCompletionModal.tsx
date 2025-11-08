@@ -48,8 +48,8 @@ import {
   completeProfile,
   completeProfileSchema,
   type CompleteProfileInput,
-  validateAvatarFile,
 } from '@tripthreads/core'
+import { validateAvatarFile } from '@/lib/utils/avatar'
 
 interface ProfileCompletionModalProps {
   open: boolean

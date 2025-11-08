@@ -6,8 +6,8 @@
 // Currency utilities
 export { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from './utils/currency'
 
-// Database types
-export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from '../types/database'
+// Database types (re-exported from @tripthreads/core)
+export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from '@tripthreads/core'
 export type { Trip, TripSummary } from '../types/trip'
 export { toTripSummary } from '../types/trip'
 
@@ -29,7 +29,10 @@ export * from '../lib/supabase/queries/invites'
 export * from '../lib/validation/trip'
 export * from '../lib/validation/profile'
 export * from '../lib/validation/invite'
-export * from '../lib/utils/avatar'
+// Avatar utilities moved to platform-specific locations
+// For web: import from apps/web/lib/utils/avatar
+// For mobile: import from apps/mobile/lib/utils/avatar
+// For platform-agnostic utilities: import { generateAvatarPath, getAvatarUrl } from '@tripthreads/core'
 
 // Re-export types from lib/types
 export type {

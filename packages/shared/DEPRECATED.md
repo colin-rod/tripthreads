@@ -24,7 +24,7 @@ import { getTrips } from '@tripthreads/shared/lib/supabase/queries/trips'
 import { formatCurrency, createTripSchema, getTrips } from '@tripthreads/core'
 ```
 
-### ➡️ Use `@tripthreads/web` instead
+### ➡️ Use web-specific imports
 
 **For browser-specific code:**
 
@@ -33,7 +33,8 @@ import { formatCurrency, createTripSchema, getTrips } from '@tripthreads/core'
 import { compressAvatar } from '@tripthreads/shared/lib/utils/avatar'
 
 // ✅ NEW (recommended)
-import { compressAvatar } from '@tripthreads/web'
+// In apps/web:
+import { compressAvatar } from '@/lib/utils/avatar'
 ```
 
 ---
@@ -76,11 +77,11 @@ import { compressAvatar } from '@tripthreads/web'
 
 - `lib/permissions/role-checks.ts` (from apps/web) - Role-based access control
 
-### To `@tripthreads/web`
+### To `apps/web/lib/utils`
 
 **Browser-specific utilities:**
 
-- `lib/utils/avatar.ts` - Image compression (uses Canvas API)
+- `avatar.ts` - Image compression (uses Canvas API)
 
 ---
 

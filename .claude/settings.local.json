@@ -1,32 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep:*)",
-      "Bash(find:*)",
-      "Bash(npm install)",
-      "Bash(npm run type-check:*)",
-      "Bash(git add:*)",
-      "Bash(git checkout:*)",
-      "Bash(git rebase:*)",
-      "Bash(git diff:*)",
-      "Bash(npm run build:*)",
-      "Bash(cat:*)",
-      "Bash(npm install:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(npm run lint:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npm test:*)",
-      "Bash(supabase db push:*)",
-      "Bash(npx shadcn@latest add:*)",
-      "Bash(npx supabase:*)",
-      "Bash(packages/shared/types/database.ts)",
-      "Bash(git restore:*)",
-      "Bash(git pull:*)",
-      "Bash(git stash:*)",
-      "Bash(supabase status:*)",
-      "Bash(npm run generate-types:*)",
-      "Bash(npm run test:*)"
+      "Bash(node verify-fx-data.js:*)"
     ],
     "deny": [],
     "ask": []

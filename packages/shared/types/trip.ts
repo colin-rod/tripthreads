@@ -1,4 +1,4 @@
-import type { Database } from './database'
+import type { Database } from '@tripthreads/core'
 
 /**
  * Trip record from the database.

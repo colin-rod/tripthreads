@@ -189,7 +189,7 @@ export SUPABASE_PROJECT_ID=your-project-id
 Generated types are available throughout the project:
 
 ```typescript
-import { Database } from '@tripthreads/shared/types/database'
+import { Database } from '@tripthreads/core'
 
 // Table types
 type ChatMessage = Database['public']['Tables']['chat_messages']['Row']
@@ -202,7 +202,7 @@ const { data } = await supabase.from('chat_messages').select('*').returns<ChatMe
 
 ## Files
 
-- **Generated types**: `packages/shared/types/database.ts`
+- **Generated types**: `packages/core/src/types/database.ts`
 - **GitHub Action**: `.github/workflows/generate-types.yml`
 - **npm scripts**: `package.json` (generate-types, generate-types:remote)
 

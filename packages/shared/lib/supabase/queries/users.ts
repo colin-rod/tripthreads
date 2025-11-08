@@ -8,8 +8,9 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../types/database'
-import { compressAvatar, generateAvatarPath } from '../../utils/avatar'
+import type { Database } from '@tripthreads/core'
+import { compressAvatar } from '../../../../../apps/web/lib/utils/avatar'
+import { generateAvatarPath } from '@tripthreads/core'
 
 type User = Database['public']['Tables']['users']['Row']
 type UserUpdate = Database['public']['Tables']['users']['Update']

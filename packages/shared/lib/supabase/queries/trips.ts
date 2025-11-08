@@ -6,7 +6,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { Database } from '../../../types/database'
+import { Database } from '@tripthreads/core'
 
 type TripInsert = Database['public']['Tables']['trips']['Insert']
 type TripUpdate = Database['public']['Tables']['trips']['Update']

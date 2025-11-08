@@ -1,15 +1,17 @@
 /**
- * Avatar utilities for image compression and upload
+ * Browser-specific avatar utilities for image compression and upload
  *
- * Handles:
- * - Image compression (<500KB target)
- * - Image resizing (512x512px max)
- * - Format conversion to JPEG
- * - Supabase Storage upload
+ * These utilities use browser-only APIs (FileReader, Image, document)
+ * and should only be imported by web-specific code.
+ *
+ * For platform-agnostic avatar utilities (generateAvatarPath, getAvatarUrl),
+ * import from @tripthreads/core
  */
 
 /**
  * Compress an image file to target size
+ *
+ * Uses browser APIs: FileReader, Image, document.createElement
  *
  * @param file - Original image file
  * @param maxSizeKB - Target size in KB (default: 500KB)
@@ -104,30 +106,9 @@ export async function compressAvatar(
 }
 
 /**
- * Generate a unique filename for avatar upload
- *
- * @param userId - User ID
- * @param extension - File extension (default: 'jpg')
- * @returns Storage path: avatars/{userId}/{timestamp}.{extension}
- */
-export function generateAvatarPath(userId: string, extension = 'jpg'): string {
-  const timestamp = Date.now()
-  return `${userId}/${timestamp}.${extension}`
-}
-
-/**
- * Get the public URL for an avatar in Supabase Storage
- *
- * @param supabaseUrl - Supabase project URL
- * @param path - Storage path (e.g., "userId/timestamp.jpg")
- * @returns Full public URL to the avatar
- */
-export function getAvatarUrl(supabaseUrl: string, path: string): string {
-  return `${supabaseUrl}/storage/v1/object/public/avatars/${path}`
-}
-
-/**
  * Validate avatar file before upload
+ *
+ * Uses browser API: File type checking
  *
  * @param file - File to validate
  * @returns Validation result with error message if invalid
