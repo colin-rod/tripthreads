@@ -28,6 +28,9 @@ export * from './validation/trip'
 export * from './validation/invite'
 export * from './validation/profile'
 
+// Schemas
+export * from './schemas/expense'
+
 // Queries
 export * from './queries/trips'
 export * from './queries/users'

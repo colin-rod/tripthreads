@@ -128,10 +128,19 @@ function calculateShares(
 export async function getUserExpensesForTrip(
   supabase: SupabaseClient<Database>,
   tripId: string
-): Promise<Expense[]> {
+): Promise<ExpenseWithDetails[]> {
   const { data, error } = await supabase
     .from('expenses')
-    .select('*')
+    .select(
+      `
+      *,
+      payer:users!expenses_payer_id_fkey (
+        id,
+        full_name,
+        avatar_url
+      )
+    `
+    )
     .eq('trip_id', tripId)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
@@ -140,7 +149,18 @@ export async function getUserExpensesForTrip(
     throw new Error(`Failed to fetch expenses: ${error.message}`)
   }
 
-  return data as Expense[]
+  // Fetch participants for each expense
+  const expensesWithDetails = await Promise.all(
+    data.map(async expense => {
+      const participants = await getExpenseParticipants(supabase, expense.id)
+      return {
+        ...expense,
+        participants,
+      } as ExpenseWithDetails
+    })
+  )
+
+  return expensesWithDetails
 }
 
 /**
