@@ -64,7 +64,7 @@ async function getTripParticipants(
 ): Promise<TripParticipant[]> {
   const { data, error } = await supabase
     .from('trip_participants')
-    .select('user_id, users!inner(full_name)')
+    .select('user_id, users!user_id(full_name)')
     .eq('trip_id', tripId)
 
   if (error) {
