@@ -38,6 +38,7 @@ export * from './queries/users'
 export * from './queries/invites'
 export * from './queries/itinerary'
 export * from './queries/expenses'
+export * from './queries/settlements'
 
 // Permissions
 export * from './permissions/role-checks'

@@ -152,3 +152,39 @@ export interface ExpenseSummary {
   expenseCount: number
   userBalance: number // Amount user owes (negative) or is owed (positive)
 }
+
+/**
+ * User balance in settlement calculations
+ * Shows net position for a participant (what they owe or are owed)
+ */
+export interface UserBalance {
+  user_id: string
+  user_name: string
+  net_balance: number // In base currency minor units (positive = owed, negative = owes)
+  currency: string // Trip base currency
+}
+
+/**
+ * Optimized settlement suggestion
+ * Represents a single transfer to minimize total transactions
+ */
+export interface OptimizedSettlement {
+  from_user_id: string
+  from_user_name: string
+  to_user_id: string
+  to_user_name: string
+  amount: number // In base currency minor units
+  currency: string // Trip base currency
+}
+
+/**
+ * Complete settlement summary for a trip
+ * Includes both individual balances and optimized transfer suggestions
+ */
+export interface SettlementSummary {
+  balances: UserBalance[]
+  settlements: OptimizedSettlement[]
+  total_expenses: number // Total number of expenses included
+  base_currency: string
+  excluded_expenses: string[] // IDs of expenses with missing FX rates
+}

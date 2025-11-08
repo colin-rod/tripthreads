@@ -7,9 +7,11 @@
  * Includes participant resolution (name → user_id) and split calculation.
  */
 
+import * as Sentry from '@sentry/nextjs'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getFxRate, formatDateForFx } from '@tripthreads/core'
+import { getFxRate, formatDateForFx, getSettlementSummary } from '@tripthreads/core'
+import type { SettlementSummary } from '@tripthreads/core'
 
 export interface CreateExpenseInput {
   tripId: string
@@ -177,12 +179,50 @@ export async function createExpense(input: CreateExpenseInput) {
           console.warn(
             `FX rate unavailable for ${baseCurrency}→${input.currency} on ${expenseDate}`
           )
-          // TODO: Log to Sentry in production
+
+          // Log to Sentry for monitoring
+          Sentry.captureMessage(
+            `FX rate unavailable: ${baseCurrency}→${input.currency} on ${expenseDate}`,
+            {
+              level: 'warning',
+              tags: {
+                feature: 'fx_rates',
+                baseCurrency,
+                targetCurrency: input.currency,
+                date: expenseDate,
+              },
+              contexts: {
+                expense: {
+                  tripId: input.tripId,
+                  amount: input.amount,
+                  currency: input.currency,
+                },
+              },
+            }
+          )
         }
       } catch (error) {
         console.error('FX rate lookup failed:', error)
+
+        // Log to Sentry
+        Sentry.captureException(error, {
+          tags: {
+            feature: 'fx_rates',
+            baseCurrency,
+            targetCurrency: input.currency,
+            operation: 'lookup',
+          },
+          contexts: {
+            expense: {
+              tripId: input.tripId,
+              amount: input.amount,
+              currency: input.currency,
+              date: expenseDate,
+            },
+          },
+        })
+
         // Continue with null rate - graceful degradation
-        // TODO: Log to Sentry in production
       }
     }
 
@@ -205,6 +245,28 @@ export async function createExpense(input: CreateExpenseInput) {
 
     if (expenseError) {
       console.error('Error creating expense:', expenseError)
+
+      // Log to Sentry with context
+      Sentry.captureException(expenseError, {
+        tags: {
+          feature: 'expenses',
+          operation: 'create',
+        },
+        contexts: {
+          expense: {
+            tripId: input.tripId,
+            amount: input.amount,
+            currency: input.currency,
+            description: input.description,
+          },
+          supabase: {
+            code: expenseError.code,
+            details: expenseError.details,
+            hint: expenseError.hint,
+          },
+        },
+      })
+
       return {
         success: false,
         error: 'Failed to create expense',
@@ -342,6 +404,26 @@ export async function createExpense(input: CreateExpenseInput) {
 
       if (participantsError) {
         console.error('Error creating participants:', participantsError)
+
+        // Log to Sentry
+        Sentry.captureException(participantsError, {
+          tags: {
+            feature: 'expenses',
+            operation: 'create_participants',
+          },
+          contexts: {
+            expense: {
+              id: expense.id,
+              tripId: input.tripId,
+            },
+            supabase: {
+              code: participantsError.code,
+              details: participantsError.details,
+              hint: participantsError.hint,
+            },
+          },
+        })
+
         // Rollback expense
         await supabase.from('expenses').delete().eq('id', expense.id)
         return {
@@ -361,9 +443,96 @@ export async function createExpense(input: CreateExpenseInput) {
     }
   } catch (error) {
     console.error('Unexpected error creating expense:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'expenses',
+        operation: 'create',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        expense: {
+          tripId: input.tripId,
+          amount: input.amount,
+          currency: input.currency,
+        },
+      },
+    })
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Get settlement summary for a trip
+ *
+ * Calculates net balances and optimized settlement suggestions.
+ * Respects RLS policies - only includes expenses visible to current user.
+ */
+export async function fetchSettlementSummary(
+  tripId: string
+): Promise<{ success: boolean; summary?: SettlementSummary; error?: string }> {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Verify user is a participant of the trip
+    const { data: participant, error: participantError } = await supabase
+      .from('trip_participants')
+      .select('id, role')
+      .eq('trip_id', tripId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (participantError || !participant) {
+      return {
+        success: false,
+        error: 'You must be a participant of this trip to view settlements',
+      }
+    }
+
+    // Fetch settlement summary (respects RLS and date scoping)
+    const summary = await getSettlementSummary(supabase, tripId)
+
+    return {
+      success: true,
+      summary,
+    }
+  } catch (error) {
+    console.error('Error fetching settlement summary:', error)
+
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'settlements',
+        operation: 'fetch_summary',
+      },
+      contexts: {
+        trip: {
+          tripId,
+        },
+      },
+    })
+
+    return {
+      success: false,
+      error: 'Failed to fetch settlement summary',
     }
   }
 }

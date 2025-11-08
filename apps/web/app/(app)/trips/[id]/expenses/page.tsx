@@ -7,8 +7,9 @@
 
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getUserExpensesForTrip, getTripById } from '@tripthreads/core'
+import { getUserExpensesForTrip, getTripById, getSettlementSummary } from '@tripthreads/core'
 import { ExpenseListView } from '@/components/features/expenses'
+import { SettlementSummary } from '@/components/features/expenses/settlements'
 import { EmptyExpenses } from '@/components/empty-state'
 
 interface TripExpensesPageProps {
@@ -64,10 +65,14 @@ export default async function TripExpensesPage({ params }: TripExpensesPageProps
     )
   }
 
-  // Fetch trip expenses
+  // Fetch trip expenses and settlement summary in parallel
   let expenses
+  let settlementSummary
   try {
-    expenses = await getUserExpensesForTrip(supabase, id)
+    ;[expenses, settlementSummary] = await Promise.all([
+      getUserExpensesForTrip(supabase, id),
+      getSettlementSummary(supabase, id),
+    ])
   } catch (error) {
     console.error('Error fetching expenses:', error)
     return (
@@ -90,17 +95,25 @@ export default async function TripExpensesPage({ params }: TripExpensesPageProps
         </div>
 
         {expenses && expenses.length > 0 ? (
-          <ExpenseListView
-            expenses={expenses}
-            tripId={id}
-            tripParticipants={
-              trip.trip_participants?.map(p => ({
-                id: p.user?.id || '',
-                name: p.user?.full_name || 'Unknown',
-              })) || []
-            }
-            currentUserId={user.id}
-          />
+          <>
+            {/* Settlement Summary - displayed at top when there are settlements */}
+            {settlementSummary && settlementSummary.settlements.length > 0 && (
+              <SettlementSummary summary={settlementSummary} currentUserId={user.id} tripId={id} />
+            )}
+
+            {/* Expense List */}
+            <ExpenseListView
+              expenses={expenses}
+              tripId={id}
+              tripParticipants={
+                trip.trip_participants?.map(p => ({
+                  id: p.user?.id || '',
+                  name: p.user?.full_name || 'Unknown',
+                })) || []
+              }
+              currentUserId={user.id}
+            />
+          </>
         ) : (
           <EmptyExpenses />
         )}
