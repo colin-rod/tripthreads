@@ -89,7 +89,9 @@
 
 ### Third-Party APIs
 
-- **exchangerate.host** - Historical FX rates (daily cron)
+- **OpenExchangeRates** - Historical FX rates (on-demand fetching with caching)
+  - Free tier: 1,000 requests/month, USD base only
+  - Unlimited plan ($12/mo): 100,000 requests/month, any base currency
 - **Expo Push Notifications** - Mobile push delivery
 - **Web Push API (VAPID)** - Web push notifications
 
@@ -288,8 +290,7 @@ npm test -- offline         # Run offline sync tests
 tripthreads/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                  # CI/CD pipeline
-│       └── cron-fx-rates.yml       # Daily FX rate sync
+│       └── ci.yml                  # CI/CD pipeline
 ├── apps/
 │   ├── web/                        # Next.js web app
 │   │   ├── app/
@@ -933,13 +934,23 @@ On PR to `main`:
 - All above checks
 - Manual deployment approval required
 
-#### FX Rate Sync (`.github/workflows/cron-fx-rates.yml`)
+#### FX Rate Sync (On-Demand Strategy)
 
-Daily cron job (runs at 00:00 UTC):
+On-demand fetching via Supabase Edge Function (`fx-rates-sync`):
 
-1. Fetch latest rates from `exchangerate.host`
-2. Store in `fx_rates` table via Supabase Edge Function
-3. Alert on failure (Sentry)
+1. Check cache (`fx_rates` table) when expense is created
+2. If rate not found, fetch from OpenExchangeRates API
+3. Automatically convert from USD base (free tier) to trip's base currency
+4. Store in `fx_rates` table for future use
+5. If API fails, store expense with `fx_rate = null` (graceful degradation)
+
+**Benefits over daily cron:**
+
+- Lower API usage (only fetch currencies actually needed)
+- Stays within free tier limits (1,000 requests/month)
+- Simpler infrastructure (no scheduled jobs to maintain)
+- Lazy loading builds cache organically
+- Works with USD-only free tier via automatic conversion
 
 ### Vercel Deployment (Web)
 

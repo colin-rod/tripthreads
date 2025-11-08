@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '13.0.5'
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       access_requests: {
@@ -413,6 +438,33 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          date: string
+          id: string
+          rate: number
+          target_currency: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          date: string
+          id?: string
+          rate: number
+          target_currency: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          date?: string
+          id?: string
+          rate?: number
+          target_currency?: string
+        }
+        Relationships: []
+      }
       invite_rate_limits: {
         Row: {
           date: string
@@ -789,6 +841,7 @@ export type Database = {
       }
       trips: {
         Row: {
+          base_currency: string
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -800,6 +853,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -811,6 +865,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -1047,6 +1102,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

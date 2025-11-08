@@ -16,6 +16,7 @@ export type ExpenseParticipant = Database['public']['Tables']['expense_participa
 export * from './utils/currency'
 export * from './utils/cn'
 export * from './utils/avatar'
+export * from './utils/fx'
 
 // Parser
 export * from './parser/llm-prompts'

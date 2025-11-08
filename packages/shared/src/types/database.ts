@@ -33,6 +33,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          requested_at: string | null
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+          trip_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          requested_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          trip_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          requested_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          trip_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'access_requests_responded_by_fkey'
+            columns: ['responded_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'access_requests_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'access_requests_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       analysis_runs: {
         Row: {
           completed_at: string | null
@@ -80,6 +138,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          trip_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type: string
+          metadata?: Json | null
+          trip_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          trip_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'chat_messages_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'chat_messages_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
       daily_metrics: {
         Row: {
@@ -329,6 +438,33 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          date: string
+          id: string
+          rate: number
+          target_currency: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          date: string
+          id?: string
+          rate: number
+          target_currency: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          date?: string
+          id?: string
+          rate?: number
+          target_currency?: string
+        }
+        Relationships: []
+      }
       invite_rate_limits: {
         Row: {
           date: string
@@ -355,6 +491,42 @@ export type Database = {
           },
         ]
       }
+      itinerary_item_participants: {
+        Row: {
+          created_at: string
+          id: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          itinerary_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          itinerary_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'itinerary_item_participants_itinerary_item_id_fkey'
+            columns: ['itinerary_item_id']
+            isOneToOne: false
+            referencedRelation: 'itinerary_items'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'itinerary_item_participants_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       itinerary_items: {
         Row: {
           created_at: string
@@ -362,7 +534,11 @@ export type Database = {
           description: string | null
           end_time: string | null
           id: string
+          is_all_day: boolean | null
+          links: Json | null
           location: string | null
+          metadata: Json | null
+          notes: string | null
           start_time: string
           title: string
           trip_id: string
@@ -375,7 +551,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time: string
           title: string
           trip_id: string
@@ -388,7 +568,11 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          is_all_day?: boolean | null
+          links?: Json | null
           location?: string | null
+          metadata?: Json | null
+          notes?: string | null
           start_time?: string
           title?: string
           trip_id?: string
@@ -462,6 +646,24 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      migration_history: {
+        Row: {
+          applied_at: string
+          id: string
+          migration_name: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: string
+          migration_name: string
+        }
+        Update: {
+          applied_at?: string
+          id?: string
+          migration_name?: string
+        }
+        Relationships: []
       }
       pattern_weights: {
         Row: {
@@ -639,6 +841,7 @@ export type Database = {
       }
       trips: {
         Row: {
+          base_currency: string
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -650,6 +853,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -661,6 +865,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_currency?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null

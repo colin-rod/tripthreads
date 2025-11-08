@@ -9,6 +9,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getFxRate, formatDateForFx } from '@tripthreads/core'
 
 export interface CreateExpenseInput {
   tripId: string
@@ -142,7 +143,50 @@ export async function createExpense(input: CreateExpenseInput) {
       payerId = resolved
     }
 
-    // Create expense
+    // Look up FX rate snapshot if expense currency differs from trip base currency
+    let fxRate: number | null = null
+
+    // Get trip base currency
+    const { data: trip, error: tripError } = await supabase
+      .from('trips')
+      .select('base_currency')
+      .eq('id', input.tripId)
+      .single()
+
+    if (tripError) {
+      console.error('Error fetching trip:', tripError)
+      return {
+        success: false,
+        error: 'Failed to fetch trip details',
+      }
+    }
+
+    const baseCurrency = trip.base_currency || 'EUR'
+
+    if (input.currency !== baseCurrency) {
+      const expenseDate = formatDateForFx(input.date || new Date().toISOString())
+
+      try {
+        fxRate = await getFxRate(supabase, baseCurrency, input.currency, expenseDate, {
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        })
+
+        if (fxRate === null) {
+          // Log warning but don't fail expense creation
+          console.warn(
+            `FX rate unavailable for ${baseCurrency}→${input.currency} on ${expenseDate}`
+          )
+          // TODO: Log to Sentry in production
+        }
+      } catch (error) {
+        console.error('FX rate lookup failed:', error)
+        // Continue with null rate - graceful degradation
+        // TODO: Log to Sentry in production
+      }
+    }
+
+    // Create expense with FX rate snapshot
     const { data: expense, error: expenseError } = await supabase
       .from('expenses')
       .insert({
@@ -153,6 +197,7 @@ export async function createExpense(input: CreateExpenseInput) {
         category: input.category || 'other',
         payer_id: payerId,
         date: input.date || new Date().toISOString(),
+        fx_rate: fxRate,
         created_by: user.id,
       })
       .select()
