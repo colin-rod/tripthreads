@@ -165,8 +165,42 @@ export interface UserBalance {
 }
 
 /**
+ * Settlement status tracking
+ */
+export type SettlementStatus = 'pending' | 'settled'
+
+/**
+ * Settlement record from database
+ * Represents a persisted settlement between two users
+ */
+export interface Settlement {
+  id: string
+  trip_id: string
+  from_user_id: string
+  to_user_id: string
+  amount: number // In base currency minor units
+  currency: string // Trip base currency
+  status: SettlementStatus
+  settled_at?: string | null // ISO 8601 timestamp
+  settled_by?: string | null // User ID who marked as paid
+  note?: string | null // Optional payment note (e.g., "Paid via Venmo")
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Settlement with user details for display
+ */
+export interface SettlementWithUsers extends Settlement {
+  from_user: ExpenseUser
+  to_user: ExpenseUser
+  settled_by_user?: ExpenseUser | null
+}
+
+/**
  * Optimized settlement suggestion
  * Represents a single transfer to minimize total transactions
+ * @deprecated Use Settlement interface for persisted settlements
  */
 export interface OptimizedSettlement {
   from_user_id: string
@@ -178,12 +212,32 @@ export interface OptimizedSettlement {
 }
 
 /**
+ * Input for creating or updating a settlement
+ */
+export interface UpsertSettlementInput {
+  tripId: string
+  fromUserId: string
+  toUserId: string
+  amount: number
+  currency: string
+}
+
+/**
+ * Input for marking a settlement as paid
+ */
+export interface MarkSettlementPaidInput {
+  settlementId: string
+  note?: string // Optional payment note
+}
+
+/**
  * Complete settlement summary for a trip
- * Includes both individual balances and optimized transfer suggestions
+ * Includes both individual balances and settlement records (pending and settled)
  */
 export interface SettlementSummary {
   balances: UserBalance[]
-  settlements: OptimizedSettlement[]
+  pending_settlements: SettlementWithUsers[] // Unpaid settlements
+  settled_settlements: SettlementWithUsers[] // Completed settlements
   total_expenses: number // Total number of expenses included
   base_currency: string
   excluded_expenses: string[] // IDs of expenses with missing FX rates

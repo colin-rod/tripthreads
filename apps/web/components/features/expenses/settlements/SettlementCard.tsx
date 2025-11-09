@@ -3,17 +3,22 @@
 /**
  * SettlementCard Component
  *
- * Displays an individual settlement suggestion (transfer from one user to another).
+ * Displays an individual settlement (transfer from one user to another).
+ * Shows pending settlements with "Mark as Paid" button, or settled settlements with status.
  * Visual representation: Debtor → Creditor with amount.
  */
 
-import type { OptimizedSettlement } from '@tripthreads/core'
-import { ArrowRight } from 'lucide-react'
+import type { SettlementWithUsers } from '@tripthreads/core'
+import { ArrowRight, Check } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { formatDistanceToNow } from 'date-fns'
 
 interface SettlementCardProps {
-  settlement: OptimizedSettlement
+  settlement: SettlementWithUsers
   currentUserId?: string
+  onMarkAsPaid?: (settlementId: string) => void
 }
 
 /**
@@ -41,21 +46,28 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
-export function SettlementCard({ settlement, currentUserId }: SettlementCardProps) {
+export function SettlementCard({ settlement, currentUserId, onMarkAsPaid }: SettlementCardProps) {
   const isDebtor = settlement.from_user_id === currentUserId
   const isCreditor = settlement.to_user_id === currentUserId
+  const isPending = settlement.status === 'pending'
+  const isSettled = settlement.status === 'settled'
+  const canMarkAsPaid = isPending && (isDebtor || isCreditor) && onMarkAsPaid
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+    <div
+      className={`flex items-center gap-4 rounded-lg border bg-card p-4 transition-all ${
+        isPending ? 'hover:shadow-sm' : 'opacity-75'
+      }`}
+    >
       {/* From user (debtor) */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarFallback className="text-xs">
-            {getInitials(settlement.from_user_name)}
+            {getInitials(settlement.from_user.full_name)}
           </AvatarFallback>
         </Avatar>
         <span className="font-medium text-sm truncate">
-          {isDebtor ? 'You' : settlement.from_user_name}
+          {isDebtor ? 'You' : settlement.from_user.full_name}
         </span>
       </div>
 
@@ -68,11 +80,11 @@ export function SettlementCard({ settlement, currentUserId }: SettlementCardProp
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarFallback className="text-xs">
-            {getInitials(settlement.to_user_name)}
+            {getInitials(settlement.to_user.full_name)}
           </AvatarFallback>
         </Avatar>
         <span className="font-medium text-sm truncate">
-          {isCreditor ? 'You' : settlement.to_user_name}
+          {isCreditor ? 'You' : settlement.to_user.full_name}
         </span>
       </div>
 
@@ -81,6 +93,36 @@ export function SettlementCard({ settlement, currentUserId }: SettlementCardProp
         <span className="font-semibold text-lg text-primary">
           {formatAmount(settlement.amount, settlement.currency)}
         </span>
+      </div>
+
+      {/* Status / Action */}
+      <div className="flex-shrink-0">
+        {isSettled ? (
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Check className="h-3 w-3" />
+              Settled
+            </Badge>
+            {settlement.settled_at && (
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(settlement.settled_at), { addSuffix: true })}
+              </span>
+            )}
+            {settlement.note && (
+              <span className="text-xs text-muted-foreground italic">{settlement.note}</span>
+            )}
+          </div>
+        ) : canMarkAsPaid ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onMarkAsPaid(settlement.id)}
+            className="flex items-center gap-1"
+          >
+            <Check className="h-3 w-3" />
+            Mark as Paid
+          </Button>
+        ) : null}
       </div>
     </div>
   )

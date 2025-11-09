@@ -8,14 +8,20 @@
  * Collapsible section with localStorage state persistence.
  */
 
-import { useState, useEffect } from 'react'
-import type { SettlementSummary as SettlementSummaryType } from '@tripthreads/core'
+import { useState, useEffect, useTransition } from 'react'
+import type {
+  SettlementSummary as SettlementSummaryType,
+  SettlementWithUsers,
+} from '@tripthreads/core'
 import { ChevronDown, ChevronUp, Users, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SettlementCard } from './SettlementCard'
 import { UserBalanceCard } from './UserBalanceCard'
 import { MissingFxWarning } from './MissingFxWarning'
+import { MarkSettlementPaidDialog } from './MarkSettlementPaidDialog'
+import { markSettlementAsPaidAction } from '@/app/actions/settlements'
+import { useToast } from '@/hooks/use-toast'
 
 interface SettlementSummaryProps {
   summary: SettlementSummaryType | null
@@ -25,18 +31,30 @@ interface SettlementSummaryProps {
 
 const COLLAPSE_STORAGE_KEY = 'settlement-summary-collapsed'
 const EXPAND_BALANCES_STORAGE_KEY = 'settlement-balances-expanded'
+const EXPAND_HISTORY_STORAGE_KEY = 'settlement-history-expanded'
 
 export function SettlementSummary({ summary, currentUserId, tripId }: SettlementSummaryProps) {
+  const { toast } = useToast()
+  const [_isPending, startTransition] = useTransition()
+
   // Collapsible state for the entire summary
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // Expandable state for individual balances
   const [balancesExpanded, setBalancesExpanded] = useState(false)
 
+  // Expandable state for settled history
+  const [historyExpanded, setHistoryExpanded] = useState(false)
+
+  // Dialog state for marking settlement as paid
+  const [selectedSettlement, setSelectedSettlement] = useState<SettlementWithUsers | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   // Load saved states from localStorage on mount
   useEffect(() => {
     const savedCollapsed = localStorage.getItem(`${COLLAPSE_STORAGE_KEY}-${tripId}`)
     const savedBalancesExpanded = localStorage.getItem(`${EXPAND_BALANCES_STORAGE_KEY}-${tripId}`)
+    const savedHistoryExpanded = localStorage.getItem(`${EXPAND_HISTORY_STORAGE_KEY}-${tripId}`)
 
     if (savedCollapsed) {
       setIsCollapsed(savedCollapsed === 'true')
@@ -44,6 +62,10 @@ export function SettlementSummary({ summary, currentUserId, tripId }: Settlement
 
     if (savedBalancesExpanded) {
       setBalancesExpanded(savedBalancesExpanded === 'true')
+    }
+
+    if (savedHistoryExpanded) {
+      setHistoryExpanded(savedHistoryExpanded === 'true')
     }
   }, [tripId])
 
@@ -61,8 +83,50 @@ export function SettlementSummary({ summary, currentUserId, tripId }: Settlement
     localStorage.setItem(`${EXPAND_BALANCES_STORAGE_KEY}-${tripId}`, String(newState))
   }
 
-  // No summary or no settlements
-  if (!summary || summary.settlements.length === 0) {
+  // Save history expanded state to localStorage
+  const toggleHistory = () => {
+    const newState = !historyExpanded
+    setHistoryExpanded(newState)
+    localStorage.setItem(`${EXPAND_HISTORY_STORAGE_KEY}-${tripId}`, String(newState))
+  }
+
+  // Handle marking settlement as paid
+  const handleMarkAsPaid = (settlementId: string) => {
+    const settlement = summary?.pending_settlements.find(s => s.id === settlementId)
+    if (settlement) {
+      setSelectedSettlement(settlement)
+      setDialogOpen(true)
+    }
+  }
+
+  // Handle dialog confirmation
+  const handleDialogConfirm = async (settlementId: string, note?: string) => {
+    startTransition(async () => {
+      const result = await markSettlementAsPaidAction({
+        settlementId,
+        note,
+      })
+
+      if (result.success) {
+        toast({
+          title: 'Settlement marked as paid',
+          description: 'The settlement has been marked as paid and excluded from your balance.',
+        })
+      } else {
+        toast({
+          title: 'Failed to mark settlement as paid',
+          description: result.error || 'An error occurred. Please try again.',
+          variant: 'destructive',
+        })
+      }
+    })
+  }
+
+  // No summary or no pending/settled settlements
+  const hasPending = summary?.pending_settlements && summary.pending_settlements.length > 0
+  const hasSettled = summary?.settled_settlements && summary.settled_settlements.length > 0
+
+  if (!summary || (!hasPending && !hasSettled)) {
     return null
   }
 
@@ -76,10 +140,15 @@ export function SettlementSummary({ summary, currentUserId, tripId }: Settlement
               Settlements
             </CardTitle>
             <CardDescription>
-              {summary.settlements.length === 1
-                ? '1 optimal transfer'
-                : `${summary.settlements.length} optimal transfers`}{' '}
-              to settle all balances
+              {hasPending &&
+                (summary.pending_settlements.length === 1
+                  ? '1 pending transfer'
+                  : `${summary.pending_settlements.length} pending transfers`)}
+              {hasPending && hasSettled && ' • '}
+              {hasSettled &&
+                (summary.settled_settlements.length === 1
+                  ? '1 settled'
+                  : `${summary.settled_settlements.length} settled`)}
             </CardDescription>
           </div>
 
@@ -97,19 +166,56 @@ export function SettlementSummary({ summary, currentUserId, tripId }: Settlement
             <MissingFxWarning excludedExpenseIds={summary.excluded_expenses} />
           )}
 
-          {/* Optimized Settlements */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Suggested Transfers</h3>
+          {/* Pending Settlements */}
+          {hasPending && (
             <div className="space-y-2">
-              {summary.settlements.map((settlement, index) => (
-                <SettlementCard
-                  key={`${settlement.from_user_id}-${settlement.to_user_id}-${index}`}
-                  settlement={settlement}
-                  currentUserId={currentUserId}
-                />
-              ))}
+              <h3 className="text-sm font-medium text-muted-foreground">Pending Transfers</h3>
+              <div className="space-y-2">
+                {summary.pending_settlements.map(settlement => (
+                  <SettlementCard
+                    key={settlement.id}
+                    settlement={settlement}
+                    currentUserId={currentUserId}
+                    onMarkAsPaid={handleMarkAsPaid}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Settled Settlements (Collapsible) */}
+          {hasSettled && (
+            <div className="space-y-2 pt-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleHistory}
+                className="w-full justify-between text-sm text-muted-foreground hover:text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Settlement History ({summary.settled_settlements.length})
+                </span>
+                {historyExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+
+              {historyExpanded && (
+                <div className="space-y-2 mt-2">
+                  {summary.settled_settlements.map(settlement => (
+                    <SettlementCard
+                      key={settlement.id}
+                      settlement={settlement}
+                      currentUserId={currentUserId}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Individual Balances (Expandable) */}
           {summary.balances.length > 0 && (
@@ -146,6 +252,15 @@ export function SettlementSummary({ summary, currentUserId, tripId }: Settlement
           )}
         </CardContent>
       )}
+
+      {/* Mark Settlement as Paid Dialog */}
+      <MarkSettlementPaidDialog
+        settlement={selectedSettlement}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onConfirm={handleDialogConfirm}
+        currentUserId={currentUserId}
+      />
     </Card>
   )
 }
