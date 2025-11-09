@@ -3,8 +3,18 @@
  * Shared utilities, types, and functions for TripThreads
  */
 
-// Currency utilities
-export { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from './utils/currency'
+// Currency & FX utilities (re-exported from @tripthreads/core)
+export {
+  formatCurrency,
+  convertToMinorUnits,
+  convertFromMinorUnits,
+  getFxRateFromCache,
+  fetchAndCacheFxRate,
+  getFxRate,
+  convertCurrency,
+  calculateInverseRate,
+  formatDateForFx,
+} from '@tripthreads/core'
 
 // Database types (re-exported from @tripthreads/core)
 export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from '@tripthreads/core'
