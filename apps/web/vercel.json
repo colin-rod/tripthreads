@@ -3,7 +3,7 @@
   "installCommand": "cd ../.. && npm install",
   "buildCommand": "cd ../.. && npx turbo run build --filter=web",
   "devCommand": "cd ../.. && npx turbo run dev --filter=web",
-  "ignoreCommand": "cd ../.. && npx turbo-ignore",
+  "ignoreCommand": "cd ../.. && npx turbo-ignore web",
   "framework": "nextjs",
   "outputDirectory": ".next"
 }
