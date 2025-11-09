@@ -622,6 +622,45 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'message_reactions_message_id_fkey'
+            columns: ['message_id']
+            isOneToOne: false
+            referencedRelation: 'chat_messages'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'message_reactions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       migration_history: {
         Row: {
           applied_at: string
@@ -695,6 +734,80 @@ export type Database = {
             columns: ['analysis_run_id']
             isOneToOne: false
             referencedRelation: 'analysis_runs'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      settlements: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          from_user_id: string
+          id: string
+          note: string | null
+          settled_at: string | null
+          settled_by: string | null
+          status: string
+          to_user_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          from_user_id: string
+          id?: string
+          note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status?: string
+          to_user_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          from_user_id?: string
+          id?: string
+          note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status?: string
+          to_user_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'settlements_from_user_id_fkey'
+            columns: ['from_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_settled_by_fkey'
+            columns: ['settled_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_to_user_id_fkey'
+            columns: ['to_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
             referencedColumns: ['id']
           },
         ]
