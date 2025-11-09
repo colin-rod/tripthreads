@@ -89,7 +89,7 @@ export function ChatThread({
         .select(
           `
           user_id,
-          users:user_id (
+          user:users!user_id (
             id,
             full_name,
             email,
@@ -106,12 +106,12 @@ export function ChatThread({
 
       if (data) {
         const mentionableUsers: MentionableUser[] = data
-          .filter(p => p.users)
+          .filter(p => p.user)
           .map(p => ({
-            id: p.users!.id,
-            full_name: p.users!.full_name,
-            email: p.users!.email,
-            avatar_url: p.users!.avatar_url,
+            id: p.user!.id,
+            full_name: p.user!.full_name,
+            email: p.user!.email,
+            avatar_url: p.user!.avatar_url,
           }))
 
         setParticipants(mentionableUsers)

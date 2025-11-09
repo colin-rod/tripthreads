@@ -95,7 +95,7 @@ export function calculateUserBalances(
     if (!balanceMap.has(expense.payer_id)) {
       balanceMap.set(expense.payer_id, {
         user_id: expense.payer_id,
-        user_name: expense.payer.full_name,
+        user_name: expense.payer.full_name || 'Unknown User',
         net_balance: 0,
       })
     }
@@ -108,7 +108,7 @@ export function calculateUserBalances(
       if (!balanceMap.has(participant.user_id)) {
         balanceMap.set(participant.user_id, {
           user_id: participant.user_id,
-          user_name: participant.user.full_name,
+          user_name: participant.user.full_name || 'Unknown User',
           net_balance: 0,
         })
       }

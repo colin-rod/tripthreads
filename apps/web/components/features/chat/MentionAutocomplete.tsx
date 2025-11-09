@@ -6,7 +6,7 @@ import { UserIcon } from 'lucide-react'
 
 export interface MentionableUser {
   id: string
-  full_name: string
+  full_name: string | null
   email: string
   avatar_url?: string | null
 }
@@ -32,7 +32,7 @@ export function MentionAutocomplete({
   // Filter participants by query (case insensitive)
   const filteredParticipants = participants.filter(participant => {
     const searchText = query.toLowerCase()
-    const fullNameMatch = participant.full_name.toLowerCase().includes(searchText)
+    const fullNameMatch = participant.full_name?.toLowerCase().includes(searchText) ?? false
     const emailMatch = participant.email.toLowerCase().includes(searchText)
     const usernameMatch = participant.email.split('@')[0].toLowerCase().includes(searchText)
 
@@ -111,7 +111,7 @@ export function MentionAutocomplete({
             {participant.avatar_url ? (
               <img
                 src={participant.avatar_url}
-                alt={participant.full_name}
+                alt={participant.full_name || 'User'}
                 className="h-8 w-8 rounded-full object-cover"
               />
             ) : (
@@ -122,7 +122,9 @@ export function MentionAutocomplete({
 
             {/* User info */}
             <div className="flex-1 overflow-hidden">
-              <p className="truncate font-medium">{participant.full_name}</p>
+              <p className="truncate font-medium">
+                {participant.full_name || participant.email.split('@')[0]}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
                 @{participant.email.split('@')[0]}
               </p>

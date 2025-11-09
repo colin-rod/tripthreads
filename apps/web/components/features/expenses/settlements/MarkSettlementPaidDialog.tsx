@@ -111,11 +111,11 @@ export function MarkSettlementPaidDialog({
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Avatar className="h-8 w-8 flex-shrink-0">
               <AvatarFallback className="text-xs">
-                {getInitials(settlement.from_user.full_name)}
+                {getInitials(settlement.from_user.full_name || 'Unknown User')}
               </AvatarFallback>
             </Avatar>
             <span className="font-medium text-sm truncate">
-              {isDebtor ? 'You' : settlement.from_user.full_name}
+              {isDebtor ? 'You' : settlement.from_user.full_name || 'Unknown User'}
             </span>
           </div>
 
@@ -128,11 +128,11 @@ export function MarkSettlementPaidDialog({
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Avatar className="h-8 w-8 flex-shrink-0">
               <AvatarFallback className="text-xs">
-                {getInitials(settlement.to_user.full_name)}
+                {getInitials(settlement.to_user.full_name || 'Unknown User')}
               </AvatarFallback>
             </Avatar>
             <span className="font-medium text-sm truncate">
-              {isCreditor ? 'You' : settlement.to_user.full_name}
+              {isCreditor ? 'You' : settlement.to_user.full_name || 'Unknown User'}
             </span>
           </div>
 

@@ -126,13 +126,13 @@ export function ExpenseListView({
     optimisticExpenses.forEach(expense => {
       payerMap.set(expense.payer_id, {
         id: expense.payer_id,
-        name: expense.payer.full_name,
+        name: expense.payer.full_name || 'Unknown User',
       })
 
       expense.participants.forEach(participant => {
         participantMap.set(participant.user_id, {
           id: participant.user_id,
-          name: participant.user.full_name,
+          name: participant.user.full_name || 'Unknown User',
         })
       })
     })
@@ -221,7 +221,7 @@ export function ExpenseListView({
           groupKey = expense.payer_id
           // Note: groupLabel not currently used but reserved for future UI enhancements
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          groupLabel = expense.payer.full_name
+          groupLabel = expense.payer.full_name || 'Unknown User'
           break
         case 'participant':
           // For participant grouping, we'll create a group for each participant
@@ -256,10 +256,11 @@ export function ExpenseListView({
           label = items[0].category.charAt(0).toUpperCase() + items[0].category.slice(1)
           break
         case 'payer':
-          label = items[0].payer.full_name
+          label = items[0].payer.full_name || 'Unknown User'
           break
         case 'participant':
-          label = items[0].participants.find(p => p.user_id === key)?.user.full_name || key
+          label =
+            items[0].participants.find(p => p.user_id === key)?.user.full_name || 'Unknown User'
           break
       }
 

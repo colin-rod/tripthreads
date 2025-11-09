@@ -47,7 +47,7 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
 
   // Verify user is a participant
   const isParticipant = trip.trip_participants?.some(
-    participant => participant.user?.id === user.id
+    (participant: (typeof trip.trip_participants)[number]) => participant.user?.id === user.id
   )
 
   if (!isParticipant) {

@@ -67,7 +67,7 @@ export interface ExpenseParticipant {
  */
 export interface ExpenseUser {
   id: string
-  full_name: string
+  full_name: string | null
   avatar_url?: string | null
 }
 

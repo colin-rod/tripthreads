@@ -133,12 +133,14 @@ export function ExpenseDetailSheet({
               {expense.payer.avatar_url && (
                 <img
                   src={expense.payer.avatar_url}
-                  alt={expense.payer.full_name}
+                  alt={expense.payer.full_name || 'User'}
                   className="h-8 w-8 rounded-full"
                 />
               )}
               <div>
-                <p className="text-base font-medium">{isPayer ? 'You' : expense.payer.full_name}</p>
+                <p className="text-base font-medium">
+                  {isPayer ? 'You' : expense.payer.full_name || 'Unknown User'}
+                </p>
                 {isPayer && (
                   <p className="text-sm text-muted-foreground">You paid for this expense</p>
                 )}
@@ -174,13 +176,13 @@ export function ExpenseDetailSheet({
                       {participant.user.avatar_url && (
                         <img
                           src={participant.user.avatar_url}
-                          alt={participant.user.full_name}
+                          alt={participant.user.full_name || 'User'}
                           className="h-8 w-8 rounded-full flex-shrink-0"
                         />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {isCurrentUser ? 'You' : participant.user.full_name}
+                          {isCurrentUser ? 'You' : participant.user.full_name || 'Unknown User'}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {sharePercentage}% • {participant.share_type} split

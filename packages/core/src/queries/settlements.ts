@@ -66,7 +66,8 @@ export async function getSettlementSummary(
   if (expenses.length === 0) {
     return {
       balances: [],
-      settlements: [],
+      pending_settlements: [],
+      settled_settlements: [],
       total_expenses: 0,
       base_currency: baseCurrency,
       excluded_expenses: [],

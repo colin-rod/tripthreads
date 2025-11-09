@@ -84,7 +84,7 @@ export function extractUsernames(message: string): string[] {
  */
 export function mapUsernamesToIds(
   message: string,
-  participants: Array<{ id: string; full_name: string; email: string }>
+  participants: Array<{ id: string; full_name: string | null; email: string }>
 ): string[] {
   const usernames = extractUsernames(message)
   const userIds: string[] = []
@@ -95,12 +95,12 @@ export function mapUsernamesToIds(
       const emailUsername = p.email.split('@')[0].toLowerCase()
 
       // Match against full_name (case insensitive, spaces removed)
-      const fullNameNormalized = p.full_name.toLowerCase().replace(/\s+/g, '')
+      const fullNameNormalized = p.full_name?.toLowerCase().replace(/\s+/g, '') ?? ''
 
       return (
         emailUsername === username ||
         fullNameNormalized === username ||
-        p.full_name.toLowerCase() === username
+        p.full_name?.toLowerCase() === username
       )
     })
 
@@ -123,7 +123,7 @@ export function mapUsernamesToIds(
 export function highlightMentions(
   message: string,
   currentUserId: string,
-  participants: Array<{ id: string; full_name: string; email: string }>
+  participants: Array<{ id: string; full_name: string | null; email: string }>
 ): string {
   const mentions = detectUserMentions(message)
 
@@ -138,12 +138,12 @@ export function highlightMentions(
   for (const mention of sortedMentions) {
     const participant = participants.find(p => {
       const emailUsername = p.email.split('@')[0].toLowerCase()
-      const fullNameNormalized = p.full_name.toLowerCase().replace(/\s+/g, '')
+      const fullNameNormalized = p.full_name?.toLowerCase().replace(/\s+/g, '') ?? ''
 
       return (
         emailUsername === mention.username.toLowerCase() ||
         fullNameNormalized === mention.username.toLowerCase() ||
-        p.full_name.toLowerCase() === mention.username.toLowerCase()
+        p.full_name?.toLowerCase() === mention.username.toLowerCase()
       )
     })
 

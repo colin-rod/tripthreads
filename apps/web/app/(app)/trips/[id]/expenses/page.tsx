@@ -97,9 +97,15 @@ export default async function TripExpensesPage({ params }: TripExpensesPageProps
         {expenses && expenses.length > 0 ? (
           <>
             {/* Settlement Summary - displayed at top when there are settlements */}
-            {settlementSummary && settlementSummary.settlements.length > 0 && (
-              <SettlementSummary summary={settlementSummary} currentUserId={user.id} tripId={id} />
-            )}
+            {settlementSummary &&
+              (settlementSummary.pending_settlements.length > 0 ||
+                settlementSummary.settled_settlements.length > 0) && (
+                <SettlementSummary
+                  summary={settlementSummary}
+                  currentUserId={user.id}
+                  tripId={id}
+                />
+              )}
 
             {/* Expense List */}
             <ExpenseListView
