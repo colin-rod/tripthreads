@@ -64,7 +64,7 @@ supabase start
 npm run generate-types
 ```
 
-This runs: `supabase gen types typescript --local > packages/shared/types/database.ts`
+This runs: `supabase gen types typescript --local > packages/core/src/types/database.ts`
 
 ### Generate from Remote/Production Database
 
@@ -76,7 +76,7 @@ export SUPABASE_PROJECT_ID=your-project-id
 npm run generate-types:remote
 ```
 
-This runs: `supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/shared/types/database.ts`
+This runs: `supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/core/src/types/database.ts`
 
 **Note**: You need to be authenticated with Supabase CLI:
 
@@ -111,7 +111,7 @@ supabase login
 5. **Commit both migration and types**:
 
    ```bash
-   git add supabase/migrations/ packages/shared/types/database.ts
+   git add supabase/migrations/ packages/core/src/types/database.ts
    git commit -m "feat(db): add chat_messages table"
    ```
 
@@ -132,7 +132,7 @@ supabase login
 
 1. **Always regenerate types** after creating/modifying migrations
 2. **Commit types with migrations** in the same commit
-3. **Never manually edit** `packages/shared/types/database.ts`
+3. **Never manually edit** `packages/core/src/types/database.ts`
 4. **Run type-check** before committing to catch type errors early
 
 ## Troubleshooting
@@ -155,7 +155,7 @@ This means you forgot to regenerate types after changing migrations.
 
 ```bash
 npm run generate-types
-git add packages/shared/types/database.ts
+git add packages/core/src/types/database.ts
 git commit -m "chore(types): regenerate Supabase types"
 git push
 ```
