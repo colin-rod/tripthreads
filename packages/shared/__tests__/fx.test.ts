@@ -4,13 +4,17 @@
  * Tests currency conversion, rate lookups, and on-demand fetching logic.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import {
   getFxRateFromCache,
+  fetchAndCacheFxRate,
+  getFxRate,
   convertCurrency,
   calculateInverseRate,
   formatDateForFx,
-} from '../src/utils/fx'
+} from '@tripthreads/core'
+
+import * as SharedExports from '../src'
 
 // Mock Supabase client
 const createMockSupabase = (mockData: any) => {
@@ -32,7 +36,16 @@ const createMockSupabase = (mockData: any) => {
 describe('FX Utilities', () => {
   beforeEach(() => {
     // Clear all mocks before each test
-    vi.clearAllMocks()
+    jest.clearAllMocks()
+  })
+
+  it('re-exports FX helpers via @tripthreads/shared', () => {
+    expect(SharedExports.getFxRateFromCache).toBe(getFxRateFromCache)
+    expect(SharedExports.fetchAndCacheFxRate).toBe(fetchAndCacheFxRate)
+    expect(SharedExports.getFxRate).toBe(getFxRate)
+    expect(SharedExports.convertCurrency).toBe(convertCurrency)
+    expect(SharedExports.calculateInverseRate).toBe(calculateInverseRate)
+    expect(SharedExports.formatDateForFx).toBe(formatDateForFx)
   })
 
   describe('getFxRateFromCache', () => {

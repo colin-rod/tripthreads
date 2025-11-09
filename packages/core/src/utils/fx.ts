@@ -53,8 +53,8 @@ export async function getFxRateFromCache(
       return null
     }
 
-    if (!data) {
-      return null // Rate not in cache
+    if (!data || typeof data.rate !== 'number') {
+      return null // Rate not in cache or malformed entry
     }
 
     return data.rate

@@ -1,6 +1,14 @@
-import { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from '../src/utils/currency'
+import { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from '@tripthreads/core'
+
+import * as SharedExports from '../src'
 
 describe('Currency Utils', () => {
+  it('re-exports currency helpers via @tripthreads/shared', () => {
+    expect(SharedExports.formatCurrency).toBe(formatCurrency)
+    expect(SharedExports.convertToMinorUnits).toBe(convertToMinorUnits)
+    expect(SharedExports.convertFromMinorUnits).toBe(convertFromMinorUnits)
+  })
+
   describe('formatCurrency', () => {
     it('should format EUR correctly', () => {
       expect(formatCurrency(100, 'EUR')).toBe('€100.00')
@@ -29,7 +37,7 @@ describe('Currency Utils', () => {
 
   describe('convertToMinorUnits', () => {
     it('should convert dollars to cents', () => {
-      expect(convertToMinorUnits(100.50)).toBe(10050)
+      expect(convertToMinorUnits(100.5)).toBe(10050)
     })
 
     it('should handle whole numbers', () => {
@@ -45,13 +53,13 @@ describe('Currency Utils', () => {
     })
 
     it('should handle negative amounts', () => {
-      expect(convertToMinorUnits(-25.50)).toBe(-2550)
+      expect(convertToMinorUnits(-25.5)).toBe(-2550)
     })
   })
 
   describe('convertFromMinorUnits', () => {
     it('should convert cents to dollars', () => {
-      expect(convertFromMinorUnits(10050)).toBe(100.50)
+      expect(convertFromMinorUnits(10050)).toBe(100.5)
     })
 
     it('should handle whole dollar amounts', () => {
@@ -63,7 +71,7 @@ describe('Currency Utils', () => {
     })
 
     it('should handle negative amounts', () => {
-      expect(convertFromMinorUnits(-2550)).toBe(-25.50)
+      expect(convertFromMinorUnits(-2550)).toBe(-25.5)
     })
   })
 })
