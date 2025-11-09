@@ -13,6 +13,7 @@ export { toTripSummary } from '../types/trip'
 
 // Natural Language Parser (Production - OpenAI GPT-4o-mini)
 export { SYSTEM_PROMPT, getDateParserPrompt, getExpenseParserPrompt } from './parser/llm-prompts'
+export { parseNaturalDate, parseExpense, detectSplitType, normalizeSplitType } from './parser'
 export type {
   ParsedDateTime,
   DateParserOptions,

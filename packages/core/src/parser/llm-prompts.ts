@@ -67,7 +67,7 @@ Return JSON with this exact schema:
   "description": "string",
   "category": "food" | "transport" | "accommodation" | "activity" | "other" | null,
   "payer": "string or null",
-  "splitType": "equal" | "custom" | "shares" | "none",
+  "splitType": "equal" | "custom" | "percentage" | "none",
   "splitCount": number or null (for equal splits),
   "participants": ["array", "of", "names"] or null (for equal splits),
   "customSplits": [{"name": "string", "amount": number}] or null (for custom splits in minor units),
@@ -79,7 +79,7 @@ Important rules:
 - For EUR/USD/GBP: Convert to minor units (€60 = 6000 cents)
 - For JPY/KRW: NO conversion, use actual amount (¥2500 = 2500)
 - Description should NOT include participant names, amounts, or split keywords
-- splitType is "equal" for equal splits, "custom" for specific amounts per person, "none" if no split
+- splitType is "equal" for equal splits, "custom" for specific amounts per person, "percentage" for share/percentage-based splits, "none" if no split
 - For equal splits: use splitCount and participants fields
 - For custom splits: use customSplits array with {name, amount} objects
 - participants should only include actual person names, NOT description words like "Dinner", "Lunch", "Hotel"

@@ -52,7 +52,7 @@ interface ParsedItemModalProps {
       description: string
       category?: string
       payer?: string
-      splitType?: 'equal' | 'custom' | 'shares'
+      splitType?: 'equal' | 'custom' | 'percentage'
       splitCount?: number
       participants?: string[]
       date?: string

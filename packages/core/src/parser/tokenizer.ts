@@ -301,7 +301,9 @@ export function extractPayer(input: string): string | null {
  * - "everyone pays their share" → 'custom'
  * - "owes half" → 'custom'
  */
-export function detectSplitType(input: string): 'equal' | 'custom' | 'percentage' | 'none' {
+export type RawSplitType = 'equal' | 'custom' | 'percentage' | 'shares' | 'none'
+
+export function detectSplitType(input: string): RawSplitType {
   // Equal splits
   if (/(?:split|divide|shared?)\s+(?:equally|evenly)/i.test(input)) {
     return 'equal'
@@ -319,9 +321,13 @@ export function detectSplitType(input: string): 'equal' | 'custom' | 'percentage
     return 'equal'
   }
 
-  // Percentage splits
+  // Percentage or share-based splits
   if (/\d+%/i.test(input)) {
     return 'percentage'
+  }
+
+  if (/(?:their\s+share|each\s+person\s+pays|everyone\s+pays)/i.test(input)) {
+    return 'shares'
   }
 
   // Custom splits
@@ -343,6 +349,16 @@ export function detectSplitType(input: string): 'equal' | 'custom' | 'percentage
   }
 
   return 'none'
+}
+
+export function normalizeSplitType(
+  splitType: RawSplitType
+): 'equal' | 'percentage' | 'custom' | 'none' {
+  if (splitType === 'shares') {
+    return 'percentage'
+  }
+
+  return splitType
 }
 
 /**

@@ -15,6 +15,7 @@ import {
   extractNames,
   extractPayer,
   detectSplitType,
+  normalizeSplitType,
   inferCategory,
   extractDescription,
 } from './tokenizer'
@@ -73,7 +74,7 @@ export function parseExpense(
   const payer = extractPayer(trimmedInput)
 
   // Detect split type
-  const splitType = detectSplitType(trimmedInput)
+  const splitType = normalizeSplitType(detectSplitType(trimmedInput))
 
   // Extract split count
   const splitCount = extractSplitCount(trimmedInput)
