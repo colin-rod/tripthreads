@@ -110,13 +110,31 @@ tripthreads/
 │
 ├── docs/                       # Documentation
 │   ├── ARCHITECTURE.md         # This file
-│   ├── OFFLINE_SYNC.md
-│   └── NL_PARSER.md
+│   ├── ANALYTICS_EVENTS.md     # Event tracking catalog
+│   ├── AUTH_SETUP.md           # Supabase auth configuration
+│   ├── E2E_TESTING.md          # Playwright / Expo test plan
+│   ├── GITHUB_SECRETS_SETUP.md # GitHub Actions secret management
+│   ├── MOBILE_DEEP_LINKING.md  # Deep linking architecture
+│   ├── MOBILE_DEEP_LINKING_INDEX.md
+│   ├── MOBILE_DEEP_LINKING_QUICKSTART.md
+│   ├── RLS_DATE_SCOPING.md     # Row-level security date filtering
+│   ├── RLS_TESTING.md          # RLS validation checklist
+│   ├── SCOPE_CRO-690.md        # Linear epic hand-off
+│   ├── SCOPE_LOCAL_CACHE.md    # Supersedes the retired OFFLINE_SYNC.md
+│   ├── SUPABASE_EMAIL_SETUP.md # Magic link + SMTP configuration
+│   ├── SUPABASE_TYPES_GENERATION.md
+│   └── wireframes/             # UX wireframes
 │
 ├── package.json                # Root package.json (workspaces)
 ├── turbo.json                  # Turborepo configuration
 └── tsconfig.json               # Root TypeScript config
 ```
+
+**Documentation Notes:**
+
+- `SCOPE_LOCAL_CACHE.md` is the active planning doc for offline support and replaces the legacy `OFFLINE_SYNC.md` guide.
+- Natural language parser docs now live at [`../AI_PARSER_INTEGRATION.md`](../AI_PARSER_INTEGRATION.md) and [`../NLP_CLEANUP_SUMMARY.md`](../NLP_CLEANUP_SUMMARY.md); the old `NL_PARSER.md` file has been retired.
+- The legacy `PRD.md` has been archived; use [`../IMPLEMENTATION_SUMMARY.md`](../IMPLEMENTATION_SUMMARY.md) for the current product overview.
 
 ---
 
@@ -558,10 +576,12 @@ export async function uploadAvatar(
 
 ## References
 
-- [TripThreads PRD](../PRD.md)
-- [Offline Sync Strategy](./OFFLINE_SYNC.md)
-- [Natural Language Parser Spec](./NL_PARSER.md)
-- [Deployment Guide](./DEPLOYMENT.md)
+- [Implementation Summary](../IMPLEMENTATION_SUMMARY.md)
+- [Auth Setup Guide](./AUTH_SETUP.md)
+- [Mobile Deep Linking Overview](./MOBILE_DEEP_LINKING.md)
+- [Local Cache Scope (Offline Sync successor)](./SCOPE_LOCAL_CACHE.md)
+- [AI Parser Integration Notes](../AI_PARSER_INTEGRATION.md)
+- [Deployment Guide](../DEPLOYMENT.md)
 
 ---
 
