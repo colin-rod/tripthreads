@@ -36,12 +36,10 @@ interface TripParticipant {
 /**
  * Resolve a participant identifier (name or user_id) to user_id
  */
-async function resolveParticipantId(
-  _supabase: unknown,
-  _tripId: string,
+export function resolveParticipantId(
   identifier: string,
   tripParticipants: TripParticipant[]
-): Promise<string | null> {
+): string | null {
   // Check if it's already a valid UUID (user_id)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (uuidRegex.test(identifier)) {
@@ -56,6 +54,285 @@ async function resolveParticipantId(
   )
 
   return matchedParticipant ? matchedParticipant.user_id : null
+}
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>
+
+interface AssertTripParticipantSuccess {
+  user: { id: string }
+  participant: { role: string }
+}
+
+type AssertTripParticipantResult =
+  | { error: string }
+  | (AssertTripParticipantSuccess & { error?: undefined })
+
+export async function assertTripParticipant(
+  supabase: SupabaseClient,
+  tripId: string
+): Promise<AssertTripParticipantResult> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return {
+      error: 'Authentication required',
+    }
+  }
+
+  const { data: participant, error: participantError } = await supabase
+    .from('trip_participants')
+    .select('id, role')
+    .eq('trip_id', tripId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (participantError || !participant) {
+    return {
+      error: 'You must be a participant of this trip to add expenses',
+    }
+  }
+
+  if (participant.role === 'viewer') {
+    return {
+      error: 'Viewers cannot add expenses',
+    }
+  }
+
+  return {
+    user: { id: user.id },
+    participant,
+  }
+}
+
+export function resolvePayer(
+  payer: string | null,
+  {
+    defaultPayerId,
+    tripParticipants,
+  }: { defaultPayerId: string; tripParticipants: TripParticipant[] }
+): { payerId: string; error?: string } {
+  if (!payer) {
+    return { payerId: defaultPayerId }
+  }
+
+  const resolved = resolveParticipantId(payer, tripParticipants)
+
+  if (!resolved) {
+    return {
+      payerId: defaultPayerId,
+      error: `Payer "${payer}" is not a participant in this trip`,
+    }
+  }
+
+  return { payerId: resolved }
+}
+
+export async function lookupFxRate(
+  supabase: SupabaseClient,
+  input: Pick<CreateExpenseInput, 'tripId' | 'currency' | 'date' | 'amount'>
+): Promise<{ fxRate: number | null; baseCurrency: string; error?: string }> {
+  const { data: trip, error: tripError } = await supabase
+    .from('trips')
+    .select('base_currency')
+    .eq('id', input.tripId)
+    .single()
+
+  if (tripError) {
+    console.error('Error fetching trip:', tripError)
+    return {
+      fxRate: null,
+      baseCurrency: 'EUR',
+      error: 'Failed to fetch trip details',
+    }
+  }
+
+  const baseCurrency = trip.base_currency || 'EUR'
+
+  if (input.currency === baseCurrency) {
+    return { fxRate: null, baseCurrency }
+  }
+
+  const expenseDate = formatDateForFx(input.date || new Date().toISOString())
+
+  try {
+    const fxRate = await getFxRate(supabase, baseCurrency, input.currency, expenseDate, {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    })
+
+    if (fxRate === null) {
+      console.warn(`FX rate unavailable for ${baseCurrency}→${input.currency} on ${expenseDate}`)
+
+      Sentry.captureMessage(
+        `FX rate unavailable: ${baseCurrency}→${input.currency} on ${expenseDate}`,
+        {
+          level: 'warning',
+          tags: {
+            feature: 'fx_rates',
+            baseCurrency,
+            targetCurrency: input.currency,
+            date: expenseDate,
+          },
+          contexts: {
+            expense: {
+              tripId: input.tripId,
+              amount: input.amount,
+              currency: input.currency,
+            },
+          },
+        }
+      )
+    }
+
+    return { fxRate, baseCurrency }
+  } catch (error) {
+    console.error('FX rate lookup failed:', error)
+
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'fx_rates',
+        baseCurrency,
+        targetCurrency: input.currency,
+        operation: 'lookup',
+      },
+      contexts: {
+        expense: {
+          tripId: input.tripId,
+          amount: input.amount,
+          currency: input.currency,
+          date: expenseDate,
+        },
+      },
+    })
+
+    return { fxRate: null, baseCurrency }
+  }
+}
+
+interface ExpenseParticipantRecord {
+  expense_id: string
+  user_id: string
+  share_amount: number
+  share_type: string
+  share_value: number | null
+}
+
+export function buildExpenseParticipants({
+  expenseId,
+  input,
+  tripParticipants,
+}: {
+  expenseId: string
+  input: CreateExpenseInput
+  tripParticipants: TripParticipant[]
+}): { participants: ExpenseParticipantRecord[]; error?: string } {
+  const expenseParticipants: ExpenseParticipantRecord[] = []
+
+  if (input.splitType === 'equal') {
+    let participantIds: string[] = []
+
+    if (input.participants && input.participants.length > 0) {
+      for (const participant of input.participants) {
+        const resolved = resolveParticipantId(participant, tripParticipants)
+        if (!resolved) {
+          return {
+            participants: expenseParticipants,
+            error: `Participant "${participant}" is not in this trip`,
+          }
+        }
+        participantIds.push(resolved)
+      }
+    } else if (input.splitCount) {
+      participantIds = tripParticipants
+        .slice(0, input.splitCount)
+        .map(participant => participant.user_id)
+    } else {
+      participantIds = tripParticipants.map(participant => participant.user_id)
+    }
+
+    if (participantIds.length === 0) {
+      return {
+        participants: expenseParticipants,
+        error: 'No participants available for equal split',
+      }
+    }
+
+    const shareAmount = Math.floor(input.amount / participantIds.length)
+    const remainder = input.amount - shareAmount * participantIds.length
+
+    participantIds.forEach((userId, index) => {
+      expenseParticipants.push({
+        expense_id: expenseId,
+        user_id: userId,
+        share_amount: shareAmount + (index === 0 ? remainder : 0),
+        share_type: 'equal',
+        share_value: null,
+      })
+    })
+  } else if (input.splitType === 'percentage' && input.percentageSplits) {
+    let totalAssigned = 0
+
+    for (let i = 0; i < input.percentageSplits.length; i++) {
+      const split = input.percentageSplits[i]
+      const userId = resolveParticipantId(split.name, tripParticipants)
+
+      if (!userId) {
+        return {
+          participants: expenseParticipants,
+          error: `Participant "${split.name}" is not in this trip`,
+        }
+      }
+
+      let shareAmount: number
+      if (i === input.percentageSplits.length - 1) {
+        shareAmount = input.amount - totalAssigned
+      } else {
+        shareAmount = Math.floor((input.amount * split.percentage) / 100)
+        totalAssigned += shareAmount
+      }
+
+      expenseParticipants.push({
+        expense_id: expenseId,
+        user_id: userId,
+        share_amount: shareAmount,
+        share_type: 'percentage',
+        share_value: split.percentage,
+      })
+    }
+  } else if (input.splitType === 'custom' && input.customSplits) {
+    const totalCustom = input.customSplits.reduce((sum, split) => sum + split.amount, 0)
+
+    if (totalCustom !== input.amount) {
+      return {
+        participants: expenseParticipants,
+        error: `Custom splits (${totalCustom}) do not sum to expense total (${input.amount})`,
+      }
+    }
+
+    for (const split of input.customSplits) {
+      const userId = resolveParticipantId(split.name, tripParticipants)
+
+      if (!userId) {
+        return {
+          participants: expenseParticipants,
+          error: `Participant "${split.name}" is not in this trip`,
+        }
+      }
+
+      expenseParticipants.push({
+        expense_id: expenseId,
+        user_id: userId,
+        share_amount: split.amount,
+        share_type: 'amount',
+        share_value: split.amount,
+      })
+    }
+  }
+
+  return { participants: expenseParticipants }
 }
 
 /**
@@ -88,145 +365,42 @@ export async function createExpense(input: CreateExpenseInput) {
   const supabase = await createClient()
 
   try {
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const participantResult = await assertTripParticipant(supabase, input.tripId)
 
-    if (authError || !user) {
-      return {
-        success: false,
-        error: 'Authentication required',
-      }
+    if ('error' in participantResult && participantResult.error) {
+      return { success: false, error: participantResult.error }
     }
 
-    // Verify user is a participant of the trip
-    const { data: participant, error: participantError } = await supabase
-      .from('trip_participants')
-      .select('id, role')
-      .eq('trip_id', input.tripId)
-      .eq('user_id', user.id)
-      .single()
+    const { user } = participantResult as AssertTripParticipantSuccess
 
-    if (participantError || !participant) {
-      return {
-        success: false,
-        error: 'You must be a participant of this trip to add expenses',
-      }
-    }
-
-    // Viewers cannot add expenses
-    if (participant.role === 'viewer') {
-      return {
-        success: false,
-        error: 'Viewers cannot add expenses',
-      }
-    }
-
-    // Get all trip participants for resolution
     const tripParticipants = await getTripParticipants(supabase, input.tripId)
 
-    // Resolve payer
-    let payerId = user.id // Default to current user
-    if (input.payer) {
-      const resolved = await resolveParticipantId(
-        supabase,
-        input.tripId,
-        input.payer,
-        tripParticipants
-      )
-      if (!resolved) {
-        return {
-          success: false,
-          error: `Payer "${input.payer}" is not a participant in this trip`,
-        }
-      }
-      payerId = resolved
-    }
+    const payerResult = resolvePayer(input.payer, {
+      defaultPayerId: user.id,
+      tripParticipants,
+    })
 
-    // Look up FX rate snapshot if expense currency differs from trip base currency
-    let fxRate: number | null = null
-
-    // Get trip base currency
-    const { data: trip, error: tripError } = await supabase
-      .from('trips')
-      .select('base_currency')
-      .eq('id', input.tripId)
-      .single()
-
-    if (tripError) {
-      console.error('Error fetching trip:', tripError)
+    if (payerResult.error) {
       return {
         success: false,
-        error: 'Failed to fetch trip details',
+        error: payerResult.error,
       }
     }
 
-    const baseCurrency = trip.base_currency || 'EUR'
+    const fxRateResult = await lookupFxRate(supabase, {
+      tripId: input.tripId,
+      currency: input.currency,
+      date: input.date,
+      amount: input.amount,
+    })
 
-    if (input.currency !== baseCurrency) {
-      const expenseDate = formatDateForFx(input.date || new Date().toISOString())
-
-      try {
-        fxRate = await getFxRate(supabase, baseCurrency, input.currency, expenseDate, {
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        })
-
-        if (fxRate === null) {
-          // Log warning but don't fail expense creation
-          console.warn(
-            `FX rate unavailable for ${baseCurrency}→${input.currency} on ${expenseDate}`
-          )
-
-          // Log to Sentry for monitoring
-          Sentry.captureMessage(
-            `FX rate unavailable: ${baseCurrency}→${input.currency} on ${expenseDate}`,
-            {
-              level: 'warning',
-              tags: {
-                feature: 'fx_rates',
-                baseCurrency,
-                targetCurrency: input.currency,
-                date: expenseDate,
-              },
-              contexts: {
-                expense: {
-                  tripId: input.tripId,
-                  amount: input.amount,
-                  currency: input.currency,
-                },
-              },
-            }
-          )
-        }
-      } catch (error) {
-        console.error('FX rate lookup failed:', error)
-
-        // Log to Sentry
-        Sentry.captureException(error, {
-          tags: {
-            feature: 'fx_rates',
-            baseCurrency,
-            targetCurrency: input.currency,
-            operation: 'lookup',
-          },
-          contexts: {
-            expense: {
-              tripId: input.tripId,
-              amount: input.amount,
-              currency: input.currency,
-              date: expenseDate,
-            },
-          },
-        })
-
-        // Continue with null rate - graceful degradation
+    if (fxRateResult.error) {
+      return {
+        success: false,
+        error: fxRateResult.error,
       }
     }
 
-    // Create expense with FX rate snapshot
     const { data: expense, error: expenseError } = await supabase
       .from('expenses')
       .insert({
@@ -235,9 +409,9 @@ export async function createExpense(input: CreateExpenseInput) {
         currency: input.currency,
         description: input.description,
         category: input.category || 'other',
-        payer_id: payerId,
+        payer_id: payerResult.payerId,
         date: input.date || new Date().toISOString(),
-        fx_rate: fxRate,
+        fx_rate: fxRateResult.fxRate,
         created_by: user.id,
       })
       .select()
@@ -273,134 +447,24 @@ export async function createExpense(input: CreateExpenseInput) {
       }
     }
 
-    // Create expense participants based on split logic
-    const expenseParticipants: Array<{
-      expense_id: string
-      user_id: string
-      share_amount: number
-      share_type: string
-      share_value: number | null
-    }> = []
+    const expenseParticipantsResult = buildExpenseParticipants({
+      expenseId: expense.id,
+      input,
+      tripParticipants,
+    })
 
-    if (input.splitType === 'equal') {
-      // Equal split among specified participants or split count
-      let participantIds: string[] = []
-
-      if (input.participants && input.participants.length > 0) {
-        // Resolve participant names/ids
-        for (const p of input.participants) {
-          const resolved = await resolveParticipantId(supabase, input.tripId, p, tripParticipants)
-          if (!resolved) {
-            // Rollback expense
-            await supabase.from('expenses').delete().eq('id', expense.id)
-            return {
-              success: false,
-              error: `Participant "${p}" is not in this trip`,
-            }
-          }
-          participantIds.push(resolved)
-        }
-      } else if (input.splitCount) {
-        // Use first N trip participants
-        participantIds = tripParticipants.slice(0, input.splitCount).map(p => p.user_id)
-      } else {
-        // Default to all trip participants
-        participantIds = tripParticipants.map(p => p.user_id)
-      }
-
-      const shareAmount = Math.floor(input.amount / participantIds.length)
-      const remainder = input.amount - shareAmount * participantIds.length
-
-      participantIds.forEach((userId, index) => {
-        expenseParticipants.push({
-          expense_id: expense.id,
-          user_id: userId,
-          share_amount: shareAmount + (index === 0 ? remainder : 0), // Give remainder to first
-          share_type: 'equal',
-          share_value: null,
-        })
-      })
-    } else if (input.splitType === 'percentage' && input.percentageSplits) {
-      // Percentage split
-      let totalAssigned = 0
-
-      for (let i = 0; i < input.percentageSplits.length; i++) {
-        const split = input.percentageSplits[i]
-        const userId = await resolveParticipantId(
-          supabase,
-          input.tripId,
-          split.name,
-          tripParticipants
-        )
-
-        if (!userId) {
-          await supabase.from('expenses').delete().eq('id', expense.id)
-          return {
-            success: false,
-            error: `Participant "${split.name}" is not in this trip`,
-          }
-        }
-
-        // For last participant, assign remaining to avoid rounding errors
-        let shareAmount: number
-        if (i === input.percentageSplits.length - 1) {
-          shareAmount = input.amount - totalAssigned
-        } else {
-          shareAmount = Math.floor((input.amount * split.percentage) / 100)
-          totalAssigned += shareAmount
-        }
-
-        expenseParticipants.push({
-          expense_id: expense.id,
-          user_id: userId,
-          share_amount: shareAmount,
-          share_type: 'percentage',
-          share_value: split.percentage,
-        })
-      }
-    } else if (input.splitType === 'custom' && input.customSplits) {
-      // Custom amount split
-      const totalCustom = input.customSplits.reduce((sum, s) => sum + s.amount, 0)
-
-      if (totalCustom !== input.amount) {
-        await supabase.from('expenses').delete().eq('id', expense.id)
-        return {
-          success: false,
-          error: `Custom splits (${totalCustom}) do not sum to expense total (${input.amount})`,
-        }
-      }
-
-      for (const split of input.customSplits) {
-        const userId = await resolveParticipantId(
-          supabase,
-          input.tripId,
-          split.name,
-          tripParticipants
-        )
-
-        if (!userId) {
-          await supabase.from('expenses').delete().eq('id', expense.id)
-          return {
-            success: false,
-            error: `Participant "${split.name}" is not in this trip`,
-          }
-        }
-
-        expenseParticipants.push({
-          expense_id: expense.id,
-          user_id: userId,
-          share_amount: split.amount,
-          share_type: 'amount',
-          share_value: split.amount,
-        })
+    if (expenseParticipantsResult.error) {
+      await supabase.from('expenses').delete().eq('id', expense.id)
+      return {
+        success: false,
+        error: expenseParticipantsResult.error,
       }
     }
 
-    // Insert expense participants
-    if (expenseParticipants.length > 0) {
+    if (expenseParticipantsResult.participants.length > 0) {
       const { error: participantsError } = await supabase
         .from('expense_participants')
-        .insert(expenseParticipants)
+        .insert(expenseParticipantsResult.participants)
 
       if (participantsError) {
         console.error('Error creating participants:', participantsError)
