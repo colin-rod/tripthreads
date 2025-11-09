@@ -86,14 +86,19 @@ export default function TripDetailScreen() {
       <View className="px-6 py-8">
         {/* Header */}
         <View className="mb-6">
-          <Button
-            variant="ghost"
-            onPress={() => router.back()}
-            accessibilityLabel="Go back"
-            className="mb-4 self-start"
-          >
-            ← Back
-          </Button>
+          <View className="flex-row justify-between items-center mb-4">
+            <Button variant="ghost" onPress={() => router.back()} accessibilityLabel="Go back">
+              ← Back
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={() => router.push(`/(app)/trips/${params.id}/settings`)}
+              accessibilityLabel="Trip settings"
+            >
+              ⚙️ Settings
+            </Button>
+          </View>
 
           <Text className="text-3xl font-bold text-foreground mb-2">{trip.name}</Text>
 

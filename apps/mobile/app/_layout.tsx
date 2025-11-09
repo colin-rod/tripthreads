@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router'
 import { AuthProvider } from '../lib/auth/auth-context'
 import { useDeepLink } from '../lib/linking/use-deep-link'
+import { ToastProvider } from '../components/ui/toast'
 import '../global.css'
 
 function RootLayoutNav() {
@@ -14,6 +15,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootLayoutNav />
+      <ToastProvider />
     </AuthProvider>
   )
 }

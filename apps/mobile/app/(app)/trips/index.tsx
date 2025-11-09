@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native'
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Button } from '../../../components/ui/button'
@@ -13,6 +20,7 @@ export default function TripsListScreen() {
 
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!user?.id) {
@@ -24,13 +32,18 @@ export default function TripsListScreen() {
     loadTrips(user.id)
   }, [user?.id])
 
-  const loadTrips = async (userId: string) => {
+  const loadTrips = async (userId: string, isRefresh = false) => {
     try {
-      setLoading(true)
+      if (isRefresh) {
+        setRefreshing(true)
+      } else {
+        setLoading(true)
+      }
 
       // Ensure user is authenticated
       if (!user?.id) {
-        setLoading(false)
+        if (isRefresh) setRefreshing(false)
+        else setLoading(false)
         return
       }
 
@@ -42,7 +55,8 @@ export default function TripsListScreen() {
 
       if (error) {
         console.error('Error loading trips:', error)
-        setLoading(false)
+        if (isRefresh) setRefreshing(false)
+        else setLoading(false)
         return
       }
 
@@ -55,7 +69,17 @@ export default function TripsListScreen() {
     } catch (err) {
       console.error('Error loading trips:', err)
     } finally {
-      setLoading(false)
+      if (isRefresh) {
+        setRefreshing(false)
+      } else {
+        setLoading(false)
+      }
+    }
+  }
+
+  const onRefresh = () => {
+    if (user?.id) {
+      loadTrips(user.id, true)
     }
   }
 
@@ -81,7 +105,12 @@ export default function TripsListScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-6 py-4">
+      <ScrollView
+        className="flex-1 px-6 py-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F97316" />
+        }
+      >
         {trips.length === 0 ? (
           <View className="flex-1 justify-center items-center py-12">
             <Text className="text-6xl mb-4">✈️</Text>
@@ -123,6 +152,20 @@ export default function TripsListScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Floating Action Button - Only show when trips exist */}
+      {trips.length > 0 && (
+        <View className="absolute bottom-6 right-6">
+          <Button
+            size="lg"
+            className="rounded-full shadow-lg w-16 h-16"
+            onPress={() => router.push('/(app)/trips/create')}
+            accessibilityLabel="Create new trip"
+          >
+            <Text className="text-2xl text-primary-foreground">+</Text>
+          </Button>
+        </View>
+      )}
     </View>
   )
 }
