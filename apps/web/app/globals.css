@@ -99,6 +99,35 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+/* Chat @mention styles */
+.message-content .mention-user {
+  color: hsl(var(--primary));
+  font-weight: 500;
+  background-color: hsl(var(--primary) / 0.1);
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.message-content .mention-user:hover {
+  background-color: hsl(var(--primary) / 0.2);
+}
+
+.message-content .mention-self {
+  color: hsl(var(--secondary));
+  font-weight: 600;
+  background-color: hsl(var(--secondary) / 0.15);
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.message-content .mention-self:hover {
+  background-color: hsl(var(--secondary) / 0.25);
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;

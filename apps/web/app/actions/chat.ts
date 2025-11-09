@@ -22,6 +22,7 @@ export interface CreateMessageInput {
   tripId: string
   content: string
   attachments?: ChatAttachment[]
+  mentionedUserIds?: string[]
   metadata?: Record<string, unknown>
 }
 
@@ -73,7 +74,14 @@ export async function createMessage(input: CreateMessageInput) {
       }
     }
 
-    // Create the message
+    // Create the message with mentioned user IDs in metadata
+    const metadata = {
+      ...(input.metadata || {}),
+      ...(input.mentionedUserIds && input.mentionedUserIds.length > 0
+        ? { mentioned_user_ids: input.mentionedUserIds }
+        : {}),
+    }
+
     const { data: message, error: messageError } = await supabase
       .from('chat_messages')
       .insert({
@@ -81,8 +89,8 @@ export async function createMessage(input: CreateMessageInput) {
         user_id: user.id,
         message_type: 'user' as const,
         content: input.content,
-        attachments: (input.attachments || []) as any,
-        metadata: (input.metadata || {}) as any,
+        attachments: (input.attachments || []) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        metadata: metadata as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       })
       .select()
       .single()
@@ -163,8 +171,8 @@ export async function createBotMessage(input: CreateBotMessageInput) {
         user_id: null, // Bot messages have no user
         message_type: 'bot' as const,
         content: input.content,
-        attachments: [] as any,
-        metadata: (input.metadata || {}) as any,
+        attachments: [] as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        metadata: (input.metadata || {}) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       })
       .select()
       .single()
@@ -440,6 +448,186 @@ export async function uploadAttachment(
     return {
       success: false,
       error: 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Add or toggle a reaction on a message
+ * If the user has already reacted with this emoji, it will be removed (toggle behavior)
+ */
+export async function addReaction(messageId: string, emoji: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Check if user already reacted with this emoji
+    const { data: existingReaction } = await supabase
+      .from('message_reactions')
+      .select('id')
+      .eq('message_id', messageId)
+      .eq('user_id', user.id)
+      .eq('emoji', emoji)
+      .single()
+
+    if (existingReaction) {
+      // Remove reaction (toggle off)
+      const { error: deleteError } = await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('id', existingReaction.id)
+
+      if (deleteError) {
+        console.error('Error removing reaction:', deleteError)
+
+        Sentry.captureException(deleteError, {
+          tags: {
+            feature: 'chat',
+            operation: 'remove_reaction',
+          },
+        })
+
+        return {
+          success: false,
+          error: 'Failed to remove reaction',
+        }
+      }
+
+      return {
+        success: true,
+        action: 'removed' as const,
+      }
+    } else {
+      // Add new reaction
+      const { error: insertError } = await supabase.from('message_reactions').insert({
+        message_id: messageId,
+        user_id: user.id,
+        emoji,
+      })
+
+      if (insertError) {
+        console.error('Error adding reaction:', insertError)
+
+        Sentry.captureException(insertError, {
+          tags: {
+            feature: 'chat',
+            operation: 'add_reaction',
+          },
+        })
+
+        return {
+          success: false,
+          error: 'Failed to add reaction',
+        }
+      }
+
+      return {
+        success: true,
+        action: 'added' as const,
+      }
+    }
+  } catch (error) {
+    console.error('Unexpected error managing reaction:', error)
+
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'add_reaction',
+        errorType: 'unexpected',
+      },
+    })
+
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Get all reactions for a message, grouped by emoji
+ */
+export type ReactionData = { emoji: string; count: number; userIds: string[] }
+
+export async function getReactions(
+  messageId: string
+): Promise<{ success: true; data: ReactionData[] } | { success: false; error: string; data: [] }> {
+  const supabase = await createClient()
+
+  try {
+    const { data: reactions, error } = await supabase
+      .from('message_reactions')
+      .select(
+        `
+        id,
+        emoji,
+        user_id,
+        users:user_id (
+          id,
+          full_name
+        )
+      `
+      )
+      .eq('message_id', messageId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching reactions:', error)
+      return {
+        success: false,
+        error: 'Failed to fetch reactions',
+        data: [],
+      }
+    }
+
+    // Group reactions by emoji and count
+    const grouped = reactions.reduce(
+      (acc, reaction) => {
+        if (!acc[reaction.emoji]) {
+          acc[reaction.emoji] = {
+            emoji: reaction.emoji,
+            count: 0,
+            userIds: [],
+          }
+        }
+        acc[reaction.emoji].count++
+        acc[reaction.emoji].userIds.push(reaction.user_id)
+        return acc
+      },
+      {} as Record<string, { emoji: string; count: number; userIds: string[] }>
+    )
+
+    return {
+      success: true,
+      data: Object.values(grouped),
+    }
+  } catch (error) {
+    console.error('Unexpected error fetching reactions:', error)
+
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'get_reactions',
+        errorType: 'unexpected',
+      },
+    })
+
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
+      data: [],
     }
   }
 }

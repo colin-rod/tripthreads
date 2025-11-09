@@ -1,19 +1,32 @@
 'use client'
 
+import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { ChatMessageData } from '@/app/actions/chat'
 import { ChatAttachmentDisplay } from './ChatAttachment'
+import { MessageContent } from './MessageContent'
+import type { MentionableUser } from './MentionAutocomplete'
+import { ReactionBar, type Reaction } from './ReactionBar'
+import { ReactionPicker } from './ReactionPicker'
 
 export type { ChatMessageData }
 
 interface ChatMessageProps {
   message: ChatMessageData
   currentUserId: string | null
+  participants?: MentionableUser[]
+  reactions?: Reaction[]
 }
 
-export function ChatMessage({ message, currentUserId }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  currentUserId,
+  participants = [],
+  reactions = [],
+}: ChatMessageProps) {
+  const [showReactionPicker, setShowReactionPicker] = useState(false)
   const isCurrentUser = message.user_id === currentUserId
   const isBot = message.message_type === 'bot'
   const isSystem = message.message_type === 'system'
@@ -91,7 +104,11 @@ export function ChatMessage({ message, currentUserId }: ChatMessageProps) {
             isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
           )}
         >
-          {message.content}
+          <MessageContent
+            content={message.content}
+            currentUserId={currentUserId}
+            participants={participants}
+          />
         </div>
 
         {message.attachments && message.attachments.length > 0 && (
@@ -101,6 +118,25 @@ export function ChatMessage({ message, currentUserId }: ChatMessageProps) {
             ))}
           </div>
         )}
+
+        {/* Reaction Bar */}
+        <div className={cn('relative', isCurrentUser && 'flex justify-end')}>
+          <ReactionBar
+            messageId={message.id}
+            reactions={reactions}
+            currentUserId={currentUserId}
+            onShowPicker={() => setShowReactionPicker(!showReactionPicker)}
+          />
+
+          {/* Reaction Picker */}
+          {showReactionPicker && (
+            <ReactionPicker
+              messageId={message.id}
+              onClose={() => setShowReactionPicker(false)}
+              onReactionAdded={() => setShowReactionPicker(false)}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

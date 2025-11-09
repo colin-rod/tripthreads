@@ -1,16 +1,23 @@
 'use client'
 
-import { useState, useRef, KeyboardEvent } from 'react'
+import { useState, useRef, KeyboardEvent, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { SendIcon, PaperclipIcon, BotIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { ChatAttachment } from '@/app/actions/chat'
+import { MentionAutocomplete, type MentionableUser } from './MentionAutocomplete'
+import { mapUsernamesToIds } from '@/lib/chat/parse-user-mentions'
 
 interface ChatInputProps {
   tripId: string
-  onSend: (message: string, attachments: ChatAttachment[]) => Promise<void>
+  participants: MentionableUser[]
+  onSend: (
+    message: string,
+    attachments: ChatAttachment[],
+    mentionedUserIds?: string[]
+  ) => Promise<void>
   onTripThreadMention?: () => void
   disabled?: boolean
   placeholder?: string
@@ -18,6 +25,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   tripId,
+  participants,
   onSend,
   onTripThreadMention,
   disabled = false,
@@ -27,6 +35,10 @@ export function ChatInput({
   const [attachments, setAttachments] = useState<ChatAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState('')
+  const [mentionStart, setMentionStart] = useState(0)
+  const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -37,9 +49,13 @@ export function ChatInput({
     setIsSending(true)
 
     try {
-      await onSend(message.trim(), attachments)
+      // Extract mentioned user IDs from message
+      const mentionedUserIds = mapUsernamesToIds(message, participants)
+
+      await onSend(message.trim(), attachments, mentionedUserIds)
       setMessage('')
       setAttachments([])
+      setShowMentionAutocomplete(false)
 
       // Reset textarea height
       if (textareaRef.current) {
@@ -53,7 +69,86 @@ export function ChatInput({
     }
   }
 
+  // Detect @ mentions and show autocomplete
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const cursorPos = textarea.selectionStart
+    const textBeforeCursor = message.slice(0, cursorPos)
+
+    // Find the last @ symbol before cursor
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+
+    if (lastAtIndex === -1) {
+      setShowMentionAutocomplete(false)
+      return
+    }
+
+    // Check if @ is preceded by whitespace or start of string (not part of email)
+    const charBeforeAt = lastAtIndex > 0 ? textBeforeCursor[lastAtIndex - 1] : ' '
+    if (charBeforeAt !== ' ' && lastAtIndex !== 0) {
+      setShowMentionAutocomplete(false)
+      return
+    }
+
+    // Extract query after @
+    const queryText = textBeforeCursor.slice(lastAtIndex + 1)
+
+    // Check if query has spaces (stops @ mention)
+    if (queryText.includes(' ')) {
+      setShowMentionAutocomplete(false)
+      return
+    }
+
+    // Check if @TripThread (skip user autocomplete)
+    if (queryText.toLowerCase().startsWith('tripthread')) {
+      setShowMentionAutocomplete(false)
+      return
+    }
+
+    // Calculate autocomplete position
+    const rect = textarea.getBoundingClientRect()
+    setAutocompletePosition({
+      top: rect.top - 280, // Position above textarea
+      left: rect.left,
+    })
+
+    setMentionQuery(queryText)
+    setMentionStart(lastAtIndex)
+    setShowMentionAutocomplete(true)
+  }, [message])
+
+  const handleMentionSelect = (user: MentionableUser) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    // Replace @ + query with @username
+    const username = user.email.split('@')[0]
+    const before = message.slice(0, mentionStart)
+    const after = message.slice(textarea.selectionStart)
+    const newMessage = `${before}@${username} ${after}`
+
+    setMessage(newMessage)
+    setShowMentionAutocomplete(false)
+
+    // Focus textarea and set cursor after mention
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = mentionStart + username.length + 2 // +2 for @ and space
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Don't send if autocomplete is open (let autocomplete handle Enter)
+    if (
+      showMentionAutocomplete &&
+      (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Escape')
+    ) {
+      return
+    }
+
     // Send on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -160,6 +255,17 @@ export function ChatInput({
 
   return (
     <div className="border-t bg-background p-4">
+      {/* Mention Autocomplete */}
+      {showMentionAutocomplete && (
+        <MentionAutocomplete
+          participants={participants}
+          query={mentionQuery}
+          onSelect={handleMentionSelect}
+          onClose={() => setShowMentionAutocomplete(false)}
+          position={autocompletePosition}
+        />
+      )}
+
       {/* Attachment previews */}
       {attachments.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">

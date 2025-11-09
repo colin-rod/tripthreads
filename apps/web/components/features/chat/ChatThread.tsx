@@ -3,12 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChatMessage, type ChatMessageData } from './ChatMessage'
 import { ChatInput } from './ChatInput'
-import { createMessage, createBotMessage, type ChatAttachment } from '@/app/actions/chat'
+import {
+  createMessage,
+  createBotMessage,
+  getReactions,
+  type ChatAttachment,
+} from '@/app/actions/chat'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { parseChatMessage } from '@/lib/chat/parse-mentions'
 import { ParsedItemModal } from './ParsedItemModal'
+import type { MentionableUser } from './MentionAutocomplete'
+import type { Reaction } from './ReactionBar'
 
 interface ChatThreadProps {
   tripId: string
@@ -56,6 +63,8 @@ export function ChatThread({
   tripCurrency = 'USD',
 }: ChatThreadProps) {
   const [messages, setMessages] = useState<ChatMessageData[]>(initialMessages)
+  const [participants, setParticipants] = useState<MentionableUser[]>([])
+  const [reactions, setReactions] = useState<Map<string, Reaction[]>>(new Map())
   const [isProcessing, setIsProcessing] = useState(false)
   const [parsedCommands, setParsedCommands] = useState<ParsedCommand[]>([])
   const [currentModalIndex, setCurrentModalIndex] = useState(0)
@@ -72,7 +81,70 @@ export function ChatThread({
     scrollToBottom()
   }, [messages])
 
-  // Set up real-time subscription
+  // Fetch trip participants for @mentions
+  useEffect(() => {
+    async function fetchParticipants() {
+      const { data, error } = await supabase
+        .from('trip_participants')
+        .select(
+          `
+          user_id,
+          users:user_id (
+            id,
+            full_name,
+            email,
+            avatar_url
+          )
+        `
+        )
+        .eq('trip_id', tripId)
+
+      if (error) {
+        console.error('Error fetching participants:', error)
+        return
+      }
+
+      if (data) {
+        const mentionableUsers: MentionableUser[] = data
+          .filter(p => p.users)
+          .map(p => ({
+            id: p.users!.id,
+            full_name: p.users!.full_name,
+            email: p.users!.email,
+            avatar_url: p.users!.avatar_url,
+          }))
+
+        setParticipants(mentionableUsers)
+      }
+    }
+
+    fetchParticipants()
+  }, [tripId, supabase])
+
+  // Fetch reactions for all messages
+  useEffect(() => {
+    async function fetchAllReactions() {
+      if (messages.length === 0) return
+
+      const newReactionsMap = new Map<string, Reaction[]>()
+
+      // Fetch reactions for each message
+      await Promise.all(
+        messages.map(async message => {
+          const result = await getReactions(message.id)
+          if (result.success && result.data.length > 0) {
+            newReactionsMap.set(message.id, result.data as Reaction[])
+          }
+        })
+      )
+
+      setReactions(newReactionsMap)
+    }
+
+    fetchAllReactions()
+  }, [messages])
+
+  // Set up real-time subscription for messages and reactions
   useEffect(() => {
     const channel = supabase
       .channel(`chat:${tripId}`)
@@ -103,6 +175,56 @@ export function ChatThread({
           setMessages(prev => [...prev, newMessage])
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'message_reactions',
+        },
+        async payload => {
+          const reaction = payload.new as { message_id: string; user_id: string; emoji: string }
+
+          // Refetch reactions for this message
+          const result = await getReactions(reaction.message_id)
+          if (result.success) {
+            setReactions(prev => {
+              const newMap = new Map(prev)
+              if (result.data.length > 0) {
+                newMap.set(reaction.message_id, result.data as Reaction[])
+              } else {
+                newMap.delete(reaction.message_id)
+              }
+              return newMap
+            })
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'message_reactions',
+        },
+        async payload => {
+          const reaction = payload.old as { message_id: string }
+
+          // Refetch reactions for this message
+          const result = await getReactions(reaction.message_id)
+          if (result.success) {
+            setReactions(prev => {
+              const newMap = new Map(prev)
+              if (result.data.length > 0) {
+                newMap.set(reaction.message_id, result.data as Reaction[])
+              } else {
+                newMap.delete(reaction.message_id)
+              }
+              return newMap
+            })
+          }
+        }
+      )
       .subscribe()
 
     return () => {
@@ -111,7 +233,11 @@ export function ChatThread({
   }, [tripId, supabase])
 
   // Handle sending a message
-  const handleSendMessage = async (content: string, attachments: ChatAttachment[]) => {
+  const handleSendMessage = async (
+    content: string,
+    attachments: ChatAttachment[],
+    mentionedUserIds?: string[]
+  ) => {
     if (!currentUserId) {
       toast.error('You must be logged in to send messages')
       return
@@ -136,6 +262,7 @@ export function ChatThread({
           tripId,
           content,
           attachments,
+          mentionedUserIds,
           metadata: {
             hasTripThreadMention: true,
             commandCount: parseResult.results.length,
@@ -150,6 +277,7 @@ export function ChatThread({
           tripId,
           content,
           attachments,
+          mentionedUserIds,
         })
       }
     } catch (error) {
@@ -237,7 +365,13 @@ export function ChatThread({
         ) : (
           <>
             {messages.map(message => (
-              <ChatMessage key={message.id} message={message} currentUserId={currentUserId} />
+              <ChatMessage
+                key={message.id}
+                message={message}
+                currentUserId={currentUserId}
+                participants={participants}
+                reactions={reactions.get(message.id) || []}
+              />
             ))}
             <div ref={messagesEndRef} />
           </>
@@ -254,6 +388,7 @@ export function ChatThread({
       {/* Input area */}
       <ChatInput
         tripId={tripId}
+        participants={participants}
         onSend={handleSendMessage}
         disabled={isProcessing}
         placeholder="Type a message or use @TripThread to add items..."
