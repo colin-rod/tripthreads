@@ -19,7 +19,7 @@ interface ParsedExpense {
   description: string
   category?: string
   payer?: string
-  splitType?: 'equal' | 'custom' | 'shares'
+  splitType?: 'equal' | 'custom' | 'percentage'
   splitCount?: number
   participants?: string[]
   date?: string
@@ -119,7 +119,7 @@ Parse the message and return a JSON object with this structure:
     "description": "brief description",
     "category": "food" | "transport" | "accommodation" | "activity" | "other" | null,
     "payer": "name of payer if mentioned" | null,
-    "splitType": "equal" | "custom" | "shares" | "none",
+    "splitType": "equal" | "custom" | "percentage" | "none",
     "splitCount": number | null,
     "participants": ["participant names"] | null,
     "date": "ISO 8601 date" | null

@@ -70,7 +70,7 @@ describe('parseExpense', () => {
       expect(result?.amount).toBe(3000) // 30.00 in cents
       expect(result?.currency).toBe('EUR')
       expect(result?.description).toContain('drinks')
-      expect(result?.splitType).toBe('shares')
+      expect(result?.splitType).toBe('percentage')
       expect(result?.confidence).toBeGreaterThan(0.6)
     })
   })
@@ -164,7 +164,7 @@ describe('parseExpense', () => {
 
     it('detects shares split with "everyone pays their share"', () => {
       const result = parseExpense('€90 everyone pays their share')
-      expect(result?.splitType).toBe('shares')
+      expect(result?.splitType).toBe('percentage')
     })
 
     it('detects no split when no keywords present', () => {
@@ -377,7 +377,7 @@ describe('parseExpense', () => {
 
     it('handles "each person" phrasing', () => {
       const result = parseExpense('€20 each person pays')
-      expect(result?.splitType).toBe('shares')
+      expect(result?.splitType).toBe('percentage')
     })
 
     it('handles mixed case input', () => {
@@ -408,9 +408,9 @@ describe('parseExpense', () => {
       expect(result?.participants).toContain('Bob')
     })
 
-    it('handles percentage splits (custom)', () => {
+    it('handles percentage splits', () => {
       const result = parseExpense('$100 dinner Bob owes 40%')
-      expect(result?.splitType).toBe('custom')
+      expect(result?.splitType).toBe('percentage')
       expect(result?.participants).toContain('Bob')
     })
 
