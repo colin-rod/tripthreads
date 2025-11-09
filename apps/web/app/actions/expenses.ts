@@ -35,8 +35,9 @@ interface TripParticipant {
 
 /**
  * Resolve a participant identifier (name or user_id) to user_id
+ * Internal helper function
  */
-export function resolveParticipantId(
+function resolveParticipantId(
   identifier: string,
   tripParticipants: TripParticipant[]
 ): string | null {
@@ -107,7 +108,11 @@ export async function assertTripParticipant(
   }
 }
 
-export function resolvePayer(
+/**
+ * Resolve payer identifier to user ID
+ * Internal helper function
+ */
+function resolvePayer(
   payer: string | null,
   {
     defaultPayerId,
@@ -220,7 +225,11 @@ interface ExpenseParticipantRecord {
   share_value: number | null
 }
 
-export function buildExpenseParticipants({
+/**
+ * Build expense participant records from input
+ * Internal helper function
+ */
+function buildExpenseParticipants({
   expenseId,
   input,
   tripParticipants,
