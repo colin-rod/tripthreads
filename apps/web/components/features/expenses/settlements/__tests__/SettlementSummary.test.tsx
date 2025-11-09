@@ -5,20 +5,20 @@
  * dialog integration, and localStorage persistence.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SettlementSummary } from '../SettlementSummary'
 import type { SettlementSummary as SettlementSummaryType } from '@tripthreads/core'
 
 // Mock the server action
-vi.mock('@/app/actions/settlements', () => ({
-  markSettlementAsPaidAction: vi.fn().mockResolvedValue({ success: true }),
+jest.mock('@/app/actions/settlements', () => ({
+  markSettlementAsPaidAction: jest.fn().mockResolvedValue({ success: true }),
 }))
 
 // Mock useToast
-const mockToast = vi.fn()
-vi.mock('@/hooks/use-toast', () => ({
+const mockToast = jest.fn()
+jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
 }))
 

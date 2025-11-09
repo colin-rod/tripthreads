@@ -5,7 +5,7 @@
  * and confirmation/cancellation flows.
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, jest } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MarkSettlementPaidDialog } from '../MarkSettlementPaidDialog'
@@ -44,8 +44,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -58,8 +58,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={false}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -71,8 +71,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={null}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -84,8 +84,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -99,8 +99,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -114,8 +114,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
           currentUserId="benji-id"
         />
       )
@@ -130,8 +130,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
           currentUserId="alice-id"
         />
       )
@@ -146,8 +146,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
           currentUserId="other-user-id"
         />
       )
@@ -163,8 +163,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -179,8 +179,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -195,8 +195,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -210,8 +210,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -221,14 +221,14 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should call onOpenChange(false) when Cancel is clicked', async () => {
       const user = userEvent.setup()
-      const onOpenChange = vi.fn()
+      const onOpenChange = jest.fn()
 
       render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={vi.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -240,13 +240,13 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should call onConfirm with settlementId and note when confirmed', async () => {
       const user = userEvent.setup()
-      const onConfirm = vi.fn()
+      const onConfirm = jest.fn()
 
       render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -264,13 +264,13 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should call onConfirm with undefined note if note is empty', async () => {
       const user = userEvent.setup()
-      const onConfirm = vi.fn()
+      const onConfirm = jest.fn()
 
       render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -285,13 +285,13 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should trim whitespace from note', async () => {
       const user = userEvent.setup()
-      const onConfirm = vi.fn()
+      const onConfirm = jest.fn()
 
       render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -309,8 +309,8 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should close dialog after successful confirmation', async () => {
       const user = userEvent.setup()
-      const onOpenChange = vi.fn()
-      const onConfirm = vi.fn().mockResolvedValue(undefined)
+      const onOpenChange = jest.fn()
+      const onConfirm = jest.fn().mockResolvedValue(undefined)
 
       render(
         <MarkSettlementPaidDialog
@@ -331,13 +331,13 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should reset note after successful confirmation', async () => {
       const user = userEvent.setup()
-      const onConfirm = vi.fn().mockResolvedValue(undefined)
+      const onConfirm = jest.fn().mockResolvedValue(undefined)
 
       const { rerender } = render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -353,7 +353,7 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={false}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -362,7 +362,7 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -374,14 +374,14 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should reset note when Cancel is clicked', async () => {
       const user = userEvent.setup()
-      const onOpenChange = vi.fn()
+      const onOpenChange = jest.fn()
 
       const { rerender } = render(
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={vi.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -397,7 +397,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={vi.fn()}
+          onConfirm={jest.fn()}
         />
       )
 
@@ -411,7 +411,7 @@ describe('MarkSettlementPaidDialog', () => {
     it('should show loading text when submitting', async () => {
       const user = userEvent.setup()
       let resolveConfirm: () => void
-      const onConfirm = vi.fn(
+      const onConfirm = jest.fn(
         () =>
           new Promise<void>(resolve => {
             resolveConfirm = resolve
@@ -422,7 +422,7 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -441,7 +441,7 @@ describe('MarkSettlementPaidDialog', () => {
     it('should disable textarea when submitting', async () => {
       const user = userEvent.setup()
       let resolveConfirm: () => void
-      const onConfirm = vi.fn(
+      const onConfirm = jest.fn(
         () =>
           new Promise<void>(resolve => {
             resolveConfirm = resolve
@@ -452,7 +452,7 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -470,7 +470,7 @@ describe('MarkSettlementPaidDialog', () => {
     it('should disable Cancel button when submitting', async () => {
       const user = userEvent.setup()
       let resolveConfirm: () => void
-      const onConfirm = vi.fn(
+      const onConfirm = jest.fn(
         () =>
           new Promise<void>(resolve => {
             resolveConfirm = resolve
@@ -481,7 +481,7 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={mockSettlement}
           open={true}
-          onOpenChange={vi.fn()}
+          onOpenChange={jest.fn()}
           onConfirm={onConfirm}
         />
       )
@@ -505,8 +505,8 @@ describe('MarkSettlementPaidDialog', () => {
         <MarkSettlementPaidDialog
           settlement={usdSettlement}
           open={true}
-          onOpenChange={vi.fn()}
-          onConfirm={vi.fn()}
+          onOpenChange={jest.fn()}
+          onConfirm={jest.fn()}
         />
       )
 

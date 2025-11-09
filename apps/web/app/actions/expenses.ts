@@ -110,9 +110,9 @@ export async function assertTripParticipant(
 
 /**
  * Resolve payer identifier to user ID
- * Internal helper function
+ * Exported for testing
  */
-function resolvePayer(
+export function resolvePayer(
   payer: string | null,
   {
     defaultPayerId,
@@ -227,9 +227,9 @@ interface ExpenseParticipantRecord {
 
 /**
  * Build expense participant records from input
- * Internal helper function
+ * Exported for testing
  */
-function buildExpenseParticipants({
+export function buildExpenseParticipants({
   expenseId,
   input,
   tripParticipants,

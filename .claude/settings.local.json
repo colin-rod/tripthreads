@@ -16,7 +16,11 @@
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
       "Bash(npm run build:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(for file in SettlementCard.test.tsx MarkSettlementPaidDialog.test.tsx SettlementSummary.test.tsx)",
+      "Bash(do perl -pi -e 's/\\bvi\\./jest./g' \"$file\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

@@ -231,7 +231,7 @@ test.describe('Settlement Mark as Paid Flow', () => {
 
     if (initialButtons > 1) {
       // Mark first settlement as paid
-      await page.click('button:has-text("Mark as Paid")').first()
+      await page.locator('button:has-text("Mark as Paid")').first().click()
       await page.click('role=dialog >> button:has-text("Confirm Payment")')
       await page.waitForTimeout(2000)
 

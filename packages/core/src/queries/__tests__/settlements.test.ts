@@ -58,7 +58,8 @@ describe('getSettlementSummary', () => {
     const summary = await getSettlementSummary(aliceClient, TEST_TRIP_ID)
 
     expect(summary.balances).toEqual([])
-    expect(summary.settlements).toEqual([])
+    expect(summary.pending_settlements).toEqual([])
+    expect(summary.settled_settlements).toEqual([])
     expect(summary.total_expenses).toBe(0)
     expect(summary.excluded_expenses).toEqual([])
   })
@@ -118,16 +119,16 @@ describe('getSettlementSummary', () => {
     const summary = await getSettlementSummary(aliceClient, TEST_TRIP_ID)
 
     // Should create 2 optimal settlements
-    expect(summary.settlements).toHaveLength(2)
+    expect(summary.pending_settlements).toHaveLength(2)
 
     // Benji pays Alice €20
-    const benjiSettlement = summary.settlements.find(
+    const benjiSettlement = summary.pending_settlements.find(
       s => s.from_user_id === BENJI_ID && s.to_user_id === ALICE_ID
     )
     expect(benjiSettlement?.amount).toBe(2000)
 
     // Baylee pays Alice €20
-    const bayleeSettlement = summary.settlements.find(
+    const bayleeSettlement = summary.pending_settlements.find(
       s => s.from_user_id === BAYLEE_ID && s.to_user_id === ALICE_ID
     )
     expect(bayleeSettlement?.amount).toBe(2000)
@@ -176,12 +177,10 @@ describe('getSettlementSummary', () => {
     expect(benji?.net_balance).toBe(-2000)
 
     // Should create 1 settlement: Benji pays Alice €20
-    expect(summary.settlements).toHaveLength(1)
-    expect(summary.settlements[0]).toEqual({
+    expect(summary.pending_settlements).toHaveLength(1)
+    expect(summary.pending_settlements[0]).toMatchObject({
       from_user_id: BENJI_ID,
-      from_user_name: expect.any(String),
       to_user_id: ALICE_ID,
-      to_user_name: expect.any(String),
       amount: 2000,
       currency: 'EUR',
     })
@@ -225,7 +224,7 @@ describe('getSettlementSummary', () => {
     })
 
     // No settlements needed
-    expect(summary.settlements).toEqual([])
+    expect(summary.pending_settlements).toEqual([])
   })
 
   // Note: Multi-currency and FX rate tests would go here

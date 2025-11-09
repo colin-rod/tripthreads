@@ -5,7 +5,7 @@
  * user role-based display, and mark as paid action.
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, jest } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SettlementCard } from '../SettlementCard'
@@ -78,7 +78,7 @@ describe('SettlementCard', () => {
     })
 
     it('should show "Mark as Paid" button for debtor', () => {
-      const onMarkAsPaid = vi.fn()
+      const onMarkAsPaid = jest.fn()
       render(
         <SettlementCard
           settlement={mockPendingSettlement}
@@ -92,7 +92,7 @@ describe('SettlementCard', () => {
     })
 
     it('should show "Mark as Paid" button for creditor', () => {
-      const onMarkAsPaid = vi.fn()
+      const onMarkAsPaid = jest.fn()
       render(
         <SettlementCard
           settlement={mockPendingSettlement}
@@ -106,7 +106,7 @@ describe('SettlementCard', () => {
     })
 
     it('should not show "Mark as Paid" button for uninvolved users', () => {
-      const onMarkAsPaid = vi.fn()
+      const onMarkAsPaid = jest.fn()
       render(
         <SettlementCard
           settlement={mockPendingSettlement}
@@ -120,7 +120,7 @@ describe('SettlementCard', () => {
 
     it('should call onMarkAsPaid when button is clicked', async () => {
       const user = userEvent.setup()
-      const onMarkAsPaid = vi.fn()
+      const onMarkAsPaid = jest.fn()
 
       render(
         <SettlementCard
@@ -188,7 +188,7 @@ describe('SettlementCard', () => {
     })
 
     it('should not show "Mark as Paid" button for settled settlements', () => {
-      const onMarkAsPaid = vi.fn()
+      const onMarkAsPaid = jest.fn()
       render(
         <SettlementCard
           settlement={mockSettledSettlement}
