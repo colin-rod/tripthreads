@@ -46,7 +46,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 import { cn } from '@tripthreads/core'
 
 import { createExpenseSchema, CURRENCY_CODES, type CreateExpenseFormData } from '@tripthreads/core'

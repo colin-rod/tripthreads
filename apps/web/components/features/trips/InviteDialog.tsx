@@ -26,7 +26,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
 import { createInviteLink, createBatchEmailInvites, type InviteLinkResult } from '@tripthreads/core'

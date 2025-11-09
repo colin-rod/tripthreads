@@ -39,7 +39,7 @@ import {
 import { Link as LinkIcon, X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createItineraryItem, updateItineraryItem } from '@/app/actions/itinerary'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 interface ItineraryItemDialogProps {
   open: boolean
