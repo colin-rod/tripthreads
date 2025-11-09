@@ -11,7 +11,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(cat:*)",
-      "Bash(apps/web/app/actions/chat.ts)"
+      "Bash(apps/web/app/actions/chat.ts)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)"
     ],
     "deny": [],
     "ask": []
