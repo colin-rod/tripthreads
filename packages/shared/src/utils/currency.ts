@@ -1,1 +1,6 @@
-export { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from '@tripthreads/core'
+export {
+  formatCurrency,
+  convertToMinorUnits,
+  convertFromMinorUnits,
+  formatCurrencyFromMinorUnits,
+} from '@tripthreads/core'
