@@ -1,9 +1,9 @@
 # Fuzzy Participant Name Matching
 
-**Status:** ✅ Phase 1-2 Complete & Deployed | 📋 Phase 3-5 Deferred
+**Status:** ✅ All Phases Complete & Deployed (Phase 1-5)
 **Last Updated:** November 2025
 **Linear Issue:** CRO-737 (Closed)
-**Git Commit:** `9baf152`
+**Git Commits:** `9baf152` (Phase 1-2), `dab20b4` (Phase 3), `2253b63` (Phase 4-5)
 
 ---
 
@@ -11,7 +11,15 @@
 
 Fuzzy participant name matching improves the UX of natural language expense parsing by allowing flexible participant name input. Users can now type partial names, make typos, skip accents, or use initials, and the system will automatically match them to the correct trip participants.
 
-## ✅ What's Implemented (Phase 1-2)
+**Complete Feature Set:**
+
+- ✅ **Auto-resolution:** High-confidence matches (≥0.85) are automatically resolved
+- ✅ **Disambiguation:** Ambiguous matches show an interactive dialog for user selection
+- ✅ **Manual selection:** Unmatched names (<0.6) show a dialog with suggestions and manual picker
+- ✅ **Visual feedback:** Preview card shows resolved names with confidence indicators
+- ✅ **Seamless UX:** Auto-submit after user resolves ambiguous/unmatched names
+
+## ✅ What's Implemented (Phase 1-5)
 
 ### Core Fuzzy Matching Engine
 
@@ -122,127 +130,81 @@ The server automatically resolves names with **≥0.85 confidence**. This means:
 - Exact matches (1.0) ✅ Auto-resolved
 - Partial matches (0.9) ✅ Auto-resolved
 - High-confidence fuzzy matches (≥0.85) ✅ Auto-resolved
-- Lower confidence matches (<0.85) ⚠️ Error (for now, UI needed)
+- Lower confidence matches (<0.85) → Handled by disambiguation/unmatched dialogs
 
 ---
 
-## 📋 Deferred Work (Phase 3-5)
+## ✅ Complete Implementation (Phase 3-5)
 
-The following UI enhancements were planned but deferred for future implementation. They are **not blocking** - the core feature works great without them.
+All planned UI enhancements have been successfully implemented and deployed.
 
-### Phase 3: Client-Side Auto-Resolution UI (2-3 days)
+### ✅ Phase 3: Client-Side Auto-Resolution UI (Complete)
 
-**Goal:** Show resolved names in the expense preview
+**Implemented Features:**
 
-**Tasks:**
+- Trip participants fetched on ExpenseInput mount
+- Client-side name resolution after AI parsing
+- Preview card shows resolved names with visual indicators:
+  - ✅ Green checkmark for auto-resolved (≥0.85 confidence)
+  - ⚠️ Yellow badge for ambiguous matches
+  - ❌ Red badge for unmatched names
+- Helper messages for ambiguous/unmatched scenarios
 
-1. Fetch trip participants when ExpenseInput mounts
-2. After AI parsing, resolve participant names client-side
-3. Update preview card to show resolved names with checkmarks
+**Files Modified:**
 
-**Preview Mock:**
+- `apps/web/components/features/expenses/ExpenseInput.tsx`
+- `apps/web/app/actions/expenses.ts` (added fetchTripParticipants)
 
-```
-Participants:
-  • Alice → Alice Smith ✓ (auto-matched)
-  • Bob → Bob Jones ✓ (auto-matched)
-```
+### ✅ Phase 4: Disambiguation Dialog (Complete)
 
-**Benefits:**
+**Implemented Features:**
 
-- Visual confirmation of name resolution
-- User sees exactly who will be charged
-- Transparency before submission
+- `ParticipantDisambiguationDialog.tsx` component created
+- Shows all potential matches with confidence scores
+- Radio button selection for user choice
+- Validates all names resolved before proceeding
+- Auto-submits after user confirms selection
+- Seamlessly integrates with ExpenseInput flow
 
-**Files to Modify:**
+**User Flow:**
+
+1. User enters expense with ambiguous name (e.g., "Alice")
+2. System detects multiple high-confidence matches
+3. Dialog appears: "Who did you mean by 'Alice'?"
+4. User selects correct participant from radio options
+5. Dialog closes and expense auto-submits
+
+**Files Created:**
+
+- `apps/web/components/features/expenses/ParticipantDisambiguationDialog.tsx` (164 lines)
+
+**Files Modified:**
 
 - `apps/web/components/features/expenses/ExpenseInput.tsx`
 
-### Phase 4: Disambiguation Dialog (3-4 days)
+### ✅ Phase 5: Unmatched Name Handler (Complete)
 
-**Goal:** Handle ambiguous matches (e.g., "Alice" → Alice Smith OR Alice Jones?)
+**Implemented Features:**
 
-**Tasks:**
+- `UnmatchedParticipantDialog.tsx` component created
+- Shows low-confidence suggestions (if available)
+- Manual dropdown picker for all trip participants
+- Validates all names resolved before proceeding
+- Auto-submits after user confirms selection
+- Seamlessly integrates with ExpenseInput flow
 
-1. Create `ParticipantDisambiguationDialog.tsx` component
-2. Detect ambiguous matches (multiple >0.7 confidence)
-3. Show modal with all potential matches
-4. User selects correct match
-5. Continue with expense creation
+**User Flow:**
 
-**Dialog Mock:**
+1. User enters expense with unmatched name (e.g., "Charlie")
+2. System cannot find match (confidence <0.6)
+3. Dialog appears: "Cannot find participant 'Charlie'"
+4. Shows suggestions (e.g., "Carlos Garcia - 55% match")
+5. User can click suggestion OR use manual dropdown
+6. Dialog closes and expense auto-submits
 
-```
-┌─────────────────────────────────────────┐
-│ Confirm Participants                    │
-├─────────────────────────────────────────┤
-│ Who did you mean by "Alice"?            │
-│                                         │
-│ ○ Alice Smith (alice@example.com)      │
-│ ○ Alice Jones (alice.j@example.com)    │
-│                                         │
-│           [Cancel]  [Confirm]           │
-└─────────────────────────────────────────┘
-```
+**Files Created:**
 
-**Benefits:**
-
-- Handles edge cases gracefully
-- User stays in control
-- Clear, intuitive UX
-
-**Files to Create:**
-
-- `apps/web/components/features/expenses/ParticipantDisambiguationDialog.tsx`
-
-**Files to Modify:**
-
-- `apps/web/components/features/expenses/ExpenseInput.tsx`
-
-### Phase 5: Unmatched Name Handler (2 days)
-
-**Goal:** Handle names that can't be matched (confidence <0.6)
-
-**Tasks:**
-
-1. Create `UnmatchedParticipantDialog.tsx` component
-2. Detect unmatched names
-3. Show error with suggestions (if available)
-4. Fallback to manual participant picker
-5. Continue with expense creation
-
-**Dialog Mock:**
-
-```
-┌─────────────────────────────────────────┐
-│ ⚠️  Cannot find participant              │
-├─────────────────────────────────────────┤
-│ "Charlie" is not a participant in this  │
-│ trip. Did you mean:                     │
-│                                         │
-│ ○ Carlos Garcia (0.55 match)           │
-│ ○ Charlotte Brown (0.52 match)         │
-│                                         │
-│ Or select from all participants:        │
-│ [Dropdown: All trip participants]       │
-│                                         │
-│           [Cancel]  [Confirm]           │
-└─────────────────────────────────────────┘
-```
-
-**Benefits:**
-
-- Graceful error handling
-- Helpful suggestions
-- Manual override available
-
-**Files to Create:**
-
-- `apps/web/components/features/expenses/UnmatchedParticipantDialog.tsx`
-
-**Files to Modify:**
-
-- `apps/web/components/features/expenses/ExpenseInput.tsx`
+- `apps/web/components/features/expenses/UnmatchedParticipantDialog.tsx` (204 lines)
 
 ---
 
@@ -546,28 +508,47 @@ await createExpense({
 
 ## Summary
 
-**What's Working Now:**
+**✅ Complete Feature (All 5 Phases Deployed):**
 
-- ✅ Fuzzy name matching (server-side)
-- ✅ Typo tolerance
-- ✅ Accent normalization
-- ✅ Partial names
-- ✅ Initials matching
-- ✅ 100% test coverage
-- ✅ Production-ready
+**Core Matching Engine (Phase 1-2):**
 
-**What's Deferred:**
+- ✅ Fuzzy name matching with Dice coefficient algorithm
+- ✅ Typo tolerance (e.g., "Alica" → "Alice")
+- ✅ Accent normalization (e.g., "Jose" → "José")
+- ✅ Partial names (e.g., "Alice" → "Alice Smith")
+- ✅ Initials matching (e.g., "AS" → "Alice Smith")
+- ✅ 100% unit test coverage (47 tests passing)
 
-- 📋 Client-side preview with resolved names
-- 📋 Disambiguation dialog for ambiguous matches
-- 📋 Unmatched name handler with suggestions
+**Client-Side Resolution UI (Phase 3):**
 
-**Recommendation:**
+- ✅ Real-time participant fetching and caching
+- ✅ Visual preview with confidence indicators
+- ✅ Green checkmarks for auto-resolved names (≥0.85)
+- ✅ Warning badges for ambiguous matches
+- ✅ Error badges for unmatched names
 
-- Test current implementation in staging
-- Gather user feedback
-- Prioritize Phases 3-5 based on actual user needs
-- Consider as separate issues/sprints
+**Interactive Disambiguation (Phase 4-5):**
+
+- ✅ Disambiguation dialog for ambiguous matches
+- ✅ Unmatched name handler with suggestions
+- ✅ Manual participant picker as fallback
+- ✅ Auto-submit after user resolves conflicts
+- ✅ Seamless UX flow from parsing → resolution → submission
+
+**Production Status:**
+
+- ✅ Deployed to `development` branch
+- ✅ All tests passing
+- ✅ Lint and type-check passing
+- ✅ Ready for staging testing
+
+**Next Steps:**
+
+- Test complete feature in development/staging environment
+- Gather user feedback on disambiguation flow
+- Monitor Sentry for any edge cases
+- Consider E2E test coverage for dialog interactions
+- Potential future: Component tests for dialogs
 
 ---
 
