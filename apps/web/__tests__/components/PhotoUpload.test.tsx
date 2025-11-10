@@ -230,8 +230,8 @@ describe('PhotoUpload Component', () => {
       await user.click(uploadButton)
 
       await waitFor(() => {
-        expect(compressImage).toHaveBeenCalledWith(file)
-        expect(generateThumbnail).toHaveBeenCalledWith(file)
+        expect(imageCompression.compressImage).toHaveBeenCalledWith(file)
+        expect(imageCompression.generateThumbnail).toHaveBeenCalledWith(file)
       })
     })
 

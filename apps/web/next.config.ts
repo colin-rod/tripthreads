@@ -4,6 +4,9 @@ import { withSentryConfig } from '@sentry/nextjs'
 const nextConfig: NextConfig = {
   // Instrumentation is enabled by default in Next.js 15+
   // The instrumentation.ts file will be automatically loaded
+
+  // Transpile monorepo packages
+  transpilePackages: ['@tripthreads/core'],
 }
 
 // Sentry configuration

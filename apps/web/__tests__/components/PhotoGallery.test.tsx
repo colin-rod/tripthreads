@@ -4,12 +4,12 @@
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import PhotoGallery from '@/components/features/feed/PhotoGallery'
-import { getMediaFilesGroupedByDate } from '@repo/core/queries/media'
+import { getMediaFilesGroupedByDate } from '@tripthreads/core/queries/media'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
 jest.mock('@/lib/supabase/client')
-jest.mock('@repo/core/queries/media')
+jest.mock('@tripthreads/core/queries/media')
 jest.mock('date-fns', () => ({
   format: jest.fn((date: Date, formatStr: string) => {
     if (formatStr === 'EEEE, MMMM d, yyyy') {

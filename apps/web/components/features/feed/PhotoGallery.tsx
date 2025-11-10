@@ -16,7 +16,7 @@ import { format } from 'date-fns'
 import { Calendar, Image as ImageIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getMediaFilesGroupedByDate } from '@repo/core/queries/media'
+import { getMediaFilesGroupedByDate } from '@tripthreads/core/queries/media'
 import { createClient } from '@/lib/supabase/client'
 
 interface PhotoGalleryProps {
@@ -24,20 +24,24 @@ interface PhotoGalleryProps {
   onPhotoClick?: (photoId: string, photoUrl: string) => void
 }
 
-interface MediaFile {
+interface MediaFileWithUser {
   id: string
   url: string
   thumbnail_url: string | null
   caption: string | null
   date_taken: string
+  trip_id: string
+  user_id: string
+  type: string
+  created_at: string
   user: {
     id: string
-    full_name: string
+    full_name: string | null
     avatar_url: string | null
   }
 }
 
-type GroupedMedia = Record<string, MediaFile[]>
+type GroupedMedia = Record<string, MediaFileWithUser[]>
 
 export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps) {
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedMedia>({})
@@ -64,7 +68,7 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
     }
   }
 
-  const handlePhotoClick = (photo: MediaFile) => {
+  const handlePhotoClick = (photo: MediaFileWithUser) => {
     onPhotoClick?.(photo.id, photo.url)
   }
 

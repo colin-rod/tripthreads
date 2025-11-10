@@ -21,7 +21,8 @@
       "Bash(for file in SettlementCard.test.tsx MarkSettlementPaidDialog.test.tsx SettlementSummary.test.tsx)",
       "Bash(do perl -pi -e 's/\\bvi\\./jest./g' \"$file\")",
       "Bash(done)",
-      "Bash(supabase db push:*)"
+      "Bash(supabase db push:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

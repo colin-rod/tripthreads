@@ -34,7 +34,7 @@ import {
   updateMediaFile,
   deleteMediaFile,
   deleteMediaFileFromStorage,
-} from '@repo/core/queries/media'
+} from '@tripthreads/core/queries/media'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
