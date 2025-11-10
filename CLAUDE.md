@@ -11,13 +11,13 @@
 
 ### Project Status at a Glance
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| **Phase 1** | ✅ Complete | Core foundation (Auth, Trips, Participants, Invites) |
+| Phase       | Status      | Description                                            |
+| ----------- | ----------- | ------------------------------------------------------ |
+| **Phase 1** | ✅ Complete | Core foundation (Auth, Trips, Participants, Invites)   |
 | **Phase 2** | ✅ Complete | Itinerary, Expenses, Multi-currency, Chat, Settlements |
-| **Phase 3** | 📋 Planned | Media/Feed, Stripe/Pro, PDF Recap |
-| **Phase 4** | 📋 Planned | Push Notifications, Launch Prep |
-| **Phase 5** | 📋 Future | Post-MVP Enhancements |
+| **Phase 3** | 📋 Planned  | Media/Feed, Stripe/Pro, PDF Recap                      |
+| **Phase 4** | 📋 Planned  | Push Notifications, Launch Prep                        |
+| **Phase 5** | 📋 Future   | Post-MVP Enhancements                                  |
 
 ### Most-Used Commands
 
@@ -100,12 +100,14 @@ git push origin main       # Deploy to production
 ### ✅ Fully Implemented (Phase 1-2)
 
 #### Authentication & User Management
+
 - ✅ Email/password authentication (Supabase Auth)
 - ✅ Google OAuth integration
 - ✅ User profiles with avatar support
 - ✅ Password reset flows
 
 #### Trip Management
+
 - ✅ Create, edit, delete trips
 - ✅ Trip participant management
 - ✅ Trip invitations via email
@@ -114,6 +116,7 @@ git push origin main       # Deploy to production
 - ✅ Partial joiner support (date-scoped visibility)
 
 #### Expense Tracking & Settlements
+
 - ✅ Create, edit, delete expenses
 - ✅ Multi-currency expense support
 - ✅ FX rate lookup and caching (OpenExchangeRates)
@@ -122,19 +125,23 @@ git push origin main       # Deploy to production
 - ✅ Optimized settlement recommendations
 - ✅ Mark settlements as paid/unpaid
 - ✅ Natural language expense parsing
+- ✅ Fuzzy participant name matching (handles typos, partial names, accents)
 
 #### Itinerary
+
 - ✅ Create, edit, delete itinerary items (flights, stays, activities)
 - ✅ Enhanced fields (location, booking reference, cost, URL)
 - ✅ Timeline view organized by date
 
 #### Chat & Collaboration
+
 - ✅ Trip chat with real-time updates
 - ✅ AI assistant integration (OpenAI)
 - ✅ Message reactions (emoji)
 - ✅ Mentions (user tagging)
 
 #### Developer Experience
+
 - ✅ Jest testing framework (migrated from Vitest)
 - ✅ Playwright E2E tests (web)
 - ✅ Sentry error monitoring
@@ -152,6 +159,7 @@ git push origin main       # Deploy to production
 ### 📋 Planned (Phase 3-5)
 
 #### Phase 3: Media & Pro Features (Next)
+
 - 📋 Photo/video uploads to trip feed
 - 📋 Trip media timeline with day tagging
 - 📋 Stripe integration for Pro subscriptions
@@ -159,12 +167,14 @@ git push origin main       # Deploy to production
 - 📋 PDF trip recap generation
 
 #### Phase 4: Push & Launch
+
 - 📋 Push notifications (web + mobile)
 - 📋 Notification preferences
 - 📋 Trip recap delivery
 - 📋 App store submission (iOS + Android)
 
 #### Phase 5: Post-MVP
+
 - 📋 Advanced offline sync (full CRUD, conflict resolution)
 - 📋 Receipt OCR for expense creation
 - 📋 Calendar sync (Google, Apple)
@@ -439,6 +449,7 @@ main (production)
 ### Development Workflow
 
 1. **Create feature branch from `development`:**
+
    ```bash
    git checkout development
    git pull origin development
@@ -462,6 +473,7 @@ Format: `<type>(<scope>): <subject>`
 **Scopes:** `auth`, `trips`, `expenses`, `itinerary`, `chat`, `parser`, `offline`, `fx`, `mobile`, `web`
 
 **Examples:**
+
 ```
 feat(expenses): add natural language expense parsing
 fix(fx): handle missing exchange rates gracefully
@@ -475,21 +487,21 @@ test(ledger): add comprehensive settlement tests
 ### GitHub Actions
 
 **On every push:**
+
 1. ✅ Lint (ESLint)
 2. ✅ Type Check (TypeScript)
 3. ✅ Unit & Component Tests (Jest)
 4. ✅ Build Check (Next.js)
 
-**On PR to `main`:**
-5. ✅ E2E Tests (Playwright)
+**On PR to `main`:** 5. ✅ E2E Tests (Playwright)
 
 ### Vercel Deployment
 
-| Branch | Environment | Auto-Deploy | Status |
-|--------|-------------|-------------|--------|
-| `main` | Production | ✅ Yes | 📋 Ready |
-| `development` | Staging | ✅ Yes | ✅ Active |
-| `feature/*` | Preview | ✅ Yes | ✅ Active |
+| Branch        | Environment | Auto-Deploy | Status    |
+| ------------- | ----------- | ----------- | --------- |
+| `main`        | Production  | ✅ Yes      | 📋 Ready  |
+| `development` | Staging     | ✅ Yes      | ✅ Active |
+| `feature/*`   | Preview     | ✅ Yes      | ✅ Active |
 
 **For detailed CI/CD documentation, see [docs/CICD.md](docs/CICD.md)**
 
@@ -529,11 +541,13 @@ test(ledger): add comprehensive settlement tests
 ### Quick Reference
 
 **Primary Colors:**
+
 - Primary: `#F97316` (Orange 500) - Adventure, energy
 - Secondary: `#22C55E` (Green 500) - Success, collaboration
 - Destructive: `#EF4444` (Red 500) - Errors
 
 **Typography:**
+
 - Font: `Inter` with system fallback
 - Headings: `font-semibold` (600)
 - Body: `font-normal` (400)
@@ -562,6 +576,7 @@ test(ledger): add comprehensive settlement tests
 **Project URL:** https://linear.app/crod/project/tripthreads-mvp-cda67386ed0a
 
 **Phases:**
+
 1. ✅ **Phase 1:** Core Foundation (8 weeks, 16 issues, ~55 SP) - **Complete**
 2. ✅ **Phase 2:** Itinerary & Ledger (6 weeks, 9 issues, ~38 SP) - **Complete**
 3. 📋 **Phase 3:** Media, Pro Features & Stripe (6 weeks, 18 issues, ~62 SP)
@@ -633,23 +648,23 @@ npm run build              # Build for production
 
 ### MVP Launch Success (First Month)
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Trips created | 500+ | 📋 Not launched |
-| Trips with ≥2 participants | 40%+ | 📋 Not launched |
-| Free-to-paid conversion | 5%+ | 📋 Phase 3 |
-| p95 API response time | <100ms | 🚧 Monitoring |
-| Critical security issues | 0 | ✅ 0 current |
+| Metric                     | Target | Status          |
+| -------------------------- | ------ | --------------- |
+| Trips created              | 500+   | 📋 Not launched |
+| Trips with ≥2 participants | 40%+   | 📋 Not launched |
+| Free-to-paid conversion    | 5%+    | 📋 Phase 3      |
+| p95 API response time      | <100ms | 🚧 Monitoring   |
+| Critical security issues   | 0      | ✅ 0 current    |
 
 ### 6-Month Success
 
-| Metric | Target |
-|--------|--------|
-| Active trips | 5,000+ |
-| 3-month retention rate | 50%+ |
-| Conversion rate | 8%+ |
-| MRR | €10k+ |
-| App store rating | 4.5+ |
+| Metric                 | Target |
+| ---------------------- | ------ |
+| Active trips           | 5,000+ |
+| 3-month retention rate | 50%+   |
+| Conversion rate        | 8%+    |
+| MRR                    | €10k+  |
+| App store rating       | 4.5+   |
 
 ---
 
@@ -733,12 +748,12 @@ Before merging a PR:
 
 ### Technical Risks
 
-| Risk | Mitigation |
-|------|------------|
-| Offline sync complexity | Start with basic queue, defer conflict resolution |
-| Supabase scaling | Monitor usage, plan for optimization |
-| FX API rate limits | Daily caching, graceful degradation |
-| Mobile app store approval | Follow guidelines strictly, legal docs ready |
+| Risk                      | Mitigation                                        |
+| ------------------------- | ------------------------------------------------- |
+| Offline sync complexity   | Start with basic queue, defer conflict resolution |
+| Supabase scaling          | Monitor usage, plan for optimization              |
+| FX API rate limits        | Daily caching, graceful degradation               |
+| Mobile app store approval | Follow guidelines strictly, legal docs ready      |
 
 ---
 
@@ -759,4 +774,4 @@ For issues or questions:
 
 ---
 
-*Built with ❤️ by Colin Rodriguez with AI pair programming (Claude)*
+_Built with ❤️ by Colin Rodriguez with AI pair programming (Claude)_

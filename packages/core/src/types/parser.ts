@@ -479,3 +479,167 @@ export interface FeedbackSignalWithCorrections extends FeedbackSignal {
   correction_details?: FieldCorrection[]
   failure_classification?: 'extraction_error' | 'recognition_error' | 'ambiguity'
 }
+
+// ============================================================
+// Participant Name Matching Types (Fuzzy Matching)
+// ============================================================
+
+/**
+ * Type of match found when resolving participant names
+ */
+export type NameMatchType = 'exact' | 'partial' | 'fuzzy' | 'initials'
+
+/**
+ * A single name match result with confidence score
+ */
+export interface NameMatch {
+  /**
+   * User ID of the matched trip participant
+   */
+  userId: string
+
+  /**
+   * Full name of the matched participant
+   */
+  fullName: string
+
+  /**
+   * Confidence score from 0-1
+   * - 1.0: Exact match (case-insensitive)
+   * - 0.9: Partial match (full name contains input)
+   * - 0.7-0.9: Fuzzy match (typo or similarity)
+   * - 0.6: Initials match
+   * - <0.6: Not a match
+   */
+  confidence: number
+
+  /**
+   * Type of match found
+   */
+  matchType: NameMatchType
+
+  /**
+   * Additional metadata for debugging
+   */
+  metadata?: {
+    /**
+     * Raw similarity score (if fuzzy matching)
+     */
+    similarityScore?: number
+
+    /**
+     * Which part of the name matched (for partial matches)
+     */
+    matchedPart?: 'full' | 'first' | 'last' | 'initials'
+  }
+}
+
+/**
+ * Result of matching a single parsed name to trip participants
+ */
+export interface ParticipantMatch {
+  /**
+   * Original parsed name from natural language input
+   */
+  input: string
+
+  /**
+   * All potential matches, sorted by confidence (descending)
+   */
+  matches: NameMatch[]
+
+  /**
+   * Whether this name has ambiguous matches
+   * (multiple matches with confidence > 0.7)
+   */
+  isAmbiguous: boolean
+
+  /**
+   * Whether this name has no good matches
+   * (no matches with confidence >= 0.6)
+   */
+  isUnmatched: boolean
+
+  /**
+   * The best match (if available)
+   * Same as matches[0] but for convenience
+   */
+  bestMatch?: NameMatch
+}
+
+/**
+ * Complete result of resolving all participant names
+ */
+export interface ParticipantResolutionResult {
+  /**
+   * Individual match results for each parsed name
+   */
+  matches: ParticipantMatch[]
+
+  /**
+   * Whether any names are ambiguous and need user disambiguation
+   */
+  hasAmbiguous: boolean
+
+  /**
+   * Whether any names are unmatched and need user selection
+   */
+  hasUnmatched: boolean
+
+  /**
+   * Whether all names were successfully auto-resolved
+   * (all matches have confidence >= 0.85 and are unique)
+   */
+  isFullyResolved: boolean
+
+  /**
+   * Resolved user IDs (only present if fully resolved)
+   * Maps to the best match for each input name
+   */
+  resolvedUserIds?: string[]
+}
+
+/**
+ * Options for name matching behavior
+ */
+export interface NameMatcherOptions {
+  /**
+   * Minimum confidence threshold to consider a match
+   * Default: 0.6
+   */
+  minConfidence?: number
+
+  /**
+   * Confidence threshold for auto-resolution
+   * (match must be >= this AND be the only match above minConfidence)
+   * Default: 0.85
+   */
+  autoResolveThreshold?: number
+
+  /**
+   * Whether to normalize accents (é → e, ñ → n)
+   * Default: true
+   */
+  normalizeAccents?: boolean
+
+  /**
+   * Whether to match on initials
+   * Default: true
+   */
+  matchInitials?: boolean
+}
+
+/**
+ * Trip participant data for name matching
+ */
+export interface TripParticipant {
+  /**
+   * User ID (UUID)
+   */
+  user_id: string
+
+  /**
+   * Full name of the participant
+   */
+  full_name: string
+}
