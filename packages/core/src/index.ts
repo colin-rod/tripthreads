@@ -17,6 +17,7 @@ export * from './utils/currency'
 export * from './utils/cn'
 export * from './utils/avatar'
 export * from './utils/fx'
+export * from './utils/expense-splits'
 
 // Parser
 export * from './parser'
