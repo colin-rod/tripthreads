@@ -266,3 +266,80 @@ export function isUserInvolvedInItem(item: ItineraryItemWithParticipants, userId
   // Check if user is in participants list
   return item.participants.some(p => p.user_id === userId)
 }
+
+/**
+ * Create a new itinerary item
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param input - Itinerary item data
+ * @returns Created itinerary item
+ * @throws Error if creation fails
+ */
+export async function createItineraryItem(
+  supabase: SupabaseClient<Database>,
+  input: Database['public']['Tables']['itinerary_items']['Insert']
+) {
+  const { data, error } = await supabase
+    .from('itinerary_items')
+    .insert(input)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating itinerary item:', error)
+    throw new Error(`Failed to create itinerary item: ${error.message}`)
+  }
+
+  return data
+}
+
+/**
+ * Update an existing itinerary item
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param itemId - UUID of the item to update
+ * @param updates - Partial item data to update
+ * @returns Updated itinerary item
+ * @throws Error if update fails
+ */
+export async function updateItineraryItem(
+  supabase: SupabaseClient<Database>,
+  itemId: string,
+  updates: Database['public']['Tables']['itinerary_items']['Update']
+) {
+  const { data, error } = await supabase
+    .from('itinerary_items')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', itemId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating itinerary item:', error)
+    throw new Error(`Failed to update itinerary item: ${error.message}`)
+  }
+
+  return data
+}
+
+/**
+ * Delete an itinerary item
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param itemId - UUID of the item to delete
+ * @throws Error if deletion fails
+ */
+export async function deleteItineraryItem(
+  supabase: SupabaseClient<Database>,
+  itemId: string
+) {
+  const { error } = await supabase.from('itinerary_items').delete().eq('id', itemId)
+
+  if (error) {
+    console.error('Error deleting itinerary item:', error)
+    throw new Error(`Failed to delete itinerary item: ${error.message}`)
+  }
+}
