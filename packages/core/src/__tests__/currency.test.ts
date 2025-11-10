@@ -1,4 +1,9 @@
-import { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from '../utils/currency'
+import {
+  formatCurrency,
+  convertToMinorUnits,
+  convertFromMinorUnits,
+  formatCurrencyFromMinorUnits,
+} from '../utils/currency'
 
 describe('Currency Utils', () => {
   describe('formatCurrency', () => {
@@ -64,6 +69,29 @@ describe('Currency Utils', () => {
 
     it('should handle negative amounts', () => {
       expect(convertFromMinorUnits(-2550)).toBe(-25.5)
+    })
+  })
+
+  describe('formatCurrencyFromMinorUnits', () => {
+    it('formats positive amounts using default locale', () => {
+      expect(formatCurrencyFromMinorUnits(12345, 'USD')).toBe('$123.45')
+    })
+
+    it('formats negative amounts', () => {
+      expect(formatCurrencyFromMinorUnits(-9876, 'USD')).toBe('-$98.76')
+    })
+
+    it('respects provided locale', () => {
+      expect(formatCurrencyFromMinorUnits(12345, 'EUR', { locale: 'de-DE' })).toBe('123,45\u00a0€')
+    })
+
+    it('allows overriding Intl options', () => {
+      expect(
+        formatCurrencyFromMinorUnits(5000, 'JPY', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })
+      ).toBe('¥50')
     })
   })
 })

@@ -8,25 +8,13 @@
  */
 
 import type { UserBalance } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 interface UserBalanceCardProps {
   balance: UserBalance
   currentUserId?: string
-}
-
-/**
- * Format amount from cents to display format
- */
-function formatAmount(amount: number, currency: string): string {
-  const majorUnits = Math.abs(amount) / 100 // Use absolute value for display
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(majorUnits)
 }
 
 /**
@@ -45,7 +33,10 @@ function getInitials(name: string): string {
  * Get balance status text
  */
 function getBalanceText(balance: UserBalance, isCurrentUser: boolean): string {
-  const formattedAmount = formatAmount(balance.net_balance, balance.currency)
+  const formattedAmount = formatCurrencyFromMinorUnits(
+    Math.abs(balance.net_balance),
+    balance.currency
+  )
 
   if (balance.net_balance === 0) {
     return isCurrentUser ? 'You are settled' : 'Settled'

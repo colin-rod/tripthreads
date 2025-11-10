@@ -14,6 +14,7 @@
 import { useState } from 'react'
 import { parseWithOpenAI } from '@/lib/parser/openai'
 import type { ParsedExpense } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -111,13 +112,6 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
     setError(null)
   }
 
-  const formatAmount = (amount: number, currency: string) => {
-    if (['JPY', 'KRW'].includes(currency)) {
-      return amount.toLocaleString()
-    }
-    return (amount / 100).toFixed(2)
-  }
-
   return (
     <div className="space-y-4">
       {/* Input Section */}
@@ -184,8 +178,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Amount</p>
                     <p className="font-mono text-lg">
-                      {parsedResult.currency}{' '}
-                      {formatAmount(parsedResult.amount, parsedResult.currency)}
+                      {formatCurrencyFromMinorUnits(parsedResult.amount, parsedResult.currency)}
                     </p>
                   </div>
                   <div>
@@ -251,8 +244,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                             {split.name}
                           </Badge>
                           <span className="font-mono">
-                            {parsedResult.currency}{' '}
-                            {formatAmount(split.amount, parsedResult.currency)}
+                            {formatCurrencyFromMinorUnits(split.amount, parsedResult.currency)}
                           </span>
                         </div>
                       ))}

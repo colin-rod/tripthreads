@@ -11,6 +11,8 @@ import {
 } from '@tripthreads/core'
 
 import type { CreateExpenseInput } from '@/app/actions/expenses'
+import { matchSingleParticipantName } from '@tripthreads/core'
+import type { TripParticipant as CoreTripParticipant } from '@tripthreads/core'
 
 interface TripParticipant {
   user_id: string
@@ -27,6 +29,7 @@ interface ExpenseParticipantRecord {
 
 /**
  * Resolve a participant identifier (name or user_id) to user_id
+ * Uses fuzzy name matching for improved user experience
  * Internal helper function
  */
 function resolveParticipantId(
@@ -41,12 +44,17 @@ function resolveParticipantId(
     return participant ? identifier : null
   }
 
-  // Try to match by name (case-insensitive)
-  const matchedParticipant = tripParticipants.find(
-    p => p.full_name.toLowerCase() === identifier.toLowerCase()
-  )
+  // Try to match by name using fuzzy matching
+  const coreParticipants: CoreTripParticipant[] = tripParticipants.map(p => ({
+    user_id: p.user_id,
+    full_name: p.full_name,
+  }))
 
-  return matchedParticipant ? matchedParticipant.user_id : null
+  const match = matchSingleParticipantName(identifier, coreParticipants, {
+    minConfidence: 0.85, // Require high confidence for auto-resolution
+  })
+
+  return match ? match.userId : null
 }
 
 /**

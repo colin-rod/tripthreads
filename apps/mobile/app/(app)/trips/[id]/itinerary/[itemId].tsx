@@ -108,8 +108,10 @@ export default function ItineraryItemDetailScreen() {
     try {
       setSaveLoading(true)
 
-      const updated = await updateItineraryItem(supabase, params.itemId, data)
-      setItem(updated as ItineraryItemWithParticipants)
+      await updateItineraryItem(supabase, params.itemId, data)
+      // Re-fetch the item with participants to ensure proper typing
+      const refreshedItem = await getItineraryItem(supabase, params.itemId)
+      setItem(refreshedItem)
       setIsEditing(false)
 
       toast({
@@ -311,7 +313,6 @@ export default function ItineraryItemDetailScreen() {
                         <DatePicker
                           value={field.value ? new Date(field.value) : undefined}
                           onChange={date => field.onChange(date?.toISOString())}
-                          mode="datetime"
                         />
                       </FormControl>
                       <FormMessage />
@@ -329,7 +330,6 @@ export default function ItineraryItemDetailScreen() {
                         <DatePicker
                           value={field.value ? new Date(field.value) : undefined}
                           onChange={date => field.onChange(date?.toISOString())}
-                          mode="datetime"
                         />
                       </FormControl>
                       <FormMessage />

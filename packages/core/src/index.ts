@@ -18,6 +18,8 @@ export * from './utils/cn'
 export * from './utils/avatar'
 export * from './utils/fx'
 export * from './utils/expense-splits'
+export * from './utils/settlements'
+export * from './utils/name-matcher'
 
 // Parser
 export * from './parser'

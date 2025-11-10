@@ -93,15 +93,19 @@ export default function CreateExpenseScreen() {
       const trip = await getTripById(supabase, params.id)
 
       if (trip.trip_participants) {
-        setTripParticipants(trip.trip_participants as TripParticipant[])
+        // Transform the data to match TripParticipant interface
+        const participants: TripParticipant[] = trip.trip_participants.map(p => ({
+          id: p.id,
+          user_id: p.user.id,
+          user: p.user,
+        }))
+        setTripParticipants(participants)
 
         // Set current user as default payer
         setPayerId(user.id)
 
         // Select all participants by default
-        const allParticipantIds = new Set(
-          trip.trip_participants.map((p: TripParticipant) => p.user_id)
-        )
+        const allParticipantIds = new Set(participants.map(p => p.user_id))
         setSelectedParticipants(allParticipantIds)
       }
     } catch (error) {
@@ -332,7 +336,6 @@ export default function CreateExpenseScreen() {
                         <DatePicker
                           value={field.value ? new Date(field.value) : undefined}
                           onChange={date => field.onChange(date?.toISOString())}
-                          mode="date"
                         />
                       </FormControl>
                       <FormMessage />
