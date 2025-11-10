@@ -341,7 +341,7 @@ describe('buildExpenseParticipants', () => {
 
     expect(result).toEqual({
       participants: [],
-      error: 'Custom splits (200) do not sum to expense total (301)',
+      error: 'Participant shares (200) do not sum to expense total (301)',
     })
   })
 

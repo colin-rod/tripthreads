@@ -13,87 +13,9 @@ import {
   CreateExpenseInput,
   UpdateExpenseInput,
   CreateExpenseParticipantInput,
-  SplitCalculation,
 } from '../types/expense'
 import { Database } from '../types/database'
-
-/**
- * Calculate share amounts for participants based on split type
- */
-function calculateShares(
-  totalAmount: number,
-  participants: CreateExpenseParticipantInput[]
-): SplitCalculation[] {
-  const result: SplitCalculation[] = []
-
-  // Determine split type (assume all participants use same type)
-  const splitType = participants[0]?.shareType || 'equal'
-
-  switch (splitType) {
-    case 'equal': {
-      const shareAmount = Math.floor(totalAmount / participants.length)
-      const remainder = totalAmount - shareAmount * participants.length
-
-      // Distribute shares, giving remainder to first participant
-      participants.forEach((p, index) => {
-        result.push({
-          userId: p.userId,
-          shareAmount: shareAmount + (index === 0 ? remainder : 0),
-          shareType: 'equal',
-        })
-      })
-      break
-    }
-
-    case 'percentage': {
-      let totalAssigned = 0
-
-      participants.forEach((p, index) => {
-        const percentage = p.shareValue || 0
-        let shareAmount: number
-
-        // For last participant, assign remaining amount to avoid rounding errors
-        if (index === participants.length - 1) {
-          shareAmount = totalAmount - totalAssigned
-        } else {
-          shareAmount = Math.floor((totalAmount * percentage) / 100)
-          totalAssigned += shareAmount
-        }
-
-        result.push({
-          userId: p.userId,
-          shareAmount,
-          shareType: 'percentage',
-          shareValue: percentage,
-        })
-      })
-      break
-    }
-
-    case 'amount': {
-      // Verify amounts sum to total
-      const sum = participants.reduce((acc, p) => acc + (p.shareValue || 0), 0)
-      if (sum !== totalAmount) {
-        throw new Error(`Participant shares (${sum}) do not sum to expense total (${totalAmount})`)
-      }
-
-      participants.forEach(p => {
-        result.push({
-          userId: p.userId,
-          shareAmount: p.shareValue || 0,
-          shareType: 'amount',
-          shareValue: p.shareValue,
-        })
-      })
-      break
-    }
-
-    default:
-      throw new Error(`Unknown split type: ${splitType}`)
-  }
-
-  return result
-}
+import { calculateExpenseShares } from '../utils/expense-splits'
 
 /**
  * Get all expenses for a trip that the current user can see
@@ -202,8 +124,17 @@ export async function createExpense(
   // Default date to today if not provided
   const date = input.date || new Date().toISOString().split('T')[0]
 
+  const splitType = input.participants[0]?.shareType ?? 'equal'
+
   // Calculate share amounts
-  const shares = calculateShares(input.amount, input.participants)
+  const shares = calculateExpenseShares({
+    totalAmount: input.amount,
+    splitType,
+    participants: input.participants.map(participant => ({
+      userId: participant.userId,
+      shareValue: participant.shareValue,
+    })),
+  })
 
   // Insert expense
   const { data: expense, error: expenseError } = await supabase
@@ -356,8 +287,17 @@ export async function updateExpenseParticipants(
     throw new Error(`Failed to fetch expense: ${expenseError?.message}`)
   }
 
+  const splitType = participants[0]?.shareType ?? 'equal'
+
   // Calculate new shares
-  const shares = calculateShares(expense.amount, participants)
+  const shares = calculateExpenseShares({
+    totalAmount: expense.amount,
+    splitType,
+    participants: participants.map(participant => ({
+      userId: participant.userId,
+      shareValue: participant.shareValue,
+    })),
+  })
 
   // Delete existing participants
   const { error: deleteError } = await supabase
