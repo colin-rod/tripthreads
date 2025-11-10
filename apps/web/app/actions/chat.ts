@@ -10,6 +10,10 @@
 import * as Sentry from '@sentry/nextjs'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import {
+  moveAttachmentToGallery as moveToGallery,
+  removeFromGallery as removeGalleryItem,
+} from '@repo/core/queries/media'
 
 export interface ChatAttachment {
   url: string
@@ -628,6 +632,196 @@ export async function getReactions(
       success: false,
       error: 'An unexpected error occurred',
       data: [],
+    }
+  }
+}
+
+/**
+ * Add a chat attachment to the trip gallery
+ */
+export async function addAttachmentToGallery(
+  attachmentUrl: string,
+  tripId: string,
+  caption?: string
+): Promise<{ success: boolean; mediaFileId?: string; error?: string }> {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Verify user is a participant of the trip
+    const { data: participant, error: participantError } = await supabase
+      .from('trip_participants')
+      .select('id')
+      .eq('trip_id', tripId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (participantError || !participant) {
+      return {
+        success: false,
+        error: 'You must be a trip participant to add photos to gallery',
+      }
+    }
+
+    // Move attachment to gallery using core query function
+    const result = await moveToGallery(supabase, attachmentUrl, tripId, user.id, caption)
+
+    if (!result.success || !result.mediaFileId) {
+      console.error('Error moving attachment to gallery:', result.error)
+
+      Sentry.captureException(new Error(result.error), {
+        tags: {
+          feature: 'chat',
+          operation: 'add_to_gallery',
+        },
+        contexts: {
+          attachment: {
+            url: attachmentUrl,
+            tripId,
+          },
+        },
+      })
+
+      return {
+        success: false,
+        error: result.error || 'Failed to add to gallery',
+      }
+    }
+
+    // Revalidate both chat and feed pages
+    revalidatePath(`/trips/${tripId}/chat`)
+    revalidatePath(`/trips/${tripId}`)
+
+    return {
+      success: true,
+      mediaFileId: result.mediaFileId,
+    }
+  } catch (error) {
+    console.error('Unexpected error adding to gallery:', error)
+
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'add_to_gallery',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        attachment: {
+          url: attachmentUrl,
+          tripId,
+        },
+      },
+    })
+
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
+    }
+  }
+}
+
+/**
+ * Remove a photo from the trip gallery (back to chat-only)
+ */
+export async function removeAttachmentFromGallery(
+  mediaFileId: string,
+  tripId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+
+  try {
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      }
+    }
+
+    // Verify user is a participant of the trip
+    const { data: participant, error: participantError } = await supabase
+      .from('trip_participants')
+      .select('id')
+      .eq('trip_id', tripId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (participantError || !participant) {
+      return {
+        success: false,
+        error: 'You must be a trip participant to remove photos from gallery',
+      }
+    }
+
+    // Remove from gallery using core query function
+    const result = await removeGalleryItem(supabase, mediaFileId)
+
+    if (!result.success) {
+      console.error('Error removing from gallery:', result.error)
+
+      Sentry.captureException(new Error(result.error), {
+        tags: {
+          feature: 'chat',
+          operation: 'remove_from_gallery',
+        },
+        contexts: {
+          mediaFile: {
+            id: mediaFileId,
+            tripId,
+          },
+        },
+      })
+
+      return {
+        success: false,
+        error: result.error || 'Failed to remove from gallery',
+      }
+    }
+
+    // Revalidate both chat and feed pages
+    revalidatePath(`/trips/${tripId}/chat`)
+    revalidatePath(`/trips/${tripId}`)
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    console.error('Unexpected error removing from gallery:', error)
+
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'chat',
+        operation: 'remove_from_gallery',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        mediaFile: {
+          id: mediaFileId,
+          tripId,
+        },
+      },
+    })
+
+    return {
+      success: false,
+      error: 'An unexpected error occurred',
     }
   }
 }

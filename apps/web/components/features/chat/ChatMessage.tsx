@@ -15,6 +15,7 @@ export type { ChatMessageData }
 
 interface ChatMessageProps {
   message: ChatMessageData
+  tripId: string
   currentUserId: string | null
   participants?: MentionableUser[]
   reactions?: Reaction[]
@@ -22,6 +23,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({
   message,
+  tripId,
   currentUserId,
   participants = [],
   reactions = [],
@@ -65,7 +67,7 @@ export function ChatMessage({
           {message.attachments && message.attachments.length > 0 && (
             <div className="mt-2 space-y-2">
               {message.attachments.map((attachment, index) => (
-                <ChatAttachmentDisplay key={index} attachment={attachment} />
+                <ChatAttachmentDisplay key={index} attachment={attachment} tripId={tripId} />
               ))}
             </div>
           )}
@@ -114,7 +116,7 @@ export function ChatMessage({
         {message.attachments && message.attachments.length > 0 && (
           <div className={cn('mt-2 space-y-2', isCurrentUser && 'items-end')}>
             {message.attachments.map((attachment, index) => (
-              <ChatAttachmentDisplay key={index} attachment={attachment} />
+              <ChatAttachmentDisplay key={index} attachment={attachment} tripId={tripId} />
             ))}
           </div>
         )}

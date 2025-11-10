@@ -642,3 +642,101 @@ npm run lint
 # Test
 npm test
 ```
+
+---
+
+## 📸 Photo Uploads Feature (CRO-824)
+
+**Date Added:** 2025-02-09
+**Status:** ⏳ Web Complete, Mobile Implementation Needed
+
+### Web Implementation Status
+
+✅ **Completed:**
+
+- Supabase Storage bucket `trip-media` with RLS policies
+- Database queries module (`packages/core/src/queries/media.ts`)
+- Upload API route (`/api/upload-photo`) with dual upload (full + thumbnail)
+- Image compression utility (client-side, browser-based)
+- PhotoUpload component (drag-and-drop, preview, progress)
+- Free tier limit enforcement (25 photos)
+- Unit tests (27 passing)
+
+### Mobile Changes Required
+
+#### 1. Image Compression
+
+**Replace:** `browser-image-compression` (browser-only)
+**With:** `react-native-image-resizer` (recommended)
+
+```bash
+npx expo install react-native-image-resizer
+```
+
+**Usage:**
+
+```typescript
+import ImageResizer from 'react-native-image-resizer'
+
+const compressed = await ImageResizer.createResizedImage(uri, 2048, 2048, 'JPEG', 70, 0, null, true)
+```
+
+#### 2. Image Picker
+
+**Add:** `expo-image-picker` for camera + gallery access
+
+```bash
+npx expo install expo-image-picker
+```
+
+**Permissions (app.json):**
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow TripThreads to access photos",
+          "cameraPermission": "Allow TripThreads to take photos"
+        }
+      ]
+    ]
+  }
+}
+```
+
+#### 3. Components Needed
+
+1. **PhotoUpload** (`apps/mobile/components/features/feed/PhotoUpload.tsx`)
+   - Image picker (camera + gallery)
+   - Image previews
+   - Caption input
+   - Upload progress
+   - Free tier limits
+
+2. **PhotoGallery** (`apps/mobile/components/features/feed/PhotoGallery.tsx`)
+   - Masonry/grid layout (use `@shopify/flash-list`)
+   - Group by date
+   - Pull-to-refresh
+
+3. **PhotoLightbox** (use `react-native-image-viewing`)
+   - Full-screen viewer
+   - Swipe navigation
+   - Edit/delete actions
+
+### Implementation Checklist
+
+- [ ] Install dependencies (`react-native-image-resizer`, `expo-image-picker`)
+- [ ] Add camera/photo permissions to `app.json`
+- [ ] Create mobile image compression utility
+- [ ] Implement PhotoUpload component
+- [ ] Implement PhotoGallery component
+- [ ] Implement PhotoLightbox
+- [ ] Write component tests
+- [ ] Test on iOS and Android
+
+**Estimated Effort:** 15-21 hours
+
+**Note:** Backend API and database queries are fully reusable. Only UI and platform-specific image handling need mobile implementation.

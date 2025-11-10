@@ -35,7 +35,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       expect(screen.getByText('Hello everyone!')).toBeInTheDocument()
       expect(screen.getByText('Alice Smith')).toBeInTheDocument()
@@ -56,7 +56,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-1" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />)
 
       expect(screen.getByText('You')).toBeInTheDocument()
       expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument()
@@ -76,7 +76,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       // Check for avatar fallback with initials
       expect(screen.getByText('AS')).toBeInTheDocument()
@@ -101,7 +101,7 @@ describe('ChatMessage', () => {
         },
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       // Should fallback to email
       expect(screen.getByText('alice@example.com')).toBeInTheDocument()
@@ -123,7 +123,7 @@ describe('ChatMessage', () => {
         user: null,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-1" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />)
 
       expect(screen.getByText('TripThread')).toBeInTheDocument()
       expect(screen.getByText('✅ Added expense: Dinner - €60.00')).toBeInTheDocument()
@@ -144,7 +144,7 @@ describe('ChatMessage', () => {
         user: null,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-1" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />)
 
       // Check for primary color styling on bot name
       const botName = screen.getByText('TripThread')
@@ -167,7 +167,7 @@ describe('ChatMessage', () => {
         user: null,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-1" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />)
 
       expect(screen.getByText('Alice joined the trip')).toBeInTheDocument()
     })
@@ -186,7 +186,9 @@ describe('ChatMessage', () => {
         user: null,
       }
 
-      const { container } = render(<ChatMessage message={message} currentUserId="user-1" />)
+      const { container } = render(
+        <ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />
+      )
 
       // Check for centered layout
       const wrapper = container.firstChild as HTMLElement
@@ -216,7 +218,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       expect(screen.getByText('Check this out')).toBeInTheDocument()
       // Image would be rendered by ChatAttachmentDisplay component
@@ -243,7 +245,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       expect(screen.getByText('Receipt attached')).toBeInTheDocument()
     })
@@ -275,7 +277,7 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      render(<ChatMessage message={message} currentUserId="user-2" />)
+      render(<ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />)
 
       expect(screen.getByText('Multiple files')).toBeInTheDocument()
       // Would render 2 ChatAttachmentDisplay components
@@ -297,7 +299,9 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      const { container } = render(<ChatMessage message={message} currentUserId="user-1" />)
+      const { container } = render(
+        <ChatMessage message={message} tripId="trip-1" currentUserId="user-1" />
+      )
 
       // Check for right-aligned layout
       const wrapper = container.firstChild as HTMLElement
@@ -318,7 +322,9 @@ describe('ChatMessage', () => {
         user: mockUser,
       }
 
-      const { container } = render(<ChatMessage message={message} currentUserId="user-2" />)
+      const { container } = render(
+        <ChatMessage message={message} tripId="trip-1" currentUserId="user-2" />
+      )
 
       // Check for left-aligned layout
       const wrapper = container.firstChild as HTMLElement

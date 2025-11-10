@@ -368,6 +368,7 @@ export function ChatThread({
               <ChatMessage
                 key={message.id}
                 message={message}
+                tripId={tripId}
                 currentUserId={currentUserId}
                 participants={participants}
                 reactions={reactions.get(message.id) || []}

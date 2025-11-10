@@ -1,18 +1,41 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { FileIcon, DownloadIcon } from 'lucide-react'
+import { FileIcon, DownloadIcon, ImagePlus, ImageMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { ChatAttachment } from '@/app/actions/chat'
+import { addAttachmentToGallery, removeAttachmentFromGallery } from '@/app/actions/chat'
+import { getMediaFileByUrl } from '@repo/core/queries/media'
+import { createClient } from '@/lib/supabase/client'
 
 interface ChatAttachmentDisplayProps {
   attachment: ChatAttachment
+  tripId: string
   className?: string
 }
 
-export function ChatAttachmentDisplay({ attachment, className }: ChatAttachmentDisplayProps) {
+export function ChatAttachmentDisplay({
+  attachment,
+  tripId,
+  className,
+}: ChatAttachmentDisplayProps) {
   const { url, type, name, size } = attachment
+  const [mediaFileId, setMediaFileId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const supabase = createClient()
+
+  // Check if attachment is in gallery on mount
+  useEffect(() => {
+    const checkGalleryStatus = async () => {
+      if (type === 'image') {
+        const fileId = await getMediaFileByUrl(supabase, url, tripId)
+        setMediaFileId(fileId)
+      }
+    }
+    checkGalleryStatus()
+  }, [url, tripId, type])
 
   // Format file size
   const formatFileSize = (bytes: number): string => {
@@ -23,8 +46,41 @@ export function ChatAttachmentDisplay({ attachment, className }: ChatAttachmentD
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`
   }
 
+  // Add to gallery
+  const handleAddToGallery = async () => {
+    setIsLoading(true)
+    try {
+      const result = await addAttachmentToGallery(url, tripId)
+      if (result.success && result.mediaFileId) {
+        setMediaFileId(result.mediaFileId)
+      }
+    } catch (error) {
+      console.error('Error adding to gallery:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Remove from gallery
+  const handleRemoveFromGallery = async () => {
+    if (!mediaFileId) return
+    setIsLoading(true)
+    try {
+      const result = await removeAttachmentFromGallery(mediaFileId, tripId)
+      if (result.success) {
+        setMediaFileId(null)
+      }
+    } catch (error) {
+      console.error('Error removing from gallery:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Image attachment
   if (type === 'image') {
+    const inGallery = !!mediaFileId
+
     return (
       <div className={cn('relative overflow-hidden rounded-lg', className)}>
         <a href={url} target="_blank" rel="noopener noreferrer" className="block">
@@ -33,9 +89,39 @@ export function ChatAttachmentDisplay({ attachment, className }: ChatAttachmentD
             alt={name}
             width={400}
             height={300}
-            className="max-h-64 w-auto rounded-lg object-cover transition-opacity hover:opacity-90"
+            className={cn(
+              'max-h-64 w-auto rounded-lg object-cover transition-opacity hover:opacity-90',
+              inGallery && 'ring-2 ring-primary ring-offset-2'
+            )}
           />
         </a>
+
+        {/* Gallery Toggle Button */}
+        <div className="absolute bottom-2 right-2">
+          {inGallery ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleRemoveFromGallery}
+              disabled={isLoading}
+              className="gap-1.5"
+            >
+              <ImageMinus className="h-4 w-4" />
+              Remove from gallery
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={handleAddToGallery}
+              disabled={isLoading}
+              className="gap-1.5"
+            >
+              <ImagePlus className="h-4 w-4" />
+              Add to gallery
+            </Button>
+          )}
+        </div>
       </div>
     )
   }

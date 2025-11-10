@@ -26,6 +26,8 @@ import { PendingInvitesList } from '@/components/features/invites/PendingInvites
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
 import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
+import PhotoUpload from '@/components/features/feed/PhotoUpload'
+import PhotoFeed from '@/components/features/feed/PhotoFeed'
 
 interface TripDetailPageProps {
   params: Promise<{
@@ -206,16 +208,25 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
             {/* Feed Tab */}
             <TabsContent value="feed" className="space-y-6 mt-6">
+              {/* Photo Upload (Participants only) */}
+              {canEdit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Upload Photos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PhotoUpload tripId={trip.id} onUploadComplete={() => {}} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Photo Feed (Gallery + Lightbox) */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Trip Feed</CardTitle>
+                  <CardTitle className="text-lg">Trip Photos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No photos or updates yet</p>
-                    <p className="text-sm mt-1">Share photos and memories from your trip</p>
-                  </div>
+                  <PhotoFeed tripId={trip.id} userId={user?.id || ''} />
                 </CardContent>
               </Card>
             </TabsContent>
