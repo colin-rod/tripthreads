@@ -150,7 +150,9 @@ export default function CreateItineraryItemScreen() {
                           >
                             <Text
                               className={`text-sm ${
-                                field.value === option.value ? 'text-primary-foreground' : 'text-foreground'
+                                field.value === option.value
+                                  ? 'text-primary-foreground'
+                                  : 'text-foreground'
                               }`}
                             >
                               {option.label}
@@ -193,7 +195,6 @@ export default function CreateItineraryItemScreen() {
                       <DatePicker
                         value={field.value ? new Date(field.value) : undefined}
                         onChange={date => field.onChange(date?.toISOString())}
-                        mode="datetime"
                       />
                     </FormControl>
                     <FormMessage />
@@ -211,8 +212,7 @@ export default function CreateItineraryItemScreen() {
                       <DatePicker
                         value={field.value ? new Date(field.value) : undefined}
                         onChange={date => field.onChange(date?.toISOString())}
-                        mode="datetime"
-                        minDate={
+                        minimumDate={
                           form.watch('start_time') ? new Date(form.watch('start_time')!) : undefined
                         }
                       />

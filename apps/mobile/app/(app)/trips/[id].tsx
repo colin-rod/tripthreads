@@ -323,7 +323,7 @@ export default function TripDetailScreen() {
                     </Text>
                     {settlements.map((settlement, index) => (
                       <Text key={index} className="text-sm text-muted-foreground">
-                        {settlement.from_name} owes {settlement.to_name}{' '}
+                        {settlement.from_user_name} owes {settlement.to_user_name}{' '}
                         {formatCurrency(settlement.amount, 'USD')}
                       </Text>
                     ))}
