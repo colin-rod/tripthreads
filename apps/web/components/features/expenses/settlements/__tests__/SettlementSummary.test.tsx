@@ -9,6 +9,7 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SettlementSummary } from '../SettlementSummary'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import type { SettlementSummary as SettlementSummaryType } from '@tripthreads/core'
 
 // Mock the server action
@@ -224,7 +225,11 @@ describe('SettlementSummary', () => {
 
       render(<SettlementSummary summary={multiPending} tripId="trip-1" />)
 
-      const settlements = screen.getAllByText('€30.00')
+      const formattedAmount = formatCurrencyFromMinorUnits(
+        mockSummaryWithPending.pending_settlements[0].amount,
+        mockSummaryWithPending.pending_settlements[0].currency
+      )
+      const settlements = screen.getAllByText(formattedAmount)
       expect(settlements).toHaveLength(2)
     })
 
@@ -370,7 +375,11 @@ describe('SettlementSummary', () => {
       await user.click(markAsPaidButton)
 
       // Should show settlement amount in dialog
-      const amounts = screen.getAllByText('€30.00')
+      const formattedAmount = formatCurrencyFromMinorUnits(
+        mockSummaryWithPending.pending_settlements[0].amount,
+        mockSummaryWithPending.pending_settlements[0].currency
+      )
+      const amounts = screen.getAllByText(formattedAmount)
       expect(amounts.length).toBeGreaterThan(0)
     })
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { createClient } from '@/lib/supabase/server'
 import { SYSTEM_PROMPT } from '@tripthreads/core'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -51,6 +52,16 @@ export async function POST(request: NextRequest) {
   const requestStartTime = Date.now()
 
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     // Check for API key
     if (!OPENAI_API_KEY) {
       return NextResponse.json<ParseChatMessageResponse>(
@@ -88,6 +99,33 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+    }
+
+    const { data: participant, error: participantError } = await supabase
+      .from('trip_participants')
+      .select('id')
+      .eq('trip_id', tripId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (participantError) {
+      console.error('[Parse Chat] Error verifying trip participant:', participantError)
+      return NextResponse.json<ParseChatMessageResponse>(
+        {
+          success: false,
+          hasExpense: false,
+          hasItinerary: false,
+          error: 'Unable to verify trip membership',
+          errorType: 'internal_error',
+          model: DEFAULT_MODEL,
+          latencyMs: 0,
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!participant) {
+      return NextResponse.json({ error: 'You are not a participant in this trip' }, { status: 403 })
     }
 
     // Initialize OpenAI client

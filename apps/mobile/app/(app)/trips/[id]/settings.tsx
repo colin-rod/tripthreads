@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, ActivityIndicator, Alert, Share, KeyboardAvoidingView, Platform } from 'react-native'
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Share,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useForm } from 'react-hook-form'
@@ -31,7 +39,14 @@ import { useAuth } from '../../../../lib/auth/auth-context'
 import { useToast } from '../../../../hooks/use-toast'
 import { Button } from '../../../../components/ui/button'
 import { Text } from '../../../../components/ui/text'
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '../../../../components/ui/form'
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '../../../../components/ui/form'
 import { Input } from '../../../../components/ui/input'
 import { Textarea } from '../../../../components/ui/textarea'
 import { DatePicker } from '../../../../components/ui/date-picker'
@@ -280,239 +295,243 @@ export default function TripSettingsScreen() {
         className="flex-1"
       >
         <ScrollView className="flex-1 px-6 py-4">
-        {/* Header */}
-        <View className="mb-6">
-          <Button variant="ghost" onPress={() => router.back()} className="mb-4 self-start">
-            ← Back
-          </Button>
+          {/* Header */}
+          <View className="mb-6">
+            <Button variant="ghost" onPress={() => router.back()} className="mb-4 self-start">
+              ← Back
+            </Button>
 
-          <Text size="3xl" weight="bold" className="mb-2">
-            Trip Settings
-          </Text>
-          <Text variant="muted">Manage {trip.name}</Text>
-        </View>
-
-        {/* Trip Info */}
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text size="lg" weight="semibold">
-              Trip Details
+            <Text size="3xl" weight="bold" className="mb-2">
+              Trip Settings
             </Text>
-            {isOwner && !isEditing && (
-              <Button variant="outline" size="sm" onPress={handleEditTrip}>
-                ✏️ Edit
-              </Button>
-            )}
+            <Text variant="muted">Manage {trip.name}</Text>
           </View>
 
-          {isEditing ? (
-            <Form {...form}>
-              <View className="bg-card p-4 rounded-xl border border-border space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Trip Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter trip name"
-                          value={field.value || ''}
-                          onChangeText={field.onChange}
-                          autoCapitalize="words"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="start_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Start Date</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          value={field.value ? new Date(field.value) : undefined}
-                          onChange={date => field.onChange(date?.toISOString())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="end_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>End Date</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          value={field.value ? new Date(field.value) : undefined}
-                          onChange={date => field.onChange(date?.toISOString())}
-                          minDate={form.watch('start_date') ? new Date(form.watch('start_date')!) : undefined}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Add a description..."
-                          value={field.value || ''}
-                          onChangeText={field.onChange}
-                          maxLength={500}
-                          showCharCount
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <View className="flex-row space-x-2 pt-2">
-                  <Button
-                    variant="default"
-                    onPress={form.handleSubmit(handleSaveTrip)}
-                    disabled={saveLoading}
-                    className="flex-1"
-                  >
-                    {saveLoading ? 'Saving...' : '💾 Save Changes'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onPress={handleCancelEdit}
-                    disabled={saveLoading}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                </View>
-              </View>
-            </Form>
-          ) : (
-            <View className="bg-card p-4 rounded-xl border border-border space-y-2">
-              <View>
-                <Text size="sm" variant="muted">
-                  Name
-                </Text>
-                <Text size="base" weight="medium">
-                  {trip.name}
-                </Text>
-              </View>
-              <View>
-                <Text size="sm" variant="muted">
-                  Dates
-                </Text>
-                <Text size="base">
-                  {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                  {new Date(trip.end_date).toLocaleDateString()}
-                </Text>
-              </View>
-              {trip.description && (
-                <View>
-                  <Text size="sm" variant="muted">
-                    Description
-                  </Text>
-                  <Text size="base">{trip.description}</Text>
-                </View>
+          {/* Trip Info */}
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text size="lg" weight="semibold">
+                Trip Details
+              </Text>
+              {isOwner && !isEditing && (
+                <Button variant="outline" size="sm" onPress={handleEditTrip}>
+                  ✏️ Edit
+                </Button>
               )}
             </View>
-          )}
-        </View>
 
-        {/* Participants */}
-        <View className="mb-6">
-          <Text size="lg" weight="semibold" className="mb-3">
-            Participants ({participants.length})
-          </Text>
-          <View className="bg-card rounded-xl border border-border overflow-hidden">
-            {participants.map((participant, index) => (
-              <View
-                key={participant.id}
-                className={`p-4 flex-row items-center justify-between ${
-                  index < participants.length - 1 ? 'border-b border-border' : ''
-                }`}
-              >
-                <View className="flex-1">
-                  <Text size="base" weight="medium">
-                    {participant.user?.full_name || 'Unknown User'}
-                  </Text>
+            {isEditing ? (
+              <Form {...form}>
+                <View className="bg-card p-4 rounded-xl border border-border space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Trip Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter trip name"
+                            value={field.value || ''}
+                            onChangeText={field.onChange}
+                            autoCapitalize="words"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="start_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Start Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            value={field.value ? new Date(field.value) : undefined}
+                            onChange={date => field.onChange(date?.toISOString())}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="end_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>End Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            value={field.value ? new Date(field.value) : undefined}
+                            onChange={date => field.onChange(date?.toISOString())}
+                            minimumDate={
+                              form.watch('start_date')
+                                ? new Date(form.watch('start_date')!)
+                                : undefined
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Add a description..."
+                            value={field.value || ''}
+                            onChangeText={field.onChange}
+                            maxLength={500}
+                            showCharCount
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <View className="flex-row space-x-2 pt-2">
+                    <Button
+                      variant="default"
+                      onPress={form.handleSubmit(handleSaveTrip)}
+                      disabled={saveLoading}
+                      className="flex-1"
+                    >
+                      {saveLoading ? 'Saving...' : '💾 Save Changes'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onPress={handleCancelEdit}
+                      disabled={saveLoading}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </View>
+                </View>
+              </Form>
+            ) : (
+              <View className="bg-card p-4 rounded-xl border border-border space-y-2">
+                <View>
                   <Text size="sm" variant="muted">
-                    {participant.role.charAt(0).toUpperCase() + participant.role.slice(1)}
+                    Name
+                  </Text>
+                  <Text size="base" weight="medium">
+                    {trip.name}
                   </Text>
                 </View>
-                {participant.role === 'owner' && (
-                  <View className="bg-primary/10 px-3 py-1 rounded-full">
-                    <Text size="xs" className="text-primary">
-                      Owner
+                <View>
+                  <Text size="sm" variant="muted">
+                    Dates
+                  </Text>
+                  <Text size="base">
+                    {new Date(trip.start_date).toLocaleDateString()} -{' '}
+                    {new Date(trip.end_date).toLocaleDateString()}
+                  </Text>
+                </View>
+                {trip.description && (
+                  <View>
+                    <Text size="sm" variant="muted">
+                      Description
                     </Text>
+                    <Text size="base">{trip.description}</Text>
                   </View>
                 )}
               </View>
-            ))}
+            )}
           </View>
-        </View>
 
-        {/* Invite Options */}
-        <View className="mb-6">
-          <Text size="lg" weight="semibold" className="mb-3">
-            Invite People
-          </Text>
-          <View className="space-y-2">
-            <Button
-              variant="outline"
-              onPress={() => handleShareInvite('participant')}
-              disabled={shareLoading}
-              className="w-full"
-            >
-              {shareLoading ? 'Creating link...' : '📤 Share Participant Invite'}
-            </Button>
-            <Button
-              variant="outline"
-              onPress={() => handleShareInvite('viewer')}
-              disabled={shareLoading}
-              className="w-full"
-            >
-              {shareLoading ? 'Creating link...' : '👀 Share Viewer Invite'}
-            </Button>
-          </View>
-          <Text size="sm" variant="muted" className="mt-2">
-            Participants can edit the trip. Viewers can only view.
-          </Text>
-        </View>
-
-        {/* Danger Zone - Only for owners */}
-        {isOwner && (
+          {/* Participants */}
           <View className="mb-6">
-            <Text size="lg" weight="semibold" variant="destructive" className="mb-3">
-              Danger Zone
+            <Text size="lg" weight="semibold" className="mb-3">
+              Participants ({participants.length})
             </Text>
-            <Button
-              variant="destructive"
-              onPress={handleDeleteTrip}
-              disabled={deleteLoading}
-              className="w-full"
-            >
-              {deleteLoading ? 'Deleting...' : '🗑️ Delete Trip'}
-            </Button>
+            <View className="bg-card rounded-xl border border-border overflow-hidden">
+              {participants.map((participant, index) => (
+                <View
+                  key={participant.id}
+                  className={`p-4 flex-row items-center justify-between ${
+                    index < participants.length - 1 ? 'border-b border-border' : ''
+                  }`}
+                >
+                  <View className="flex-1">
+                    <Text size="base" weight="medium">
+                      {participant.user?.full_name || 'Unknown User'}
+                    </Text>
+                    <Text size="sm" variant="muted">
+                      {participant.role.charAt(0).toUpperCase() + participant.role.slice(1)}
+                    </Text>
+                  </View>
+                  {participant.role === 'owner' && (
+                    <View className="bg-primary/10 px-3 py-1 rounded-full">
+                      <Text size="xs" className="text-primary">
+                        Owner
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Invite Options */}
+          <View className="mb-6">
+            <Text size="lg" weight="semibold" className="mb-3">
+              Invite People
+            </Text>
+            <View className="space-y-2">
+              <Button
+                variant="outline"
+                onPress={() => handleShareInvite('participant')}
+                disabled={shareLoading}
+                className="w-full"
+              >
+                {shareLoading ? 'Creating link...' : '📤 Share Participant Invite'}
+              </Button>
+              <Button
+                variant="outline"
+                onPress={() => handleShareInvite('viewer')}
+                disabled={shareLoading}
+                className="w-full"
+              >
+                {shareLoading ? 'Creating link...' : '👀 Share Viewer Invite'}
+              </Button>
+            </View>
             <Text size="sm" variant="muted" className="mt-2">
-              This action cannot be undone. All trip data will be permanently deleted.
+              Participants can edit the trip. Viewers can only view.
             </Text>
           </View>
-        )}
+
+          {/* Danger Zone - Only for owners */}
+          {isOwner && (
+            <View className="mb-6">
+              <Text size="lg" weight="semibold" variant="destructive" className="mb-3">
+                Danger Zone
+              </Text>
+              <Button
+                variant="destructive"
+                onPress={handleDeleteTrip}
+                disabled={deleteLoading}
+                className="w-full"
+              >
+                {deleteLoading ? 'Deleting...' : '🗑️ Delete Trip'}
+              </Button>
+              <Text size="sm" variant="muted" className="mt-2">
+                This action cannot be undone. All trip data will be permanently deleted.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

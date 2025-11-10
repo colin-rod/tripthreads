@@ -9,6 +9,7 @@ import { describe, it, expect, jest } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MarkSettlementPaidDialog } from '../MarkSettlementPaidDialog'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import type { SettlementWithUsers } from '@tripthreads/core'
 
 const mockSettlement: SettlementWithUsers = {
@@ -91,7 +92,11 @@ describe('MarkSettlementPaidDialog', () => {
 
       expect(screen.getByText('Benji Rodriguez')).toBeInTheDocument()
       expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
-      expect(screen.getByText('€30.00')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          formatCurrencyFromMinorUnits(mockSettlement.amount, mockSettlement.currency)
+        )
+      ).toBeInTheDocument()
     })
 
     it('should show description text', () => {

@@ -9,6 +9,7 @@
  */
 
 import type { ExpenseWithDetails } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import { DollarSign, MoreHorizontal, Edit, Trash, Users } from 'lucide-react'
 import {
@@ -26,19 +27,6 @@ interface ExpenseCardProps {
   onClick?: () => void
   onEdit?: () => void
   onDelete?: () => void
-}
-
-/**
- * Format amount from cents to display format
- */
-function formatAmount(amount: number, currency: string): string {
-  const majorUnits = amount / 100
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(majorUnits)
 }
 
 /**
@@ -86,11 +74,11 @@ function getOwedDisplay(expense: ExpenseWithDetails, currentUserId?: string): st
 
     if (totalOwed === 0) return null
 
-    return `You're owed ${formatAmount(totalOwed, expense.currency)}`
+    return `You're owed ${formatCurrencyFromMinorUnits(totalOwed, expense.currency)}`
   }
 
   // User owes money
-  return `You owe ${formatAmount(owedAmount, expense.currency)}`
+  return `You owe ${formatCurrencyFromMinorUnits(owedAmount, expense.currency)}`
 }
 
 /**
@@ -149,7 +137,7 @@ export function ExpenseCard({
             <div className="flex items-baseline gap-3 flex-wrap">
               <span className="font-medium text-base">{expense.description}</span>
               <span className="text-lg font-semibold text-primary">
-                {formatAmount(expense.amount, expense.currency)}
+                {formatCurrencyFromMinorUnits(expense.amount, expense.currency)}
               </span>
             </div>
 

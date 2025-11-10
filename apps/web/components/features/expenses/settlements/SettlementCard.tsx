@@ -9,6 +9,7 @@
  */
 
 import type { SettlementWithUsers } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { ArrowRight, Check } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -19,19 +20,6 @@ interface SettlementCardProps {
   settlement: SettlementWithUsers
   currentUserId?: string
   onMarkAsPaid?: (settlementId: string) => void
-}
-
-/**
- * Format amount from cents to display format
- */
-function formatAmount(amount: number, currency: string): string {
-  const majorUnits = amount / 100
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(majorUnits)
 }
 
 /**
@@ -91,7 +79,7 @@ export function SettlementCard({ settlement, currentUserId, onMarkAsPaid }: Sett
       {/* Amount */}
       <div className="flex-shrink-0">
         <span className="font-semibold text-lg text-primary">
-          {formatAmount(settlement.amount, settlement.currency)}
+          {formatCurrencyFromMinorUnits(settlement.amount, settlement.currency)}
         </span>
       </div>
 

@@ -76,6 +76,11 @@ export default function ExpenseDetailScreen() {
     try {
       setLoading(true)
       const data = await getExpenseById(supabase, params.expenseId)
+
+      if (!data) {
+        throw new Error('Expense not found')
+      }
+
       setExpense(data)
 
       // Populate form (convert cents to dollars for display)
@@ -103,7 +108,7 @@ export default function ExpenseDetailScreen() {
       setSaveLoading(true)
 
       // Convert amount from dollars to cents if provided
-      const updates: any = {}
+      const updates: Record<string, string | number> = {}
       if (data.description) updates.description = data.description
       if (data.amount) updates.amount = Math.round(parseFloat(data.amount) * 100)
       if (data.currency) updates.currency = data.currency
@@ -361,7 +366,6 @@ export default function ExpenseDetailScreen() {
                         <DatePicker
                           value={field.value ? new Date(field.value) : undefined}
                           onChange={date => field.onChange(date?.toISOString())}
-                          mode="date"
                         />
                       </FormControl>
                       <FormMessage />

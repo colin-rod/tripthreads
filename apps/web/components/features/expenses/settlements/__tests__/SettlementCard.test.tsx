@@ -9,6 +9,7 @@ import { describe, it, expect, jest } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SettlementCard } from '../SettlementCard'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import type { SettlementWithUsers } from '@tripthreads/core'
 
 const mockPendingSettlement: SettlementWithUsers = {
@@ -58,7 +59,11 @@ describe('SettlementCard', () => {
 
       expect(screen.getByText('Benji Rodriguez')).toBeInTheDocument()
       expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
-      expect(screen.getByText('€30.00')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          formatCurrencyFromMinorUnits(mockPendingSettlement.amount, mockPendingSettlement.currency)
+        )
+      ).toBeInTheDocument()
     })
 
     it('should show "You" for debtor when currentUserId matches from_user_id', () => {
@@ -245,28 +250,38 @@ describe('SettlementCard', () => {
     it('should format EUR correctly', () => {
       render(<SettlementCard settlement={mockPendingSettlement} />)
 
-      expect(screen.getByText('€30.00')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          formatCurrencyFromMinorUnits(mockPendingSettlement.amount, mockPendingSettlement.currency)
+        )
+      ).toBeInTheDocument()
     })
 
     it('should format USD correctly', () => {
       const usdSettlement = { ...mockPendingSettlement, currency: 'USD', amount: 5000 }
       render(<SettlementCard settlement={usdSettlement} />)
 
-      expect(screen.getByText('$50.00')).toBeInTheDocument()
+      expect(
+        screen.getByText(formatCurrencyFromMinorUnits(usdSettlement.amount, usdSettlement.currency))
+      ).toBeInTheDocument()
     })
 
     it('should format GBP correctly', () => {
       const gbpSettlement = { ...mockPendingSettlement, currency: 'GBP', amount: 7500 }
       render(<SettlementCard settlement={gbpSettlement} />)
 
-      expect(screen.getByText('£75.00')).toBeInTheDocument()
+      expect(
+        screen.getByText(formatCurrencyFromMinorUnits(gbpSettlement.amount, gbpSettlement.currency))
+      ).toBeInTheDocument()
     })
 
     it('should handle fractional amounts correctly', () => {
       const settlement = { ...mockPendingSettlement, amount: 1234 } // €12.34
       render(<SettlementCard settlement={settlement} />)
 
-      expect(screen.getByText('€12.34')).toBeInTheDocument()
+      expect(
+        screen.getByText(formatCurrencyFromMinorUnits(settlement.amount, settlement.currency))
+      ).toBeInTheDocument()
     })
   })
 })

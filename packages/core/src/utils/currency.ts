@@ -64,3 +64,33 @@ export function convertToMinorUnits(amount: number): number {
 export function convertFromMinorUnits(minorUnits: number): number {
   return minorUnits / 100
 }
+
+type FormatMinorUnitOptions = Intl.NumberFormatOptions & {
+  locale?: string
+}
+
+/**
+ * Format currency amount stored in minor units using Intl.NumberFormat
+ * @param minorUnits - Amount in minor units (e.g., cents)
+ * @param currency - ISO 4217 currency code
+ * @param options - Optional locale and Intl.NumberFormat configuration
+ * @returns Locale-aware formatted currency string
+ *
+ * @example
+ * formatCurrencyFromMinorUnits(12345, 'USD') // '$123.45'
+ * formatCurrencyFromMinorUnits(12345, 'EUR', { locale: 'de-DE' }) // '123,45\u00a0€'
+ */
+export function formatCurrencyFromMinorUnits(
+  minorUnits: number,
+  currency: string,
+  options: FormatMinorUnitOptions = {}
+): string {
+  const { locale = 'en-US', ...formatOptions } = options
+  const majorUnits = convertFromMinorUnits(minorUnits)
+
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    ...formatOptions,
+  }).format(majorUnits)
+}

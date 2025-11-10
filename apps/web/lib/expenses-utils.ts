@@ -4,7 +4,15 @@
  * Helper functions for expense processing (non-Server Actions)
  */
 
+import {
+  calculateExpenseShares,
+  type NormalizedSplitConfig,
+  type NormalizedSplitParticipant,
+} from '@tripthreads/core'
+
 import type { CreateExpenseInput } from '@/app/actions/expenses'
+import { matchSingleParticipantName } from '@tripthreads/core'
+import type { TripParticipant as CoreTripParticipant } from '@tripthreads/core'
 
 interface TripParticipant {
   user_id: string
@@ -21,6 +29,7 @@ interface ExpenseParticipantRecord {
 
 /**
  * Resolve a participant identifier (name or user_id) to user_id
+ * Uses fuzzy name matching for improved user experience
  * Internal helper function
  */
 function resolveParticipantId(
@@ -35,12 +44,17 @@ function resolveParticipantId(
     return participant ? identifier : null
   }
 
-  // Try to match by name (case-insensitive)
-  const matchedParticipant = tripParticipants.find(
-    p => p.full_name.toLowerCase() === identifier.toLowerCase()
-  )
+  // Try to match by name using fuzzy matching
+  const coreParticipants: CoreTripParticipant[] = tripParticipants.map(p => ({
+    user_id: p.user_id,
+    full_name: p.full_name,
+  }))
 
-  return matchedParticipant ? matchedParticipant.user_id : null
+  const match = matchSingleParticipantName(identifier, coreParticipants, {
+    minConfidence: 0.85, // Require high confidence for auto-resolution
+  })
+
+  return match ? match.userId : null
 }
 
 /**
@@ -84,6 +98,7 @@ export function buildExpenseParticipants({
   tripParticipants: TripParticipant[]
 }): { participants: ExpenseParticipantRecord[]; error?: string } {
   const expenseParticipants: ExpenseParticipantRecord[] = []
+  let splitConfig: NormalizedSplitConfig | null = null
 
   if (input.splitType === 'equal') {
     let participantIds: string[] = []
@@ -114,23 +129,15 @@ export function buildExpenseParticipants({
       }
     }
 
-    const shareAmount = Math.floor(input.amount / participantIds.length)
-    const remainder = input.amount - shareAmount * participantIds.length
-
-    participantIds.forEach((userId, index) => {
-      expenseParticipants.push({
-        expense_id: expenseId,
-        user_id: userId,
-        share_amount: shareAmount + (index === 0 ? remainder : 0),
-        share_type: 'equal',
-        share_value: null,
-      })
-    })
+    splitConfig = {
+      totalAmount: input.amount,
+      splitType: 'equal',
+      participants: participantIds.map(userId => ({ userId })),
+    }
   } else if (input.splitType === 'percentage' && input.percentageSplits) {
-    let totalAssigned = 0
+    const resolvedParticipants: NormalizedSplitParticipant[] = []
 
-    for (let i = 0; i < input.percentageSplits.length; i++) {
-      const split = input.percentageSplits[i]
+    for (const split of input.percentageSplits) {
       const userId = resolveParticipantId(split.name, tripParticipants)
 
       if (!userId) {
@@ -140,31 +147,16 @@ export function buildExpenseParticipants({
         }
       }
 
-      let shareAmount: number
-      if (i === input.percentageSplits.length - 1) {
-        shareAmount = input.amount - totalAssigned
-      } else {
-        shareAmount = Math.floor((input.amount * split.percentage) / 100)
-        totalAssigned += shareAmount
-      }
+      resolvedParticipants.push({ userId, shareValue: split.percentage })
+    }
 
-      expenseParticipants.push({
-        expense_id: expenseId,
-        user_id: userId,
-        share_amount: shareAmount,
-        share_type: 'percentage',
-        share_value: split.percentage,
-      })
+    splitConfig = {
+      totalAmount: input.amount,
+      splitType: 'percentage',
+      participants: resolvedParticipants,
     }
   } else if (input.splitType === 'custom' && input.customSplits) {
-    const totalCustom = input.customSplits.reduce((sum, split) => sum + split.amount, 0)
-
-    if (totalCustom !== input.amount) {
-      return {
-        participants: expenseParticipants,
-        error: `Custom splits (${totalCustom}) do not sum to expense total (${input.amount})`,
-      }
-    }
+    const resolvedParticipants: NormalizedSplitParticipant[] = []
 
     for (const split of input.customSplits) {
       const userId = resolveParticipantId(split.name, tripParticipants)
@@ -176,14 +168,35 @@ export function buildExpenseParticipants({
         }
       }
 
+      resolvedParticipants.push({ userId, shareValue: split.amount })
+    }
+
+    splitConfig = {
+      totalAmount: input.amount,
+      splitType: 'amount',
+      participants: resolvedParticipants,
+    }
+  }
+
+  if (!splitConfig) {
+    return { participants: expenseParticipants }
+  }
+
+  try {
+    const shares = calculateExpenseShares(splitConfig)
+
+    shares.forEach(share => {
       expenseParticipants.push({
         expense_id: expenseId,
-        user_id: userId,
-        share_amount: split.amount,
-        share_type: 'amount',
-        share_value: split.amount,
+        user_id: share.userId,
+        share_amount: share.shareAmount,
+        share_type: share.shareType,
+        share_value: share.shareValue ?? null,
       })
-    }
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to calculate expense shares'
+    return { participants: [], error: message }
   }
 
   return { participants: expenseParticipants }

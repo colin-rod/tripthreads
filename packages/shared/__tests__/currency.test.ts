@@ -1,4 +1,9 @@
-import { formatCurrency, convertToMinorUnits, convertFromMinorUnits } from '@tripthreads/core'
+import {
+  formatCurrency,
+  convertToMinorUnits,
+  convertFromMinorUnits,
+  formatCurrencyFromMinorUnits,
+} from '@tripthreads/core'
 
 import * as SharedExports from '../src'
 
@@ -7,6 +12,7 @@ describe('Currency Utils', () => {
     expect(SharedExports.formatCurrency).toBe(formatCurrency)
     expect(SharedExports.convertToMinorUnits).toBe(convertToMinorUnits)
     expect(SharedExports.convertFromMinorUnits).toBe(convertFromMinorUnits)
+    expect(SharedExports.formatCurrencyFromMinorUnits).toBe(formatCurrencyFromMinorUnits)
   })
 
   describe('formatCurrency', () => {
@@ -72,6 +78,16 @@ describe('Currency Utils', () => {
 
     it('should handle negative amounts', () => {
       expect(convertFromMinorUnits(-2550)).toBe(-25.5)
+    })
+  })
+
+  describe('formatCurrencyFromMinorUnits', () => {
+    it('should format USD correctly from minor units', () => {
+      expect(formatCurrencyFromMinorUnits(12345, 'USD')).toBe('$123.45')
+    })
+
+    it('should respect locale overrides', () => {
+      expect(formatCurrencyFromMinorUnits(12345, 'EUR', { locale: 'fr-FR' })).toBe('123,45\u00a0€')
     })
   })
 })

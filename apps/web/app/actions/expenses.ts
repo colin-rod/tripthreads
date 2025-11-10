@@ -14,6 +14,8 @@ import { getFxRate, formatDateForFx, getSettlementSummary } from '@tripthreads/c
 import type { SettlementSummary } from '@tripthreads/core'
 import { resolvePayer, buildExpenseParticipants } from '@/lib/expenses-utils'
 
+export { resolvePayer, buildExpenseParticipants }
+
 export interface CreateExpenseInput {
   tripId: string
   amount: number // in minor units (cents)

@@ -3,7 +3,7 @@
  */
 
 import { calculateUserBalances, optimizeSettlements } from '@tripthreads/core'
-import type { ExpenseWithDetails } from '@tripthreads/core'
+import type { ExpenseWithDetails, UserBalance, OptimizedSettlement } from '@tripthreads/core'
 
 describe('Expense and Settlement Integration Tests', () => {
   describe('calculateUserBalances', () => {
@@ -65,8 +65,8 @@ describe('Expense and Settlement Integration Tests', () => {
 
       expect(balances).toHaveLength(2)
 
-      const alice = balances.find(b => b.user_id === 'user-1')
-      const bob = balances.find(b => b.user_id === 'user-2')
+      const alice = balances.find((b: UserBalance) => b.user_id === 'user-1')
+      const bob = balances.find((b: UserBalance) => b.user_id === 'user-2')
 
       expect(alice?.net_balance).toBe(3000) // Paid 6000, owes 3000 = +3000
       expect(bob?.net_balance).toBe(-3000) // Paid 0, owes 3000 = -3000
@@ -154,8 +154,8 @@ describe('Expense and Settlement Integration Tests', () => {
 
       const balances = calculateUserBalances(expenses, 'USD')
 
-      const alice = balances.find(b => b.user_id === 'user-1')
-      const bob = balances.find(b => b.user_id === 'user-2')
+      const alice = balances.find((b: UserBalance) => b.user_id === 'user-1')
+      const bob = balances.find((b: UserBalance) => b.user_id === 'user-2')
 
       // Alice: Paid 6000, owes (3000 + 6000) = -3000
       expect(alice?.net_balance).toBe(-3000)
@@ -172,9 +172,9 @@ describe('Expense and Settlement Integration Tests', () => {
 
   describe('optimizeSettlements', () => {
     it('should optimize simple two-person settlement', () => {
-      const balances = [
-        { user_id: 'user-1', user_name: 'Alice', net_balance: 3000 },
-        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000 },
+      const balances: UserBalance[] = [
+        { user_id: 'user-1', user_name: 'Alice', net_balance: 3000, currency: 'USD' },
+        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000, currency: 'USD' },
       ]
 
       const settlements = optimizeSettlements(balances)
@@ -190,10 +190,10 @@ describe('Expense and Settlement Integration Tests', () => {
     })
 
     it('should optimize three-person settlement', () => {
-      const balances = [
-        { user_id: 'user-1', user_name: 'Alice', net_balance: 5000 },
-        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000 },
-        { user_id: 'user-3', user_name: 'Charlie', net_balance: -2000 },
+      const balances: UserBalance[] = [
+        { user_id: 'user-1', user_name: 'Alice', net_balance: 5000, currency: 'USD' },
+        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000, currency: 'USD' },
+        { user_id: 'user-3', user_name: 'Charlie', net_balance: -2000, currency: 'USD' },
       ]
 
       const settlements = optimizeSettlements(balances)
@@ -202,14 +202,17 @@ describe('Expense and Settlement Integration Tests', () => {
       expect(settlements.length).toBeLessThanOrEqual(2)
 
       // Total amount owed should match total amount owed
-      const totalOwed = settlements.reduce((sum, s) => sum + s.amount, 0)
+      const totalOwed = settlements.reduce(
+        (sum: number, s: OptimizedSettlement) => sum + s.amount,
+        0
+      )
       expect(totalOwed).toBe(5000)
     })
 
     it('should handle balanced accounts (no settlements needed)', () => {
-      const balances = [
-        { user_id: 'user-1', user_name: 'Alice', net_balance: 0 },
-        { user_id: 'user-2', user_name: 'Bob', net_balance: 0 },
+      const balances: UserBalance[] = [
+        { user_id: 'user-1', user_name: 'Alice', net_balance: 0, currency: 'USD' },
+        { user_id: 'user-2', user_name: 'Bob', net_balance: 0, currency: 'USD' },
       ]
 
       const settlements = optimizeSettlements(balances)
@@ -217,27 +220,34 @@ describe('Expense and Settlement Integration Tests', () => {
     })
 
     it('should handle complex multi-person scenario', () => {
-      const balances = [
-        { user_id: 'user-1', user_name: 'Alice', net_balance: 10000 },
-        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000 },
-        { user_id: 'user-3', user_name: 'Charlie', net_balance: -2000 },
-        { user_id: 'user-4', user_name: 'David', net_balance: -5000 },
+      const balances: UserBalance[] = [
+        { user_id: 'user-1', user_name: 'Alice', net_balance: 10000, currency: 'USD' },
+        { user_id: 'user-2', user_name: 'Bob', net_balance: -3000, currency: 'USD' },
+        { user_id: 'user-3', user_name: 'Charlie', net_balance: -2000, currency: 'USD' },
+        { user_id: 'user-4', user_name: 'David', net_balance: -5000, currency: 'USD' },
       ]
 
       const settlements = optimizeSettlements(balances)
 
       // Verify total amounts match
-      const totalCredits = balances.filter(b => b.net_balance > 0).reduce((sum, b) => sum + b.net_balance, 0)
-      const totalDebts = balances.filter(b => b.net_balance < 0).reduce((sum, b) => sum + Math.abs(b.net_balance), 0)
-      const totalSettlements = settlements.reduce((sum, s) => sum + s.amount, 0)
+      const totalCredits = balances
+        .filter(b => b.net_balance > 0)
+        .reduce((sum, b) => sum + b.net_balance, 0)
+      const totalDebts = balances
+        .filter(b => b.net_balance < 0)
+        .reduce((sum, b) => sum + Math.abs(b.net_balance), 0)
+      const totalSettlements = settlements.reduce(
+        (sum: number, s: OptimizedSettlement) => sum + s.amount,
+        0
+      )
 
       expect(totalCredits).toBe(totalDebts)
       expect(totalSettlements).toBe(totalCredits)
 
       // Verify all settlements are from debtors to creditors
-      settlements.forEach(settlement => {
-        const from = balances.find(b => b.user_id === settlement.from_id)
-        const to = balances.find(b => b.user_id === settlement.to_id)
+      settlements.forEach((settlement: OptimizedSettlement) => {
+        const from = balances.find(b => b.user_id === settlement.from_user_id)
+        const to = balances.find(b => b.user_id === settlement.to_user_id)
         expect(from?.net_balance).toBeLessThan(0)
         expect(to?.net_balance).toBeGreaterThan(0)
       })
@@ -405,9 +415,9 @@ describe('Expense and Settlement Integration Tests', () => {
       // Bob: Paid 60, owes 40+20+10 = 70, net = -10
       // Charlie: Paid 30, owes 40+20+10 = 70, net = -40
 
-      const alice = balances.find(b => b.user_id === 'alice')
-      const bob = balances.find(b => b.user_id === 'bob')
-      const charlie = balances.find(b => b.user_id === 'charlie')
+      const alice = balances.find((b: UserBalance) => b.user_id === 'alice')
+      const bob = balances.find((b: UserBalance) => b.user_id === 'bob')
+      const charlie = balances.find((b: UserBalance) => b.user_id === 'charlie')
 
       expect(alice?.net_balance).toBe(5000) // +$50
       expect(bob?.net_balance).toBe(-1000) // -$10
@@ -419,7 +429,10 @@ describe('Expense and Settlement Integration Tests', () => {
       // Should have 2 settlements (Bob → Alice, Charlie → Alice)
       expect(settlements).toHaveLength(2)
 
-      const totalSettled = settlements.reduce((sum, s) => sum + s.amount, 0)
+      const totalSettled = settlements.reduce(
+        (sum: number, s: OptimizedSettlement) => sum + s.amount,
+        0
+      )
       expect(totalSettled).toBe(5000) // $50 total
     })
   })
