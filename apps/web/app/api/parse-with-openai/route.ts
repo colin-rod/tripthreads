@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { createClient } from '@/lib/supabase/server'
 import {
   getDateParserPrompt,
   getExpenseParserPrompt,
@@ -20,6 +21,16 @@ export async function POST(request: NextRequest) {
   console.log('[OpenAI API] API Key length:', OPENAI_API_KEY?.length || 0)
 
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     // Check for API key
     if (!OPENAI_API_KEY) {
       console.log('[OpenAI API] ERROR: No API key found')
@@ -37,8 +48,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body: LLMParseRequest = await request.json()
-    const { input, parserType, options = {}, model = DEFAULT_MODEL } = body
+    const body: LLMParseRequest & { tripId?: string } = await request.json()
+    const { input, parserType, options = {}, model = DEFAULT_MODEL, tripId } = body
 
     console.log('[OpenAI API] Request parsed:', { input, parserType, model })
 
@@ -54,6 +65,34 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+    }
+
+    if (tripId) {
+      const { data: participant, error: participantError } = await supabase
+        .from('trip_participants')
+        .select('id')
+        .eq('trip_id', tripId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (participantError) {
+        console.error('[OpenAI API] Error verifying trip participant:', participantError)
+        return NextResponse.json<LLMParserResult>(
+          {
+            success: false,
+            error: 'Unable to verify trip membership',
+            errorType: 'internal_error',
+            model,
+            latencyMs: 0,
+            rawOutput: '',
+          },
+          { status: 500 }
+        )
+      }
+
+      if (!participant) {
+        return NextResponse.json({ error: 'You are not a participant in this trip' }, { status: 403 })
+      }
     }
 
     // Initialize OpenAI client

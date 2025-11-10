@@ -211,6 +211,11 @@ export interface LLMParseRequest {
    * LLM model to use (default: "phi3:mini")
    */
   model?: string
+
+  /**
+   * Optional trip identifier used to scope parsing requests
+   */
+  tripId?: string
 }
 
 /**
