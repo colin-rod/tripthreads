@@ -10,6 +10,7 @@
 
 import { useState } from 'react'
 import type { SettlementWithUsers } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { Check, ArrowRight } from 'lucide-react'
 import {
   Dialog,
@@ -30,19 +31,6 @@ interface MarkSettlementPaidDialogProps {
   onOpenChange: (open: boolean) => void
   onConfirm: (settlementId: string, note?: string) => void | Promise<void>
   currentUserId?: string
-}
-
-/**
- * Format amount from cents to display format
- */
-function formatAmount(amount: number, currency: string): string {
-  const majorUnits = amount / 100
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(majorUnits)
 }
 
 /**
@@ -139,7 +127,7 @@ export function MarkSettlementPaidDialog({
           {/* Amount */}
           <div className="flex-shrink-0">
             <span className="font-semibold text-lg text-primary">
-              {formatAmount(settlement.amount, settlement.currency)}
+              {formatCurrencyFromMinorUnits(settlement.amount, settlement.currency)}
             </span>
           </div>
         </div>

@@ -9,6 +9,7 @@
  */
 
 import type { ExpenseWithDetails } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import { format, parseISO } from 'date-fns'
 import {
   Sheet,
@@ -31,19 +32,6 @@ interface ExpenseDetailSheetProps {
   currentUserId?: string
   onEdit?: () => void
   onDelete?: () => void
-}
-
-/**
- * Format amount from cents to display format
- */
-function formatAmount(amount: number, currency: string): string {
-  const majorUnits = amount / 100
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(majorUnits)
 }
 
 /**
@@ -93,7 +81,7 @@ export function ExpenseDetailSheet({
               <span>Amount</span>
             </div>
             <p className="text-3xl font-bold text-primary">
-              {formatAmount(expense.amount, expense.currency)}
+              {formatCurrencyFromMinorUnits(expense.amount, expense.currency)}
             </p>
           </div>
 
@@ -159,7 +147,10 @@ export function ExpenseDetailSheet({
             <div className="space-y-2">
               {expense.participants.map(participant => {
                 const isCurrentUser = participant.user_id === currentUserId
-                const shareAmount = formatAmount(participant.share_amount, expense.currency)
+                const shareAmount = formatCurrencyFromMinorUnits(
+                  participant.share_amount,
+                  expense.currency
+                )
                 const sharePercentage = ((participant.share_amount / expense.amount) * 100).toFixed(
                   1
                 )

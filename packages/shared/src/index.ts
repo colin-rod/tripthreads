@@ -8,6 +8,7 @@ export {
   formatCurrency,
   convertToMinorUnits,
   convertFromMinorUnits,
+  formatCurrencyFromMinorUnits,
   getFxRateFromCache,
   fetchAndCacheFxRate,
   getFxRate,
