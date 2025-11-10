@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
-import { View, Text, ActivityIndicator, ScrollView } from 'react-native'
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Button } from '../../../components/ui/button'
 import { supabase } from '../../../lib/supabase/client'
-import type { Trip } from '@tripthreads/core'
+import {
+  type Trip,
+  getTripItineraryItems,
+  groupItineraryItemsByDate,
+  type ItineraryItemWithParticipants,
+  type GroupedItineraryItems,
+} from '@tripthreads/core'
 
 export default function TripDetailScreen() {
   const router = useRouter()
@@ -13,6 +19,8 @@ export default function TripDetailScreen() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [itineraryItems, setItineraryItems] = useState<GroupedItineraryItems[]>([])
+  const [itineraryLoading, setItineraryLoading] = useState(false)
 
   useEffect(() => {
     if (!params.id) {
@@ -43,11 +51,47 @@ export default function TripDetailScreen() {
       }
 
       setTrip(data as Trip)
+
+      // Load itinerary items after trip is loaded
+      loadItineraryItems()
     } catch (err) {
       console.error('Error loading trip:', err)
       setError('Failed to load trip')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadItineraryItems = async () => {
+    if (!params.id) return
+
+    try {
+      setItineraryLoading(true)
+      const items = await getTripItineraryItems(supabase, params.id)
+      const grouped = groupItineraryItemsByDate(items)
+      setItineraryItems(grouped)
+    } catch (err) {
+      console.error('Error loading itinerary:', err)
+      // Don't show error for itinerary, just fail silently
+    } finally {
+      setItineraryLoading(false)
+    }
+  }
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'transport':
+        return '✈️'
+      case 'accommodation':
+        return '🏨'
+      case 'dining':
+        return '🍽️'
+      case 'activity':
+        return '🎯'
+      case 'sightseeing':
+        return '🏛️'
+      default:
+        return '📌'
     }
   }
 
@@ -118,8 +162,75 @@ export default function TripDetailScreen() {
         <View className="space-y-4">
           {/* Itinerary Section */}
           <View className="bg-card p-6 rounded-xl border border-border">
-            <Text className="text-xl font-semibold text-foreground mb-2">📋 Itinerary</Text>
-            <Text className="text-muted-foreground">Trip itinerary will be displayed here</Text>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-semibold text-foreground">📋 Itinerary</Text>
+              <TouchableOpacity
+                onPress={() => router.push(`/(app)/trips/${params.id}/itinerary/create`)}
+                className="bg-primary px-3 py-1.5 rounded-lg"
+              >
+                <Text className="text-primary-foreground text-sm font-medium">+ Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {itineraryLoading ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#F97316" />
+              </View>
+            ) : itineraryItems.length === 0 ? (
+              <View className="py-4">
+                <Text className="text-muted-foreground text-center">
+                  No itinerary items yet. Add your first activity!
+                </Text>
+              </View>
+            ) : (
+              <View className="space-y-4">
+                {itineraryItems.map(group => (
+                  <View key={group.date}>
+                    <Text className="text-sm font-semibold text-muted-foreground mb-2">
+                      {new Date(group.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                    <View className="space-y-2">
+                      {group.items.map(item => (
+                        <TouchableOpacity
+                          key={item.id}
+                          onPress={() => router.push(`/(app)/trips/${params.id}/itinerary/${item.id}`)}
+                          className="bg-background p-3 rounded-lg border border-border"
+                        >
+                          <View className="flex-row items-start">
+                            <Text className="text-2xl mr-2">{getTypeIcon(item.type)}</Text>
+                            <View className="flex-1">
+                              <Text className="text-base font-medium text-foreground">
+                                {item.title}
+                              </Text>
+                              {!item.is_all_day && (
+                                <Text className="text-sm text-muted-foreground">
+                                  {new Date(item.start_time).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })}
+                                  {item.end_time &&
+                                    ` - ${new Date(item.end_time).toLocaleTimeString('en-US', {
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                    })}`}
+                                </Text>
+                              )}
+                              {item.location && (
+                                <Text className="text-sm text-muted-foreground">📍 {item.location}</Text>
+                              )}
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
           {/* Expenses Section */}

@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, ActivityIndicator, Alert, Share } from 'react-native'
+import { View, ScrollView, ActivityIndicator, Alert, Share, KeyboardAvoidingView, Platform } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   getTripById,
   isTripOwner,
   createInviteLink,
   deleteTrip,
+  updateTrip,
+  updateTripSchema,
   type Trip,
   type Database,
+  type UpdateTripInput,
 } from '@tripthreads/core'
 
 type TripParticipant = Database['public']['Tables']['trip_participants']['Row']
@@ -26,6 +31,10 @@ import { useAuth } from '../../../../lib/auth/auth-context'
 import { useToast } from '../../../../hooks/use-toast'
 import { Button } from '../../../../components/ui/button'
 import { Text } from '../../../../components/ui/text'
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '../../../../components/ui/form'
+import { Input } from '../../../../components/ui/input'
+import { Textarea } from '../../../../components/ui/textarea'
+import { DatePicker } from '../../../../components/ui/date-picker'
 
 export default function TripSettingsScreen() {
   const router = useRouter()
@@ -39,6 +48,19 @@ export default function TripSettingsScreen() {
   const [isOwner, setIsOwner] = useState(false)
   const [shareLoading, setShareLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+
+  // Form for editing trip
+  const form = useForm<UpdateTripInput>({
+    resolver: zodResolver(updateTripSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      start_date: '',
+      end_date: '',
+    },
+  })
 
   useEffect(() => {
     if (!params.id || !user?.id) return
@@ -54,6 +76,14 @@ export default function TripSettingsScreen() {
       // Load trip details
       const tripData = await getTripById(supabase, params.id)
       setTrip(tripData)
+
+      // Populate form with trip data
+      form.reset({
+        name: tripData.name,
+        description: tripData.description || '',
+        start_date: tripData.start_date,
+        end_date: tripData.end_date,
+      })
 
       // Check if user is owner
       const ownerStatus = await isTripOwner(supabase, params.id)
@@ -117,6 +147,61 @@ export default function TripSettingsScreen() {
       })
     } finally {
       setShareLoading(false)
+    }
+  }
+
+  const handleEditTrip = () => {
+    if (!isOwner) {
+      toast({
+        title: 'Permission denied',
+        description: 'Only the trip owner can edit this trip',
+        variant: 'destructive',
+      })
+      return
+    }
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    // Reset form to original trip data
+    if (trip) {
+      form.reset({
+        name: trip.name,
+        description: trip.description || '',
+        start_date: trip.start_date,
+        end_date: trip.end_date,
+      })
+    }
+    setIsEditing(false)
+  }
+
+  const handleSaveTrip = async (data: UpdateTripInput) => {
+    if (!params.id) return
+
+    try {
+      setSaveLoading(true)
+
+      // Update trip
+      const updatedTrip = await updateTrip(supabase, params.id, data)
+
+      // Update local state
+      setTrip(updatedTrip)
+      setIsEditing(false)
+
+      toast({
+        title: 'Trip updated',
+        description: 'Your changes have been saved',
+        variant: 'success',
+      })
+    } catch (error) {
+      console.error('Error updating trip:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update trip',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaveLoading(false)
     }
   }
 
@@ -190,7 +275,11 @@ export default function TripSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView className="flex-1 px-6 py-4">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView className="flex-1 px-6 py-4">
         {/* Header */}
         <View className="mb-6">
           <Button variant="ghost" onPress={() => router.back()} className="mb-4 self-start">
@@ -205,36 +294,143 @@ export default function TripSettingsScreen() {
 
         {/* Trip Info */}
         <View className="mb-6">
-          <Text size="lg" weight="semibold" className="mb-3">
-            Trip Details
-          </Text>
-          <View className="bg-card p-4 rounded-xl border border-border space-y-2">
-            <View>
-              <Text size="sm" variant="muted">
-                Name
-              </Text>
-              <Text size="base" weight="medium">
-                {trip.name}
-              </Text>
-            </View>
-            <View>
-              <Text size="sm" variant="muted">
-                Dates
-              </Text>
-              <Text size="base">
-                {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                {new Date(trip.end_date).toLocaleDateString()}
-              </Text>
-            </View>
-            {trip.description && (
-              <View>
-                <Text size="sm" variant="muted">
-                  Description
-                </Text>
-                <Text size="base">{trip.description}</Text>
-              </View>
+          <View className="flex-row items-center justify-between mb-3">
+            <Text size="lg" weight="semibold">
+              Trip Details
+            </Text>
+            {isOwner && !isEditing && (
+              <Button variant="outline" size="sm" onPress={handleEditTrip}>
+                ✏️ Edit
+              </Button>
             )}
           </View>
+
+          {isEditing ? (
+            <Form {...form}>
+              <View className="bg-card p-4 rounded-xl border border-border space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Trip Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter trip name"
+                          value={field.value || ''}
+                          onChangeText={field.onChange}
+                          autoCapitalize="words"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Start Date</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value ? new Date(field.value) : undefined}
+                          onChange={date => field.onChange(date?.toISOString())}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>End Date</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value ? new Date(field.value) : undefined}
+                          onChange={date => field.onChange(date?.toISOString())}
+                          minDate={form.watch('start_date') ? new Date(form.watch('start_date')!) : undefined}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add a description..."
+                          value={field.value || ''}
+                          onChangeText={field.onChange}
+                          maxLength={500}
+                          showCharCount
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <View className="flex-row space-x-2 pt-2">
+                  <Button
+                    variant="default"
+                    onPress={form.handleSubmit(handleSaveTrip)}
+                    disabled={saveLoading}
+                    className="flex-1"
+                  >
+                    {saveLoading ? 'Saving...' : '💾 Save Changes'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onPress={handleCancelEdit}
+                    disabled={saveLoading}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </View>
+              </View>
+            </Form>
+          ) : (
+            <View className="bg-card p-4 rounded-xl border border-border space-y-2">
+              <View>
+                <Text size="sm" variant="muted">
+                  Name
+                </Text>
+                <Text size="base" weight="medium">
+                  {trip.name}
+                </Text>
+              </View>
+              <View>
+                <Text size="sm" variant="muted">
+                  Dates
+                </Text>
+                <Text size="base">
+                  {new Date(trip.start_date).toLocaleDateString()} -{' '}
+                  {new Date(trip.end_date).toLocaleDateString()}
+                </Text>
+              </View>
+              {trip.description && (
+                <View>
+                  <Text size="sm" variant="muted">
+                    Description
+                  </Text>
+                  <Text size="base">{trip.description}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Participants */}
@@ -317,7 +513,8 @@ export default function TripSettingsScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
