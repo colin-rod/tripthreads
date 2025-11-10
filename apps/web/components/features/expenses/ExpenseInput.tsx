@@ -22,6 +22,8 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { fetchTripParticipants } from '@/app/actions/expenses'
+import { ParticipantDisambiguationDialog } from './ParticipantDisambiguationDialog'
+import { UnmatchedParticipantDialog } from './UnmatchedParticipantDialog'
 
 interface ExpenseInputProps {
   tripId: string
@@ -48,6 +50,9 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
   const [tripParticipants, setTripParticipants] = useState<TripParticipant[]>([])
   const [_participantsLoading, setParticipantsLoading] = useState(true)
   const [resolutionResult, setResolutionResult] = useState<ParticipantResolutionResult | null>(null)
+  const [showDisambiguationDialog, setShowDisambiguationDialog] = useState(false)
+  const [showUnmatchedDialog, setShowUnmatchedDialog] = useState(false)
+  const [resolvedParticipantIds, setResolvedParticipantIds] = useState<Record<string, string>>({})
 
   // Fetch trip participants on mount
   useEffect(() => {
@@ -117,10 +122,39 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
   const handleSubmit = async () => {
     if (!parsedResult) return
 
+    // Check if we have ambiguous matches that need disambiguation
+    if (resolutionResult && resolutionResult.hasAmbiguous) {
+      const ambiguousMatches = resolutionResult.matches.filter(m => m.isAmbiguous)
+      if (ambiguousMatches.length > 0) {
+        setShowDisambiguationDialog(true)
+        return
+      }
+    }
+
+    // Check if we have unmatched names that need manual selection
+    if (resolutionResult && resolutionResult.hasUnmatched) {
+      const unmatchedNames = resolutionResult.matches.filter(m => m.isUnmatched)
+      if (unmatchedNames.length > 0) {
+        setShowUnmatchedDialog(true)
+        return
+      }
+    }
+
     setSubmitting(true)
     setError(null)
 
     try {
+      // If we have resolved participant IDs from disambiguation, use them
+      let participantsToSubmit: string[] | null = parsedResult.participants ?? null
+
+      if (resolutionResult && Object.keys(resolvedParticipantIds).length > 0) {
+        // Replace parsed names with resolved user IDs
+        participantsToSubmit =
+          parsedResult.participants?.map(name => {
+            return resolvedParticipantIds[name] || name
+          }) ?? null
+      }
+
       await onSubmit({
         amount: parsedResult.amount,
         currency: parsedResult.currency,
@@ -129,7 +163,7 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
         payer: parsedResult.payer ?? null,
         splitType: parsedResult.splitType,
         splitCount: parsedResult.splitCount ?? null,
-        participants: parsedResult.participants ?? null,
+        participants: participantsToSubmit,
         customSplits: parsedResult.customSplits ?? null,
         percentageSplits: parsedResult.percentageSplits ?? null,
       })
@@ -137,12 +171,97 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
       // Reset form on success
       setInput('')
       setParsedResult(null)
+      setResolutionResult(null)
+      setResolvedParticipantIds({})
     } catch (err) {
       console.error('Expense submission error:', err)
       setError(err instanceof Error ? err.message : 'Failed to save expense')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleDisambiguationConfirm = (resolvedIds: Record<string, string>) => {
+    setResolvedParticipantIds(resolvedIds)
+    setShowDisambiguationDialog(false)
+
+    // Update resolution result to mark matches as resolved
+    if (resolutionResult) {
+      const updatedMatches = resolutionResult.matches.map(match => {
+        if (resolvedIds[match.input]) {
+          // Find the selected match
+          const selectedMatch = match.matches.find(m => m.userId === resolvedIds[match.input])
+          return {
+            ...match,
+            bestMatch: selectedMatch,
+            isAmbiguous: false,
+          }
+        }
+        return match
+      })
+
+      setResolutionResult({
+        ...resolutionResult,
+        matches: updatedMatches,
+        hasAmbiguous: false,
+        isFullyResolved: !updatedMatches.some(m => m.isAmbiguous || m.isUnmatched),
+      })
+    }
+
+    // Auto-submit after disambiguation
+    setTimeout(() => {
+      handleSubmit()
+    }, 100)
+  }
+
+  const handleDisambiguationCancel = () => {
+    setShowDisambiguationDialog(false)
+  }
+
+  const handleUnmatchedConfirm = (resolvedIds: Record<string, string>) => {
+    setResolvedParticipantIds(prev => ({ ...prev, ...resolvedIds }))
+    setShowUnmatchedDialog(false)
+
+    // Update resolution result to mark matches as resolved
+    if (resolutionResult) {
+      const updatedMatches = resolutionResult.matches.map(match => {
+        if (resolvedIds[match.input]) {
+          // Find the selected participant
+          const selectedParticipant = tripParticipants.find(
+            p => p.user_id === resolvedIds[match.input]
+          )
+          if (selectedParticipant) {
+            return {
+              ...match,
+              bestMatch: {
+                userId: selectedParticipant.user_id,
+                fullName: selectedParticipant.full_name,
+                confidence: 1.0, // Manual selection = 100% confidence
+                matchType: 'exact' as const,
+              },
+              isUnmatched: false,
+            }
+          }
+        }
+        return match
+      })
+
+      setResolutionResult({
+        ...resolutionResult,
+        matches: updatedMatches,
+        hasUnmatched: false,
+        isFullyResolved: !updatedMatches.some(m => m.isAmbiguous || m.isUnmatched),
+      })
+    }
+
+    // Auto-submit after manual selection
+    setTimeout(() => {
+      handleSubmit()
+    }, 100)
+  }
+
+  const handleUnmatchedCancel = () => {
+    setShowUnmatchedDialog(false)
   }
 
   const handleReset = () => {
@@ -367,6 +486,27 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
           <li>¥2500 lunch split 3 ways</li>
         </ul>
       </div>
+
+      {/* Disambiguation Dialog */}
+      {resolutionResult && (
+        <ParticipantDisambiguationDialog
+          open={showDisambiguationDialog}
+          onCancel={handleDisambiguationCancel}
+          onConfirm={handleDisambiguationConfirm}
+          ambiguousMatches={resolutionResult.matches.filter(m => m.isAmbiguous)}
+        />
+      )}
+
+      {/* Unmatched Names Dialog */}
+      {resolutionResult && (
+        <UnmatchedParticipantDialog
+          open={showUnmatchedDialog}
+          onCancel={handleUnmatchedCancel}
+          onConfirm={handleUnmatchedConfirm}
+          unmatchedNames={resolutionResult.matches.filter(m => m.isUnmatched)}
+          tripParticipants={tripParticipants}
+        />
+      )}
     </div>
   )
 }
