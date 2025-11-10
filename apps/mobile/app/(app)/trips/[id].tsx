@@ -10,6 +10,11 @@ import {
   groupItineraryItemsByDate,
   type ItineraryItemWithParticipants,
   type GroupedItineraryItems,
+  getUserExpensesForTrip,
+  type ExpenseWithDetails,
+  calculateUserBalances,
+  optimizeSettlements,
+  type OptimizedSettlement,
 } from '@tripthreads/core'
 
 export default function TripDetailScreen() {
@@ -21,6 +26,9 @@ export default function TripDetailScreen() {
   const [error, setError] = useState<string | null>(null)
   const [itineraryItems, setItineraryItems] = useState<GroupedItineraryItems[]>([])
   const [itineraryLoading, setItineraryLoading] = useState(false)
+  const [expenses, setExpenses] = useState<ExpenseWithDetails[]>([])
+  const [expensesLoading, setExpensesLoading] = useState(false)
+  const [settlements, setSettlements] = useState<OptimizedSettlement[]>([])
 
   useEffect(() => {
     if (!params.id) {
@@ -52,8 +60,9 @@ export default function TripDetailScreen() {
 
       setTrip(data as Trip)
 
-      // Load itinerary items after trip is loaded
+      // Load itinerary items and expenses after trip is loaded
       loadItineraryItems()
+      loadExpenses()
     } catch (err) {
       console.error('Error loading trip:', err)
       setError('Failed to load trip')
@@ -78,6 +87,28 @@ export default function TripDetailScreen() {
     }
   }
 
+  const loadExpenses = async () => {
+    if (!params.id) return
+
+    try {
+      setExpensesLoading(true)
+      const expensesData = await getUserExpensesForTrip(supabase, params.id)
+      setExpenses(expensesData)
+
+      // Calculate settlements
+      // Assume USD as base currency for now (should come from trip settings)
+      const baseCurrency = 'USD'
+      const balances = calculateUserBalances(expensesData, baseCurrency)
+      const optimized = optimizeSettlements(balances)
+      setSettlements(optimized)
+    } catch (err) {
+      console.error('Error loading expenses:', err)
+      // Don't show error, just fail silently
+    } finally {
+      setExpensesLoading(false)
+    }
+  }
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'transport':
@@ -93,6 +124,30 @@ export default function TripDetailScreen() {
       default:
         return '📌'
     }
+  }
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'food':
+        return '🍽️'
+      case 'transport':
+        return '🚗'
+      case 'accommodation':
+        return '🏨'
+      case 'activity':
+        return '🎯'
+      default:
+        return '💰'
+    }
+  }
+
+  const formatCurrency = (amount: number, currency: string) => {
+    // Convert from minor units to major units
+    const majorAmount = amount / 100
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(majorAmount)
   }
 
   if (loading) {
@@ -235,8 +290,85 @@ export default function TripDetailScreen() {
 
           {/* Expenses Section */}
           <View className="bg-card p-6 rounded-xl border border-border">
-            <Text className="text-xl font-semibold text-foreground mb-2">💰 Expenses</Text>
-            <Text className="text-muted-foreground">Trip expenses will be displayed here</Text>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-semibold text-foreground">💰 Expenses</Text>
+              <TouchableOpacity
+                onPress={() => router.push(`/(app)/trips/${params.id}/expenses/create`)}
+                className="bg-primary px-3 py-1.5 rounded-lg"
+              >
+                <Text className="text-primary-foreground text-sm font-medium">+ Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {expensesLoading ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#F97316" />
+              </View>
+            ) : expenses.length === 0 ? (
+              <View className="py-4">
+                <Text className="text-muted-foreground text-center">
+                  No expenses yet. Add your first expense!
+                </Text>
+              </View>
+            ) : (
+              <View className="space-y-4">
+                {/* Settlement Summary */}
+                {settlements.length > 0 && (
+                  <View className="bg-primary/10 p-4 rounded-lg border border-primary/20 mb-2">
+                    <Text className="text-sm font-semibold text-foreground mb-2">
+                      💸 Settlements
+                    </Text>
+                    {settlements.map((settlement, index) => (
+                      <Text key={index} className="text-sm text-muted-foreground">
+                        {settlement.from_name} owes {settlement.to_name}{' '}
+                        {formatCurrency(settlement.amount, 'USD')}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                {/* Expense List */}
+                <View className="space-y-2">
+                  {expenses.slice(0, 5).map(expense => (
+                    <TouchableOpacity
+                      key={expense.id}
+                      onPress={() => router.push(`/(app)/trips/${params.id}/expenses/${expense.id}`)}
+                      className="bg-background p-3 rounded-lg border border-border"
+                    >
+                      <View className="flex-row items-start justify-between">
+                        <View className="flex-row items-start flex-1">
+                          <Text className="text-2xl mr-2">{getCategoryIcon(expense.category)}</Text>
+                          <View className="flex-1">
+                            <Text className="text-base font-medium text-foreground">
+                              {expense.description}
+                            </Text>
+                            <Text className="text-sm text-muted-foreground">
+                              Paid by {expense.payer.full_name || 'Unknown'}
+                            </Text>
+                            <Text className="text-xs text-muted-foreground">
+                              {new Date(expense.date).toLocaleDateString()}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text className="text-base font-semibold text-foreground">
+                          {formatCurrency(expense.amount, expense.currency)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                  {expenses.length > 5 && (
+                    <TouchableOpacity
+                      onPress={() => router.push(`/(app)/trips/${params.id}/expenses`)}
+                      className="py-2"
+                    >
+                      <Text className="text-center text-primary font-medium">
+                        View all {expenses.length} expenses →
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Media Section */}
