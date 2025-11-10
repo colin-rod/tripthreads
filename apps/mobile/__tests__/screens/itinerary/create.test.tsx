@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import { render, fireEvent } from '@testing-library/react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import CreateItineraryItemScreen from '../../../app/(app)/trips/[id]/itinerary/create'
 

@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -31,7 +31,6 @@ import {
   FormMessage,
 } from '../../../../../components/ui/form'
 import { Input } from '../../../../../components/ui/input'
-import { Textarea } from '../../../../../components/ui/textarea'
 import { DatePicker } from '../../../../../components/ui/date-picker'
 import { Button } from '../../../../../components/ui/button'
 import { Text } from '../../../../../components/ui/text'
@@ -359,7 +358,9 @@ export default function CreateExpenseScreen() {
                       >
                         <Text
                           className={`text-base ${
-                            payerId === participant.user_id ? 'text-primary font-medium' : 'text-foreground'
+                            payerId === participant.user_id
+                              ? 'text-primary font-medium'
+                              : 'text-foreground'
                           }`}
                         >
                           {participant.user?.full_name || participant.user?.email || 'Unknown'}

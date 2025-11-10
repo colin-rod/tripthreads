@@ -67,7 +67,7 @@ describe('CreateExpenseScreen', () => {
   })
 
   it('should render the form with all fields', async () => {
-    const { getByText, getByPlaceholderText } = render(<CreateExpenseScreen />)
+    const { getByText } = render(<CreateExpenseScreen />)
 
     await waitFor(() => {
       expect(getByText('Add Expense')).toBeTruthy()

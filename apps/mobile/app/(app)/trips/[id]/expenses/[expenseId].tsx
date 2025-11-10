@@ -21,7 +21,6 @@ import {
 } from '@tripthreads/core'
 
 import { supabase } from '../../../../../lib/supabase/client'
-import { useAuth } from '../../../../../lib/auth/auth-context'
 import { useToast } from '../../../../../hooks/use-toast'
 import {
   Form,
@@ -39,9 +38,12 @@ import { Text } from '../../../../../components/ui/text'
 // Validation schema
 const updateExpenseSchema = z.object({
   description: z.string().min(1, 'Description is required').max(200).optional(),
-  amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: 'Amount must be a positive number',
-  }).optional(),
+  amount: z
+    .string()
+    .refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: 'Amount must be a positive number',
+    })
+    .optional(),
   currency: z.string().length(3, 'Currency must be 3 letters').optional(),
   category: z.enum(['food', 'transport', 'accommodation', 'activity', 'other']).optional(),
   date: z.string().datetime('Invalid date').optional(),
@@ -52,7 +54,6 @@ type UpdateExpenseForm = z.infer<typeof updateExpenseSchema>
 export default function ExpenseDetailScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ id: string; expenseId: string }>()
-  const { user } = useAuth()
   const { toast } = useToast()
 
   const [expense, setExpense] = useState<ExpenseWithDetails | null>(null)
@@ -131,40 +132,36 @@ export default function ExpenseDetailScreen() {
   }
 
   const handleDelete = () => {
-    Alert.alert(
-      'Delete Expense',
-      `Are you sure you want to delete "${expense?.description}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleteLoading(true)
-              await deleteExpense(supabase, params.expenseId)
+    Alert.alert('Delete Expense', `Are you sure you want to delete "${expense?.description}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setDeleteLoading(true)
+            await deleteExpense(supabase, params.expenseId)
 
-              toast({
-                title: 'Expense deleted',
-                description: 'The expense has been deleted',
-                variant: 'success',
-              })
+            toast({
+              title: 'Expense deleted',
+              description: 'The expense has been deleted',
+              variant: 'success',
+            })
 
-              router.back()
-            } catch (error) {
-              console.error('Error deleting expense:', error)
-              toast({
-                title: 'Error',
-                description: 'Failed to delete expense',
-                variant: 'destructive',
-              })
-            } finally {
-              setDeleteLoading(false)
-            }
-          },
+            router.back()
+          } catch (error) {
+            console.error('Error deleting expense:', error)
+            toast({
+              title: 'Error',
+              description: 'Failed to delete expense',
+              variant: 'destructive',
+            })
+          } finally {
+            setDeleteLoading(false)
+          }
         },
-      ]
-    )
+      },
+    ])
   }
 
   const getCategoryIcon = (category: string) => {

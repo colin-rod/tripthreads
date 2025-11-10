@@ -21,7 +21,6 @@ import {
 } from '@tripthreads/core'
 
 import { supabase } from '../../../../../lib/supabase/client'
-import { useAuth } from '../../../../../lib/auth/auth-context'
 import { useToast } from '../../../../../hooks/use-toast'
 import {
   Form,
@@ -39,8 +38,14 @@ import { Text } from '../../../../../components/ui/text'
 
 // Validation schema
 const updateItineraryItemSchema = z.object({
-  type: z.enum(['transport', 'accommodation', 'dining', 'activity', 'sightseeing', 'general']).optional(),
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters').optional(),
+  type: z
+    .enum(['transport', 'accommodation', 'dining', 'activity', 'sightseeing', 'general'])
+    .optional(),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be less than 200 characters')
+    .optional(),
   description: z.string().max(1000, 'Description must be less than 1000 characters').optional(),
   notes: z.string().max(1000, 'Notes must be less than 1000 characters').optional(),
   start_time: z.string().datetime('Invalid start time').optional(),
@@ -53,7 +58,6 @@ type UpdateItineraryItemForm = z.infer<typeof updateItineraryItemSchema>
 export default function ItineraryItemDetailScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ id: string; itemId: string }>()
-  const { user } = useAuth()
   const { toast } = useToast()
 
   const [item, setItem] = useState<ItineraryItemWithParticipants | null>(null)
@@ -126,40 +130,36 @@ export default function ItineraryItemDetailScreen() {
   }
 
   const handleDelete = () => {
-    Alert.alert(
-      'Delete Item',
-      `Are you sure you want to delete "${item?.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleteLoading(true)
-              await deleteItineraryItem(supabase, params.itemId)
+    Alert.alert('Delete Item', `Are you sure you want to delete "${item?.title}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setDeleteLoading(true)
+            await deleteItineraryItem(supabase, params.itemId)
 
-              toast({
-                title: 'Item deleted',
-                description: 'The itinerary item has been deleted',
-                variant: 'success',
-              })
+            toast({
+              title: 'Item deleted',
+              description: 'The itinerary item has been deleted',
+              variant: 'success',
+            })
 
-              router.back()
-            } catch (error) {
-              console.error('Error deleting itinerary item:', error)
-              toast({
-                title: 'Error',
-                description: 'Failed to delete item',
-                variant: 'destructive',
-              })
-            } finally {
-              setDeleteLoading(false)
-            }
-          },
+            router.back()
+          } catch (error) {
+            console.error('Error deleting itinerary item:', error)
+            toast({
+              title: 'Error',
+              description: 'Failed to delete item',
+              variant: 'destructive',
+            })
+          } finally {
+            setDeleteLoading(false)
+          }
         },
-      ]
-    )
+      },
+    ])
   }
 
   const getTypeIcon = (type: string) => {

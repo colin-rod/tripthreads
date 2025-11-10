@@ -8,7 +8,6 @@ import {
   type Trip,
   getTripItineraryItems,
   groupItineraryItemsByDate,
-  type ItineraryItemWithParticipants,
   type GroupedItineraryItems,
   getUserExpensesForTrip,
   type ExpenseWithDetails,
@@ -252,7 +251,9 @@ export default function TripDetailScreen() {
                       {group.items.map(item => (
                         <TouchableOpacity
                           key={item.id}
-                          onPress={() => router.push(`/(app)/trips/${params.id}/itinerary/${item.id}`)}
+                          onPress={() =>
+                            router.push(`/(app)/trips/${params.id}/itinerary/${item.id}`)
+                          }
                           className="bg-background p-3 rounded-lg border border-border"
                         >
                           <View className="flex-row items-start">
@@ -275,7 +276,9 @@ export default function TripDetailScreen() {
                                 </Text>
                               )}
                               {item.location && (
-                                <Text className="text-sm text-muted-foreground">📍 {item.location}</Text>
+                                <Text className="text-sm text-muted-foreground">
+                                  📍 {item.location}
+                                </Text>
                               )}
                             </View>
                           </View>
@@ -332,7 +335,9 @@ export default function TripDetailScreen() {
                   {expenses.slice(0, 5).map(expense => (
                     <TouchableOpacity
                       key={expense.id}
-                      onPress={() => router.push(`/(app)/trips/${params.id}/expenses/${expense.id}`)}
+                      onPress={() =>
+                        router.push(`/(app)/trips/${params.id}/expenses/${expense.id}`)
+                      }
                       className="bg-background p-3 rounded-lg border border-border"
                     >
                       <View className="flex-row items-start justify-between">
