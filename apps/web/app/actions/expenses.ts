@@ -195,6 +195,36 @@ async function getTripParticipants(
   }))
 }
 
+/**
+ * Public server action to fetch trip participants
+ * Used for client-side name resolution
+ */
+export async function fetchTripParticipants(tripId: string): Promise<{
+  success: boolean
+  participants?: TripParticipant[]
+  error?: string
+}> {
+  try {
+    const supabase = await createClient()
+
+    // Verify user is a trip participant
+    const participantResult = await assertTripParticipant(supabase, tripId)
+    if ('error' in participantResult && participantResult.error) {
+      return { success: false, error: participantResult.error }
+    }
+
+    const participants = await getTripParticipants(supabase, tripId)
+    return { success: true, participants }
+  } catch (error) {
+    console.error('Error fetching trip participants:', error)
+    Sentry.captureException(error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch participants',
+    }
+  }
+}
+
 export async function createExpense(input: CreateExpenseInput) {
   const supabase = await createClient()
 

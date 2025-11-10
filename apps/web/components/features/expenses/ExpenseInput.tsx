@@ -11,16 +11,17 @@
  * - Loading states and error handling
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { parseWithOpenAI } from '@/lib/parser/openai'
-import type { ParsedExpense } from '@tripthreads/core'
-import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
+import type { ParsedExpense, TripParticipant, ParticipantResolutionResult } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits, matchParticipantNames } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { fetchTripParticipants } from '@/app/actions/expenses'
 
 interface ExpenseInputProps {
   tripId: string
@@ -38,12 +39,35 @@ interface ExpenseInputProps {
   }) => Promise<void>
 }
 
-export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
+export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [parsedResult, setParsedResult] = useState<ParsedExpense | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [tripParticipants, setTripParticipants] = useState<TripParticipant[]>([])
+  const [_participantsLoading, setParticipantsLoading] = useState(true)
+  const [resolutionResult, setResolutionResult] = useState<ParticipantResolutionResult | null>(null)
+
+  // Fetch trip participants on mount
+  useEffect(() => {
+    async function loadParticipants() {
+      setParticipantsLoading(true)
+      try {
+        const result = await fetchTripParticipants(tripId)
+        if (result.success && result.participants) {
+          setTripParticipants(result.participants)
+        } else {
+          console.error('Failed to fetch trip participants:', result.error)
+        }
+      } catch (err) {
+        console.error('Error loading trip participants:', err)
+      } finally {
+        setParticipantsLoading(false)
+      }
+    }
+    loadParticipants()
+  }, [tripId])
 
   const handleParse = async () => {
     if (!input.trim()) return
@@ -51,6 +75,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
     setLoading(true)
     setError(null)
     setParsedResult(null)
+    setResolutionResult(null)
 
     try {
       const result = await parseWithOpenAI({
@@ -65,6 +90,19 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
 
       if (result.success && result.expenseResult) {
         setParsedResult(result.expenseResult)
+
+        // Perform client-side participant name resolution
+        if (result.expenseResult.participants && result.expenseResult.participants.length > 0) {
+          const resolution = matchParticipantNames(
+            result.expenseResult.participants,
+            tripParticipants,
+            {
+              minConfidence: 0.6,
+              autoResolveThreshold: 0.85,
+            }
+          )
+          setResolutionResult(resolution)
+        }
       } else {
         setError(result.error || 'Failed to parse expense')
       }
@@ -222,12 +260,49 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Participants</p>
                     <div className="flex flex-wrap gap-1">
-                      {parsedResult.participants.map((participant, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {participant}
-                        </Badge>
-                      ))}
+                      {resolutionResult
+                        ? // Show resolved names with match indicators
+                          resolutionResult.matches.map((match, idx) => {
+                            const isResolved = match.bestMatch && match.bestMatch.confidence >= 0.85
+                            const isAmbiguous = match.isAmbiguous
+                            const isUnmatched = match.isUnmatched
+
+                            return (
+                              <Badge
+                                key={idx}
+                                variant={isResolved ? 'default' : isAmbiguous ? 'warning' : 'error'}
+                                className="text-xs flex items-center gap-1"
+                              >
+                                {match.bestMatch?.fullName || match.input}
+                                {isResolved && <CheckCircle2 className="h-3 w-3" />}
+                                {isAmbiguous && <AlertCircle className="h-3 w-3" />}
+                                {isUnmatched && <AlertCircle className="h-3 w-3" />}
+                              </Badge>
+                            )
+                          })
+                        : // Fallback: show original parsed names
+                          parsedResult.participants.map((participant, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {participant}
+                            </Badge>
+                          ))}
                     </div>
+                    {resolutionResult && !resolutionResult.isFullyResolved && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {resolutionResult.hasAmbiguous && (
+                          <p className="flex items-center gap-1 text-yellow-600">
+                            <AlertCircle className="h-3 w-3" />
+                            Some names need disambiguation
+                          </p>
+                        )}
+                        {resolutionResult.hasUnmatched && (
+                          <p className="flex items-center gap-1 text-red-600">
+                            <AlertCircle className="h-3 w-3" />
+                            Some names could not be matched
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
