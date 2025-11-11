@@ -21,6 +21,22 @@ jest.mock('@sentry/nextjs', () => ({
   captureException: jest.fn(),
 }))
 
+// Mock Supabase client to avoid Next.js request context issues
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(() =>
+    Promise.resolve({
+      auth: {
+        getUser: jest.fn(() =>
+          Promise.resolve({
+            data: { user: { id: 'test-user-id' } },
+            error: null,
+          })
+        ),
+      },
+    })
+  ),
+}))
+
 let POST: (request: NextRequest) => Promise<Response>
 
 beforeAll(async () => {
