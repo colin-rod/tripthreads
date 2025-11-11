@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { POST, GET } from './route'
 import { createClient } from '@/lib/supabase/server'
-import { createMediaFile, canUploadPhoto } from '@tripthreads/core/queries/media'
+import { createMediaFile, canUploadPhoto } from '@tripthreads/core'
 
 jest.mock('@sentry/nextjs', () => ({
   captureMessage: jest.fn(),
@@ -12,7 +12,7 @@ jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }))
 
-jest.mock('@tripthreads/core/queries/media', () => ({
+jest.mock('@tripthreads/core', () => ({
   createMediaFile: jest.fn(),
   canUploadPhoto: jest.fn(),
 }))

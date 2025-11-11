@@ -16,7 +16,7 @@ import { format } from 'date-fns'
 import { Calendar, Image as ImageIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getMediaFilesGroupedByDate } from '@tripthreads/core/queries/media'
+import { getMediaFilesGroupedByDate } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 interface PhotoGalleryProps {

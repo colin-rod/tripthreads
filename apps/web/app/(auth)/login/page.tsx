@@ -43,21 +43,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 border border-[--border]">
+    <div className="bg-card text-card-foreground rounded-xl shadow-lg p-8 border border-border">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-semibold text-[--foreground] mb-2">Welcome back</h1>
-        <p className="text-[--muted-foreground]">Sign in to continue to TripThreads</p>
+        <h1 className="text-3xl font-semibold text-card-foreground mb-2">Welcome back</h1>
+        <p className="text-muted-foreground">Sign in to continue to TripThreads</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-[--foreground] mb-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
             Email
           </label>
           <Input
@@ -72,10 +72,7 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-[--foreground] mb-1.5"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
             Password
           </label>
           <Input
@@ -92,7 +89,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[--primary] text-[--primary-foreground] py-2.5 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
@@ -100,17 +97,17 @@ export default function LoginPage() {
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[--border]"></div>
+          <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-[--muted-foreground]">Or continue with</span>
+          <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
         </div>
       </div>
 
       <button
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="w-full bg-white border border-[--border] text-[--foreground] py-2.5 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+        className="w-full bg-card border border-border text-foreground py-2.5 px-4 rounded-lg font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path
@@ -133,9 +130,9 @@ export default function LoginPage() {
         Continue with Google
       </button>
 
-      <p className="text-center text-sm text-[--muted-foreground] mt-6">
+      <p className="text-center text-sm text-muted-foreground mt-6">
         Don't have an account?{' '}
-        <Link href="/signup" className="text-[--primary] font-medium hover:underline">
+        <Link href="/signup" className="text-primary font-medium hover:underline">
           Sign up
         </Link>
       </p>

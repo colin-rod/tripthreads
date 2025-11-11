@@ -57,10 +57,10 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-8 border border-[--border] text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="bg-card text-card-foreground rounded-xl shadow-lg p-8 border border-border text-center">
+        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg
-            className="w-8 h-8 text-green-600"
+            className="w-8 h-8 text-success"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -68,31 +68,28 @@ export default function SignupPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold text-[--foreground] mb-2">Account created!</h2>
-        <p className="text-[--muted-foreground]">Redirecting you to your trips...</p>
+        <h2 className="text-2xl font-semibold text-card-foreground mb-2">Account created!</h2>
+        <p className="text-muted-foreground">Redirecting you to your trips...</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 border border-[--border]">
+    <div className="bg-card text-card-foreground rounded-xl shadow-lg p-8 border border-border">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-semibold text-[--foreground] mb-2">Create your account</h1>
-        <p className="text-[--muted-foreground]">Start planning trips with your friends</p>
+        <h1 className="text-3xl font-semibold text-card-foreground mb-2">Create your account</h1>
+        <p className="text-muted-foreground">Start planning trips with your friends</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label
-            htmlFor="fullName"
-            className="block text-sm font-medium text-[--foreground] mb-1.5"
-          >
+          <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-1.5">
             Full name
           </label>
           <Input
@@ -107,7 +104,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-[--foreground] mb-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
             Email
           </label>
           <Input
@@ -122,10 +119,7 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-[--foreground] mb-1.5"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
             Password
           </label>
           <Input
@@ -137,13 +131,13 @@ export default function SignupPage() {
             disabled={loading}
             placeholder="••••••••"
           />
-          <p className="mt-1.5 text-xs text-[--muted-foreground]">At least 6 characters</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">At least 6 characters</p>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[--primary] text-[--primary-foreground] py-2.5 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Creating account...' : 'Create account'}
         </button>
@@ -151,17 +145,17 @@ export default function SignupPage() {
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[--border]"></div>
+          <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-[--muted-foreground]">Or continue with</span>
+          <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
         </div>
       </div>
 
       <button
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="w-full bg-white border border-[--border] text-[--foreground] py-2.5 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+        className="w-full bg-card border border-border text-foreground py-2.5 px-4 rounded-lg font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path
@@ -184,9 +178,9 @@ export default function SignupPage() {
         Continue with Google
       </button>
 
-      <p className="text-center text-sm text-[--muted-foreground] mt-6">
+      <p className="text-center text-sm text-muted-foreground mt-6">
         Already have an account?{' '}
-        <Link href="/login" className="text-[--primary] font-medium hover:underline">
+        <Link href="/login" className="text-primary font-medium hover:underline">
           Sign in
         </Link>
       </p>
