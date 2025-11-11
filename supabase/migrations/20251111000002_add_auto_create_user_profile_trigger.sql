@@ -12,6 +12,12 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Set session variable to indicate this is a system-initiated insert
+  -- This allows the RLS policy to permit the insert during signup
+  PERFORM set_config('app.trigger_context', 'handle_new_user', true);
+
+  RAISE LOG 'handle_new_user: Creating profile for user_id=%, email=%', NEW.id, NEW.email;
+
   INSERT INTO public.users (id, email, full_name, plan)
   VALUES (
     NEW.id,
@@ -20,7 +26,14 @@ BEGIN
     'free'
   )
   ON CONFLICT (id) DO NOTHING;
+
+  RAISE LOG 'handle_new_user: Profile created successfully for user_id=%', NEW.id;
+
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE LOG 'handle_new_user: ERROR - %, DETAIL - %, user_id=%', SQLERRM, SQLSTATE, NEW.id;
+    RAISE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -56,3 +69,38 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 
 COMMENT ON FUNCTION public.handle_new_user() IS 'Automatically creates a public.users profile when a new auth.users record is created. Handles both email/password and OAuth signups.';
+
+-- ============================================================================
+-- STEP 4: ENFORCE auth.uid() FOR DIRECT INSERTS INTO public.users
+-- ============================================================================
+
+-- Ensure manually inserted profiles pick up the caller's auth UID when id is omitted
+CREATE OR REPLACE FUNCTION public.set_public_users_id_from_auth_context()
+RETURNS TRIGGER AS $$
+DECLARE
+  current_uid uuid := auth.uid();
+BEGIN
+  IF NEW.id IS NULL THEN
+    IF current_uid IS NULL THEN
+      RAISE EXCEPTION 'auth.uid() is null; cannot infer id for public.users insert';
+    END IF;
+    NEW.id := current_uid;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS before_insert_set_public_user_id ON public.users;
+CREATE TRIGGER before_insert_set_public_user_id
+  BEFORE INSERT ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_public_users_id_from_auth_context();
+
+-- Allow inserts from authenticated users OR from the handle_new_user trigger
+ALTER POLICY "Users can insert own profile"
+  ON public.users
+  WITH CHECK (
+    auth.uid() = id
+    OR current_setting('app.trigger_context', true) = 'handle_new_user'
+  );
