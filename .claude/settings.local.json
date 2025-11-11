@@ -26,7 +26,8 @@
       "Bash(npx jest:*)",
       "Bash(git merge:*)",
       "Bash(git fetch:*)",
-      "Bash(supabase status:*)"
+      "Bash(supabase status:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []

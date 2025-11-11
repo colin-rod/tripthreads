@@ -60,7 +60,8 @@ git push origin main       # Deploy to production
 📁 docs/                  # Documentation
   ├── DATABASE.md         # 📘 Schema & migrations
   ├── TESTING.md          # 🧪 Testing strategy
-  └── CICD.md             # 🚀 Deployment pipeline
+  ├── CICD.md             # 🚀 Deployment pipeline
+  └── STRIPE_SETUP.md     # 💳 Stripe integration
 ```
 
 ### Need Help?
@@ -68,6 +69,7 @@ git push origin main       # Deploy to production
 - 📘 **Database Schema** → [docs/DATABASE.md](docs/DATABASE.md)
 - 🧪 **Testing Guide** → [docs/TESTING.md](docs/TESTING.md)
 - 🚀 **CI/CD & Deployment** → [docs/CICD.md](docs/CICD.md)
+- 💳 **Stripe Setup** → [docs/STRIPE_SETUP.md](docs/STRIPE_SETUP.md)
 - 🎨 **Design System** → [design-system-playful-citrus-pop.md](design-system-playful-citrus-pop.md)
 - 📝 **TDD Principles** → [TDD_GUIDE.md](TDD_GUIDE.md)
 - 🔐 **Sentry Integration** → [SENTRY_INTEGRATION.md](SENTRY_INTEGRATION.md)
@@ -221,11 +223,15 @@ git push origin main       # Deploy to production
 - **OpenAI GPT-4** - Trip chat assistant
 - **Streaming responses** - Real-time chat experience
 
-### Payments - 📋 Planned (Phase 3)
+### Payments - 🚧 In Progress (Phase 3)
 
-- **Stripe Checkout** - Subscription management
-- **Stripe Webhooks** - Lifecycle events
-- **Stripe Customer Portal** - Self-service billing
+- ✅ **Stripe SDK** - Server & client-side integration (Phase 3.1)
+- ✅ **Multi-Currency Pricing** - EUR, USD, GBP with Adaptive Pricing (Phase 3.1)
+- ✅ **Products & Prices Configured** - Monthly (€7/$8/£6), Yearly (€70/$80/£60), One-off (€9/$10/£8) (Phase 3.1)
+- ✅ **Subscription Database Fields** - `subscription_currency`, `subscription_price_id` (Phase 3.1)
+- 📋 **Stripe Checkout** - Subscription management (Phase 3.2)
+- 📋 **Stripe Webhooks** - Lifecycle events (Phase 3.3)
+- 📋 **Stripe Customer Portal** - Self-service billing (Phase 3.4)
 
 ### Testing - ✅ Implemented
 

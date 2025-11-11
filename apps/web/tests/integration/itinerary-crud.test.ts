@@ -9,9 +9,9 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
 
-// Test configuration
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Test configuration - read in beforeAll after env vars are loaded
+let SUPABASE_URL: string
+let SUPABASE_ANON_KEY: string
 
 // Test users (these should exist in your test database)
 const TEST_USERS = {
@@ -41,6 +41,14 @@ describe('Itinerary CRUD Integration Tests', () => {
   let viewerClient: ReturnType<typeof createClient<Database>>
 
   beforeAll(async () => {
+    // Load environment variables (available after jest.setup.cjs runs)
+    SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error('Missing Supabase environment variables. Ensure .env.local is configured.')
+    }
+
     // Create authenticated clients for each user
     ownerClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
     participantClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)

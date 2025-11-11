@@ -30,7 +30,25 @@ if (typeof Headers === 'undefined') {
 const projectRoot = process.cwd().endsWith('apps/web')
   ? path.resolve(process.cwd(), '../..')
   : process.cwd()
-loadEnvConfig(projectRoot)
+
+// Load environment variables BEFORE tests run
+const envConfig = loadEnvConfig(projectRoot)
+
+// If we loaded environment variables, verify the critical ones are present
+if (envConfig?.combinedEnv) {
+  // For integration tests, we need these Supabase variables
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    console.warn(
+      '\n⚠️  Warning: Supabase environment variables not found. Integration tests will be skipped.\n' +
+        'To run integration tests:\n' +
+        '  1. Copy .env.example to .env.local\n' +
+        '  2. Fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY\n'
+    )
+  }
+}
 
 // Mock URL.createObjectURL and URL.revokeObjectURL for file uploads
 global.URL.createObjectURL = jest.fn(() => 'mock-object-url')

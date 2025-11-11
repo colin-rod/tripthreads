@@ -381,12 +381,16 @@ describe('chat server actions', () => {
         error: null,
       })
 
+      // Mock the query chain: .select('id').eq('message_id').eq('user_id').eq('emoji').single()
       const single = jest
         .fn<() => Promise<any>>()
         .mockResolvedValue({ data: { id: 'reaction-1' }, error: null })
-      const eqSecond = jest.fn<() => any>().mockReturnValue({ single })
+      const eqThird = jest.fn<() => any>().mockReturnValue({ single })
+      const eqSecond = jest.fn<() => any>().mockReturnValue({ eq: eqThird })
       const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
+
+      // Mock the delete query chain: .delete().eq('id')
       const deleteEq = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
       const deleteFn = jest.fn<() => any>().mockReturnValue({ eq: deleteEq })
 
@@ -413,12 +417,15 @@ describe('chat server actions', () => {
         error: null,
       })
 
+      // Mock the query chain: .select('id').eq('message_id').eq('user_id').eq('emoji').single()
       const single = jest
         .fn<() => Promise<any>>()
         .mockResolvedValue({ data: null, error: { message: 'No row found' } })
-      const eqSecond = jest.fn<() => any>().mockReturnValue({ single })
+      const eqThird = jest.fn<() => any>().mockReturnValue({ single })
+      const eqSecond = jest.fn<() => any>().mockReturnValue({ eq: eqThird })
       const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
+
       const insert = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
 
       const reactionTable = {
