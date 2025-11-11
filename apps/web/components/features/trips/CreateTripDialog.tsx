@@ -160,7 +160,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                           <Button
                             variant="outline"
                             className={cn(
-                              'pl-3 text-left font-normal',
+                              'w-full justify-between pl-3 pr-3 text-left font-normal',
                               !field.value && 'text-muted-foreground'
                             )}
                             disabled={isSubmitting}
@@ -171,11 +171,11 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-[320px] p-0" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
@@ -203,7 +203,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                           <Button
                             variant="outline"
                             className={cn(
-                              'pl-3 text-left font-normal',
+                              'w-full justify-between pl-3 pr-3 text-left font-normal',
                               !field.value && 'text-muted-foreground'
                             )}
                             disabled={isSubmitting}
@@ -214,11 +214,11 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-[320px] p-0" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
