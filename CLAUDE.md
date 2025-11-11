@@ -70,6 +70,7 @@ git push origin main       # Deploy to production
 - 🧪 **Testing Guide** → [docs/TESTING.md](docs/TESTING.md)
 - 🚀 **CI/CD & Deployment** → [docs/CICD.md](docs/CICD.md)
 - 💳 **Stripe Setup** → [docs/STRIPE_SETUP.md](docs/STRIPE_SETUP.md)
+- 🤖 **AI Parser Decision** → [docs/AI_PARSER_DECISION.md](docs/AI_PARSER_DECISION.md)
 - 🎨 **Design System** → [design-system-playful-citrus-pop.md](design-system-playful-citrus-pop.md)
 - 📝 **TDD Principles** → [TDD_GUIDE.md](TDD_GUIDE.md)
 - 🔐 **Sentry Integration** → [SENTRY_INTEGRATION.md](SENTRY_INTEGRATION.md)
@@ -212,14 +213,16 @@ git push origin main       # Deploy to production
 - **Supabase Edge Functions** (Deno) - Serverless logic
 - **Row-Level Security (RLS)** - Data access control
 
-### Natural Language Parser - ✅ Implemented
+### Natural Language Parsing - ✅ Implemented (AI-based)
 
-- **chrono-node** - Date/time extraction
-- **Custom tokenizer** - Currency, amounts, keywords
-- **Client-side deterministic parsing** - No AI/ML
+- **OpenAI GPT-4o-mini** - Expense and itinerary parsing
+- **Few-shot prompting** - Structured JSON output
+- **Client-side fuzzy matching** - Participant name resolution (typos, partial names)
+- 📋 **Client-side NL parser (archived)** - Deterministic parser kept for potential offline/fallback use
 
 ### AI Integration - ✅ Implemented
 
+- **OpenAI GPT-4o-mini** - Natural language parsing for expenses and itinerary
 - **OpenAI GPT-4** - Trip chat assistant
 - **Streaming responses** - Real-time chat experience
 
@@ -252,7 +255,9 @@ git push origin main       # Deploy to production
 
 - ✅ **OpenExchangeRates** - Historical FX rates (on-demand caching)
   - Free tier: 1,000 requests/month, USD base only
-- ✅ **OpenAI API** - AI chat assistant (GPT-4)
+- ✅ **OpenAI API** - Natural language parsing (GPT-4o-mini) and chat assistant (GPT-4)
+  - Used for expense/itinerary parsing and trip chat
+  - Cost: ~$0.00015/parse (~$4.50/month for 1k parses/day)
 - 📋 **Expo Push Notifications** - Mobile push delivery (Phase 4)
 - 📋 **Web Push API (VAPID)** - Web push notifications (Phase 4)
 
