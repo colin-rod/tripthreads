@@ -4,6 +4,15 @@
  * Tests RLS policies using Supabase client with real auth contexts.
  * Each test authenticates as a different user to verify access control.
  *
+ * ⚠️  IMPORTANT: These tests require a local Supabase instance with test data.
+ *    To run these tests:
+ *    1. Start Docker
+ *    2. Run: supabase start
+ *    3. Run: supabase db reset (loads seed data)
+ *    4. Update .env.local to use local Supabase URL (http://127.0.0.1:54321)
+ *
+ * Tests are automatically skipped when running against production Supabase.
+ *
  * Related: CRO-797 (Linear)
  */
 
@@ -37,7 +46,14 @@ const TEST_USERS = {
 const PARIS_TRIP_ID = '10000000-0000-0000-0000-000000000001'
 const TOKYO_TRIP_ID = '20000000-0000-0000-0000-000000000002'
 
-describe('RLS Policy Security Tests', () => {
+// Check if running against local Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const isLocalSupabase = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1')
+
+// Skip tests if not running against local instance
+const describeOrSkip = isLocalSupabase ? describe : describe.skip
+
+describeOrSkip('RLS Policy Security Tests', () => {
   let supabase: SupabaseClient<Database>
 
   beforeAll(() => {

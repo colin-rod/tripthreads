@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
   moveAttachmentToGallery as moveToGallery,
   removeFromGallery as removeGalleryItem,
-} from '@tripthreads/core/queries/media'
+} from '../../../../packages/core/src/queries/media'
 
 export interface ChatAttachment {
   url: string

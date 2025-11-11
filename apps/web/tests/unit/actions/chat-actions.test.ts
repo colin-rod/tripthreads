@@ -12,7 +12,6 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import * as Sentry from '@sentry/nextjs'
-import { moveAttachmentToGallery, removeFromGallery } from '@tripthreads/core/queries/media'
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
@@ -26,7 +25,7 @@ jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
 }))
 
-jest.mock('@tripthreads/core/queries/media', () => ({
+jest.mock('../../../../../packages/core/src/queries/media', () => ({
   moveAttachmentToGallery: jest.fn(),
   removeFromGallery: jest.fn(),
 }))
@@ -38,29 +37,38 @@ type SupabaseAuthResponse = {
 
 type SupabaseMock = {
   auth: {
-    getUser: jest.Mock<Promise<SupabaseAuthResponse>, []>
+    getUser: jest.MockedFunction<() => Promise<SupabaseAuthResponse>>
   }
-  from: jest.Mock<any, [string]>
+  from: jest.MockedFunction<(table: string) => any>
   storage: {
-    from: jest.Mock
+    from: jest.MockedFunction<(bucket: string) => any>
   }
 }
 
 const createMockSupabase = (): SupabaseMock => ({
   auth: {
-    getUser: jest.fn(),
+    getUser: jest.fn() as jest.MockedFunction<() => Promise<SupabaseAuthResponse>>,
   },
-  from: jest.fn(),
+  from: jest.fn() as jest.MockedFunction<(table: string) => any>,
   storage: {
-    from: jest.fn(),
+    from: jest.fn() as jest.MockedFunction<(bucket: string) => any>,
   },
 })
 
-const createClientMock = createClient as jest.MockedFunction<typeof createClient>
+const createClientMock = createClient as unknown as jest.MockedFunction<() => Promise<any>>
 const revalidatePathMock = revalidatePath as jest.MockedFunction<typeof revalidatePath>
-const captureExceptionMock = Sentry.captureException as jest.MockedFunction<typeof Sentry.captureException>
-const moveAttachmentToGalleryMock = moveAttachmentToGallery as jest.MockedFunction<typeof moveAttachmentToGallery>
-const removeFromGalleryMock = removeFromGallery as jest.MockedFunction<typeof removeFromGallery>
+const captureExceptionMock = Sentry.captureException as jest.MockedFunction<
+  typeof Sentry.captureException
+>
+
+// Type-safe references to mocked media functions (module is mocked above)
+const mediaQueryModule = jest.requireMock('../../../../../packages/core/src/queries/media') as any
+const moveAttachmentToGalleryMock = mediaQueryModule.moveAttachmentToGallery as jest.MockedFunction<
+  () => Promise<{ success: boolean; mediaFileId?: string; error?: string }>
+>
+const removeFromGalleryMock = mediaQueryModule.removeFromGallery as jest.MockedFunction<
+  () => Promise<{ success: boolean; error?: string }>
+>
 
 const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
 
@@ -82,17 +90,19 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: { id: 'participant-1' }, error: null })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'participant-1' }, error: null })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
-      const messageSingle = jest.fn().mockResolvedValue({
+      const messageSingle = jest.fn<() => Promise<any>>().mockResolvedValue({
         data: { id: 'message-1', content: 'Hello', attachments: [] },
         error: null,
       })
-      const messageSelect = jest.fn().mockReturnValue({ single: messageSingle })
-      const messageInsert = jest.fn().mockReturnValue({ select: messageSelect })
+      const messageSelect = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
+      const messageInsert = jest.fn<() => any>().mockReturnValue({ select: messageSelect })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -147,10 +157,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: null, error: { message: 'Missing' } })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: { message: 'Missing' } })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -172,12 +184,12 @@ describe('chat server actions', () => {
   describe('createBotMessage', () => {
     it('stores a bot message and triggers revalidation', async () => {
       const mockSupabase = createMockSupabase()
-      const messageSingle = jest.fn().mockResolvedValue({
+      const messageSingle = jest.fn<() => Promise<any>>().mockResolvedValue({
         data: { id: 'bot-message', message_type: 'bot' },
         error: null,
       })
-      const messageSelect = jest.fn().mockReturnValue({ single: messageSingle })
-      const messageInsert = jest.fn().mockReturnValue({ select: messageSelect })
+      const messageSelect = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
+      const messageInsert = jest.fn<() => any>().mockReturnValue({ select: messageSelect })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'chat_messages') {
@@ -198,9 +210,11 @@ describe('chat server actions', () => {
     it('logs and reports insert errors', async () => {
       const mockSupabase = createMockSupabase()
       const insertError = { message: 'fail', code: '500', details: 'nope', hint: 'hint' }
-      const messageSingle = jest.fn().mockResolvedValue({ data: null, error: insertError })
-      const messageSelect = jest.fn().mockReturnValue({ single: messageSingle })
-      const messageInsert = jest.fn().mockReturnValue({ select: messageSelect })
+      const messageSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: insertError })
+      const messageSelect = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
+      const messageInsert = jest.fn<() => any>().mockReturnValue({ select: messageSelect })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'chat_messages') {
@@ -228,7 +242,7 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const limit = jest.fn().mockResolvedValue({
+      const limit = jest.fn<() => Promise<any>>().mockResolvedValue({
         data: [
           {
             id: 'message-1',
@@ -238,9 +252,9 @@ describe('chat server actions', () => {
         ],
         error: null,
       })
-      const order = jest.fn().mockReturnValue({ limit })
-      const eq = jest.fn().mockReturnValue({ order })
-      const select = jest.fn().mockReturnValue({ eq })
+      const order = jest.fn<() => any>().mockReturnValue({ limit })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'chat_messages') {
@@ -281,10 +295,12 @@ describe('chat server actions', () => {
       })
 
       const queryError = { message: 'broken', code: '500', details: 'details', hint: 'hint' }
-      const limit = jest.fn().mockResolvedValue({ data: null, error: queryError })
-      const order = jest.fn().mockReturnValue({ limit })
-      const eq = jest.fn().mockReturnValue({ order })
-      const select = jest.fn().mockReturnValue({ eq })
+      const limit = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: queryError })
+      const order = jest.fn<() => any>().mockReturnValue({ limit })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'chat_messages') {
@@ -312,12 +328,14 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const upload = jest.fn().mockResolvedValue({
+      const upload = jest.fn<() => Promise<any>>().mockResolvedValue({
         data: { path: 'trip-1/user-1/file.png' },
         error: null,
       })
-      const getPublicUrl = jest.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/file.png' } })
-      const storageFrom = jest.fn().mockReturnValue({ upload, getPublicUrl })
+      const getPublicUrl = jest
+        .fn<() => any>()
+        .mockReturnValue({ data: { publicUrl: 'https://example.com/file.png' } })
+      const storageFrom = jest.fn<() => any>().mockReturnValue({ upload, getPublicUrl })
       mockSupabase.storage.from.mockImplementation(storageFrom)
 
       createClientMock.mockResolvedValue(mockSupabase as unknown as any)
@@ -338,8 +356,10 @@ describe('chat server actions', () => {
       })
 
       const uploadError = { message: 'upload failed' }
-      const upload = jest.fn().mockResolvedValue({ data: null, error: uploadError })
-      const storageFrom = jest.fn().mockReturnValue({ upload })
+      const upload = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: uploadError })
+      const storageFrom = jest.fn<() => any>().mockReturnValue({ upload })
       mockSupabase.storage.from.mockImplementation(storageFrom)
 
       createClientMock.mockResolvedValue(mockSupabase as unknown as any)
@@ -361,12 +381,14 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const single = jest.fn().mockResolvedValue({ data: { id: 'reaction-1' }, error: null })
-      const eqSecond = jest.fn().mockReturnValue({ single })
-      const eqFirst = jest.fn().mockReturnValue({ eq: eqSecond })
-      const select = jest.fn().mockReturnValue({ eq: eqFirst })
-      const deleteEq = jest.fn().mockResolvedValue({ error: null })
-      const deleteFn = jest.fn().mockReturnValue({ eq: deleteEq })
+      const single = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'reaction-1' }, error: null })
+      const eqSecond = jest.fn<() => any>().mockReturnValue({ single })
+      const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
+      const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
+      const deleteEq = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
+      const deleteFn = jest.fn<() => any>().mockReturnValue({ eq: deleteEq })
 
       const reactionTable = { select, delete: deleteFn }
       mockSupabase.from.mockImplementation((table: string) => {
@@ -391,11 +413,13 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const single = jest.fn().mockResolvedValue({ data: null, error: { message: 'No row found' } })
-      const eqSecond = jest.fn().mockReturnValue({ single })
-      const eqFirst = jest.fn().mockReturnValue({ eq: eqSecond })
-      const select = jest.fn().mockReturnValue({ eq: eqFirst })
-      const insert = jest.fn().mockResolvedValue({ error: null })
+      const single = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: { message: 'No row found' } })
+      const eqSecond = jest.fn<() => any>().mockReturnValue({ single })
+      const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
+      const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
+      const insert = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
 
       const reactionTable = {
         select,
@@ -431,9 +455,11 @@ describe('chat server actions', () => {
         { id: '2', emoji: '🔥', user_id: 'user-2' },
         { id: '3', emoji: '👍', user_id: 'user-3' },
       ]
-      const order = jest.fn().mockResolvedValue({ data: reactions, error: null })
-      const eq = jest.fn().mockReturnValue({ order })
-      const select = jest.fn().mockReturnValue({ eq })
+      const order = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: reactions, error: null })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'message_reactions') {
@@ -455,9 +481,11 @@ describe('chat server actions', () => {
 
     it('returns a failure payload when the query fails', async () => {
       const mockSupabase = createMockSupabase()
-      const order = jest.fn().mockResolvedValue({ data: null, error: { message: 'fail' } })
-      const eq = jest.fn().mockReturnValue({ order })
-      const select = jest.fn().mockReturnValue({ eq })
+      const order = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: { message: 'fail' } })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'message_reactions') {
@@ -477,11 +505,11 @@ describe('chat server actions', () => {
     it('captures unexpected errors', async () => {
       const mockSupabase = createMockSupabase()
       const error = new Error('boom')
-      const order = jest.fn().mockImplementation(() => {
+      const order = jest.fn<() => Promise<any>>().mockImplementation(() => {
         throw error
       })
-      const eq = jest.fn().mockReturnValue({ order })
-      const select = jest.fn().mockReturnValue({ eq })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'message_reactions') {
@@ -508,10 +536,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: { id: 'participant-1' }, error: null })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'participant-1' }, error: null })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -523,7 +553,11 @@ describe('chat server actions', () => {
       moveAttachmentToGalleryMock.mockResolvedValue({ success: true, mediaFileId: 'media-1' })
       createClientMock.mockResolvedValue(mockSupabase as unknown as any)
 
-      const result = await addAttachmentToGallery('https://example.com/file.png', 'trip-1', 'Caption')
+      const result = await addAttachmentToGallery(
+        'https://example.com/file.png',
+        'trip-1',
+        'Caption'
+      )
 
       expect(result).toEqual({ success: true, mediaFileId: 'media-1' })
       expect(moveAttachmentToGalleryMock).toHaveBeenCalledWith(
@@ -544,10 +578,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: null, error: { message: 'nope' } })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: { message: 'nope' } })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -572,10 +608,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: { id: 'participant-1' }, error: null })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'participant-1' }, error: null })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -605,10 +643,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: { id: 'participant-1' }, error: null })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'participant-1' }, error: null })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -635,10 +675,12 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const participantSingle = jest.fn().mockResolvedValue({ data: { id: 'participant-1' }, error: null })
-      const participantEqUser = jest.fn().mockReturnValue({ single: participantSingle })
-      const participantEqTrip = jest.fn().mockReturnValue({ eq: participantEqUser })
-      const participantSelect = jest.fn().mockReturnValue({ eq: participantEqTrip })
+      const participantSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { id: 'participant-1' }, error: null })
+      const participantEqUser = jest.fn<() => any>().mockReturnValue({ single: participantSingle })
+      const participantEqTrip = jest.fn<() => any>().mockReturnValue({ eq: participantEqUser })
+      const participantSelect = jest.fn<() => any>().mockReturnValue({ eq: participantEqTrip })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {

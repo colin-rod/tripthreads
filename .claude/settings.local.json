@@ -22,7 +22,11 @@
       "Bash(do perl -pi -e 's/\\bvi\\./jest./g' \"$file\")",
       "Bash(done)",
       "Bash(supabase db push:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npx jest:*)",
+      "Bash(git merge:*)",
+      "Bash(git fetch:*)",
+      "Bash(supabase status:*)"
     ],
     "deny": [],
     "ask": []

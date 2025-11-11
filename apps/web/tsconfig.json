@@ -21,7 +21,9 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@tripthreads/core": ["../../packages/core/src/index.ts"],
+      "@tripthreads/core/*": ["../../packages/core/src/*"]
     }
   },
   "include": [
