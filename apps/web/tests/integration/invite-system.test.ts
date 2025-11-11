@@ -29,7 +29,24 @@ import {
   testConcurrentAcceptance,
 } from './invite-test-helpers'
 
-describe('Invite System Integration Tests', () => {
+// Check if Supabase environment variables are available
+const hasSupabaseEnv =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Skip all integration tests if Supabase environment variables are not available
+const describeIntegration = hasSupabaseEnv ? describe : describe.skip
+
+// Log skip reason if environment is missing
+if (!hasSupabaseEnv) {
+  console.log(
+    '\n⏭️  Skipping integration tests: Supabase environment variables not configured.\n' +
+      'To run these tests:\n' +
+      '  1. Copy .env.example to .env.local\n' +
+      '  2. Fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY\n'
+  )
+}
+
+describeIntegration('Invite System Integration Tests', () => {
   let aliceClient: SupabaseClient<Database>
   let benjiClient: SupabaseClient<Database>
   let bayleeClient: SupabaseClient<Database>
@@ -54,10 +71,10 @@ describe('Invite System Integration Tests', () => {
   })
 
   afterAll(async () => {
-    await aliceClient.auth.signOut()
-    await benjiClient.auth.signOut()
-    await bayleeClient.auth.signOut()
-    await mayaClient.auth.signOut()
+    if (aliceClient) await aliceClient.auth.signOut()
+    if (benjiClient) await benjiClient.auth.signOut()
+    if (bayleeClient) await bayleeClient.auth.signOut()
+    if (mayaClient) await mayaClient.auth.signOut()
   })
 
   // ========================================================================
