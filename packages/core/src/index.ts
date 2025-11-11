@@ -39,6 +39,7 @@ export * from './queries/invites'
 export * from './queries/itinerary'
 export * from './queries/expenses'
 export * from './queries/settlements'
+export * from './queries/media'
 
 // Permissions
 export * from './permissions/role-checks'

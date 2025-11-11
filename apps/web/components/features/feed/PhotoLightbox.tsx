@@ -30,11 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  updateMediaFile,
-  deleteMediaFile,
-  deleteMediaFileFromStorage,
-} from '@tripthreads/core/queries/media'
+import { updateMediaFile, deleteMediaFile, deleteMediaFileFromStorage } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 

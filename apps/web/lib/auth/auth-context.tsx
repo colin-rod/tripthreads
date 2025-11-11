@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      // Profile is automatically created via database trigger
+      // Note: User profile in public.users is automatically created by database trigger
 
       return { error: null }
     } catch (error) {

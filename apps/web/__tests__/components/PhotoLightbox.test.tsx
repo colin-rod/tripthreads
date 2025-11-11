@@ -5,16 +5,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import PhotoLightbox from '@/components/features/feed/PhotoLightbox'
-import {
-  updateMediaFile,
-  deleteMediaFile,
-  deleteMediaFileFromStorage,
-} from '@tripthreads/core/queries/media'
+import { updateMediaFile, deleteMediaFile, deleteMediaFileFromStorage } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
 jest.mock('@/lib/supabase/client')
-jest.mock('@tripthreads/core/queries/media')
+jest.mock('@tripthreads/core')
 jest.mock('date-fns', () => ({
   format: jest.fn((date: Date | string, formatStr: string) => {
     if (formatStr === 'PPP') {

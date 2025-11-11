@@ -13,7 +13,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createMediaFile, canUploadPhoto } from '@tripthreads/core/queries/media'
+import { createMediaFile, canUploadPhoto } from '@tripthreads/core'
 
 export async function POST(request: NextRequest) {
   try {
