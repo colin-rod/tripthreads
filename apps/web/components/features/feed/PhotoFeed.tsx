@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import PhotoGallery from './PhotoGallery'
 import PhotoLightbox from './PhotoLightbox'
-import { getMediaFiles } from '@tripthreads/core/queries/media'
+import { getMediaFiles } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect } from 'react'
 

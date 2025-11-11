@@ -9,12 +9,12 @@ import {
   updateMediaFile,
   deleteMediaFile,
   deleteMediaFileFromStorage,
-} from '@tripthreads/core/queries/media'
+} from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
 jest.mock('@/lib/supabase/client')
-jest.mock('@tripthreads/core/queries/media')
+jest.mock('@tripthreads/core')
 jest.mock('date-fns', () => ({
   format: jest.fn((date: Date | string, formatStr: string) => {
     if (formatStr === 'PPP') {

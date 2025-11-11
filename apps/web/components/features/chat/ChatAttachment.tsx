@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { ChatAttachment } from '@/app/actions/chat'
 import { addAttachmentToGallery, removeAttachmentFromGallery } from '@/app/actions/chat'
-import { getMediaFileByUrl } from '@tripthreads/core/queries/media'
+import { getMediaFileByUrl } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 interface ChatAttachmentDisplayProps {
