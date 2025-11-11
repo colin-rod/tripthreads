@@ -9,6 +9,23 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
 
+// Check if Supabase environment variables are available
+const hasSupabaseEnv =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Skip all integration tests if Supabase environment variables are not available
+const describeIntegration = hasSupabaseEnv ? describe : describe.skip
+
+// Log skip reason if environment is missing
+if (!hasSupabaseEnv) {
+  console.log(
+    '\n⏭️  Skipping itinerary CRUD integration tests: Supabase environment variables not configured.\n' +
+      'To run these tests:\n' +
+      '  1. Copy .env.example to .env.local\n' +
+      '  2. Fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY\n'
+  )
+}
+
 // Test configuration - read in beforeAll after env vars are loaded
 let SUPABASE_URL: string
 let SUPABASE_ANON_KEY: string
@@ -35,7 +52,7 @@ const TEST_USERS = {
 let testTripId: string
 let testItemId: string
 
-describe('Itinerary CRUD Integration Tests', () => {
+describeIntegration('Itinerary CRUD Integration Tests', () => {
   let ownerClient: ReturnType<typeof createClient<Database>>
   let participantClient: ReturnType<typeof createClient<Database>>
   let viewerClient: ReturnType<typeof createClient<Database>>
@@ -44,10 +61,6 @@ describe('Itinerary CRUD Integration Tests', () => {
     // Load environment variables (available after jest.setup.cjs runs)
     SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
     SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Missing Supabase environment variables. Ensure .env.local is configured.')
-    }
 
     // Create authenticated clients for each user
     ownerClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -110,14 +123,14 @@ describe('Itinerary CRUD Integration Tests', () => {
 
   afterAll(async () => {
     // Clean up test trip (CASCADE will delete participants and items)
-    if (testTripId) {
+    if (testTripId && ownerClient) {
       await ownerClient.from('trips').delete().eq('id', testTripId)
     }
 
     // Sign out all clients
-    await ownerClient.auth.signOut()
-    await participantClient.auth.signOut()
-    await viewerClient.auth.signOut()
+    if (ownerClient) await ownerClient.auth.signOut()
+    if (participantClient) await participantClient.auth.signOut()
+    if (viewerClient) await viewerClient.auth.signOut()
   })
 
   describe('CREATE Operations', () => {

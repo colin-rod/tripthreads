@@ -6,13 +6,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChatAttachmentDisplay } from '@/components/features/chat/ChatAttachment'
 import { addAttachmentToGallery, removeAttachmentFromGallery } from '@/app/actions/chat'
-import { getMediaFileByUrl } from '@tripthreads/core/queries/media'
+import { getMediaFileByUrl } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
 jest.mock('@/lib/supabase/client')
 jest.mock('@/app/actions/chat')
-jest.mock('@tripthreads/core/queries/media')
+jest.mock('@tripthreads/core')
 
 const mockSupabase = {
   from: jest.fn(),
