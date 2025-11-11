@@ -5,11 +5,24 @@
  * Used in itinerary-parsing.test.ts to avoid real API calls.
  */
 
-import type { ParsedDateTime } from '@tripthreads/core'
+/**
+ * Raw OpenAI date response (dates are strings, not Date objects)
+ * The route converts these to Date objects after parsing
+ */
+export interface RawParsedDateTime {
+  date: string
+  hasTime?: boolean
+  isRange?: boolean
+  endDate?: string
+  confidence: number
+  originalText?: string
+  type?: 'absolute' | 'relative' | 'time' | 'range' | 'ambiguous'
+  description?: string
+}
 
 export interface ItineraryTestCase {
   input: string
-  expectedResponse: ParsedDateTime
+  expectedResponse: RawParsedDateTime
   description: string
   category?:
     | 'flight'
@@ -530,6 +543,96 @@ export const edgeCaseItinerary: ItineraryTestCase[] = [
     },
     description: 'Time without am/pm (assume pm for 3)',
     category: 'edge_case',
+  },
+  {
+    input: 'Lunch appointment 12:30',
+    expectedResponse: {
+      date: new Date().toISOString().split('T')[0] + 'T12:30:00.000Z',
+      type: 'absolute',
+      description: 'Lunch appointment',
+      confidence: 0.9,
+    },
+    description: 'Time in 24-hour format without date',
+    category: 'date',
+  },
+  {
+    input: 'Conference call next Tuesday 10am',
+    expectedResponse: {
+      date: '2025-11-18T10:00:00.000Z', // Next Tuesday
+      type: 'relative',
+      description: 'Conference call',
+      confidence: 0.9,
+    },
+    description: 'Relative weekday with specific time',
+    category: 'date',
+  },
+  {
+    input: 'Workshop from 2pm to 5pm today',
+    expectedResponse: {
+      date: new Date().toISOString().split('T')[0] + 'T14:00:00.000Z',
+      endDate: new Date().toISOString().split('T')[0] + 'T17:00:00.000Z',
+      type: 'relative',
+      description: 'Workshop',
+      confidence: 0.9,
+      isRange: true,
+    },
+    description: 'Time range on same day',
+    category: 'date',
+  },
+  {
+    input: 'Gym session at 7am',
+    expectedResponse: {
+      date: new Date().toISOString().split('T')[0] + 'T07:00:00.000Z',
+      type: 'absolute',
+      description: 'Gym session',
+      confidence: 0.95,
+    },
+    description: 'Morning activity with specific time',
+    category: 'activity',
+  },
+  {
+    input: 'Doctor appointment Thursday 3:30pm',
+    expectedResponse: {
+      date: '2025-11-13T15:30:00.000Z', // Next Thursday
+      type: 'relative',
+      description: 'Doctor appointment',
+      confidence: 0.9,
+    },
+    description: 'Appointment with relative date and time',
+    category: 'activity',
+  },
+  {
+    input: 'Team meeting every Monday 9am',
+    expectedResponse: {
+      date: '2025-11-17T09:00:00.000Z', // Next Monday
+      type: 'relative',
+      description: 'Team meeting',
+      confidence: 0.85,
+    },
+    description: 'Recurring event (first occurrence)',
+    category: 'date',
+  },
+  {
+    input: 'Sunset cruise 6:30pm',
+    expectedResponse: {
+      date: new Date().toISOString().split('T')[0] + 'T18:30:00.000Z',
+      type: 'absolute',
+      description: 'Sunset cruise',
+      confidence: 0.9,
+    },
+    description: 'Evening activity without date',
+    category: 'activity',
+  },
+  {
+    input: 'Early morning hike 5:30am tomorrow',
+    expectedResponse: {
+      date: new Date(Date.now() + 86400000).toISOString().split('T')[0] + 'T05:30:00.000Z',
+      type: 'relative',
+      description: 'Early morning hike',
+      confidence: 0.95,
+    },
+    description: 'Early morning activity',
+    category: 'activity',
   },
 ]
 
