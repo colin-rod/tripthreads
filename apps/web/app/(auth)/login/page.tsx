@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/auth/auth-context'
 
 export default function LoginPage() {
@@ -59,14 +60,13 @@ export default function LoginPage() {
           <label htmlFor="email" className="block text-sm font-medium text-[--foreground] mb-1.5">
             Email
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             disabled={loading}
-            className="w-full px-3 py-2 border border-[--border] rounded-lg focus:ring-2 focus:ring-[--primary] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="you@example.com"
           />
         </div>
@@ -78,14 +78,13 @@ export default function LoginPage() {
           >
             Password
           </label>
-          <input
+          <Input
             id="password"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             disabled={loading}
-            className="w-full px-3 py-2 border border-[--border] rounded-lg focus:ring-2 focus:ring-[--primary] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="••••••••"
           />
         </div>
