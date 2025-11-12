@@ -40,7 +40,10 @@ export const createTripSchema = z
           const startDate = new Date(date)
           const today = new Date()
           today.setHours(0, 0, 0, 0)
-          return startDate >= today
+          // Compare dates at UTC midnight to avoid timezone issues
+          const startDateMidnight = new Date(startDate)
+          startDateMidnight.setUTCHours(0, 0, 0, 0)
+          return startDateMidnight >= today
         },
         {
           message: 'Start date cannot be in the past',
