@@ -30,7 +30,8 @@
       "Bash(npx eslint:*)",
       "Bash(supabase db:*)",
       "Bash(supabase link --help:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(supabase migration list:*)"
     ],
     "deny": [],
     "ask": []

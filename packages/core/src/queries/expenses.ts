@@ -251,7 +251,7 @@ export async function getExpenseParticipants(
     .select(
       `
       *,
-      user:users (
+      user:profiles (
         id,
         full_name,
         avatar_url

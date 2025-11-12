@@ -8,7 +8,7 @@ export * from './types/expense'
 // Convenience type exports from Database
 import type { Database } from './types/database'
 export type Trip = Database['public']['Tables']['trips']['Row']
-export type User = Database['public']['Tables']['users']['Row']
+export type User = Database['public']['Tables']['profiles']['Row']
 export type Expense = Database['public']['Tables']['expenses']['Row']
 export type ExpenseParticipant = Database['public']['Tables']['expense_participants']['Row']
 
