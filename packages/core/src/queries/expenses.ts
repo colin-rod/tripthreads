@@ -30,7 +30,7 @@ export async function getUserExpensesForTrip(
     .select(
       `
       *,
-      payer:users!expenses_payer_id_fkey (
+      payer:profiles!expenses_payer_id_fkey (
         id,
         full_name,
         avatar_url
@@ -73,7 +73,7 @@ export async function getExpenseById(
     .select(
       `
       *,
-      payer:users!expenses_payer_id_fkey (
+      payer:profiles!expenses_payer_id_fkey (
         id,
         full_name,
         avatar_url
@@ -93,7 +93,7 @@ export async function getExpenseById(
     .select(
       `
       *,
-      user:users (
+      user:profiles!user_id (
         id,
         full_name,
         avatar_url

@@ -27,7 +27,7 @@ export async function getUserTrips(supabase: SupabaseClient<Database>) {
     .select(
       `
       *,
-      owner:users!owner_id (
+      owner:profiles!owner_id (
         id,
         full_name,
         avatar_url
@@ -70,7 +70,7 @@ export async function getTripById(supabase: SupabaseClient<Database>, tripId: st
     .select(
       `
       *,
-      owner:users!owner_id (
+      owner:profiles!owner_id (
         id,
         full_name,
         avatar_url,

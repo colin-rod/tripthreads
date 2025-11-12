@@ -399,7 +399,7 @@ describe('createExpense integration', () => {
                 return builder
               }
 
-              if (columns === 'user_id, users!user_id(full_name)') {
+              if (columns === 'user_id, users:profiles!user_id(full_name)') {
                 return {
                   eq: jest.fn().mockResolvedValue({
                     data: tripParticipantsRows,

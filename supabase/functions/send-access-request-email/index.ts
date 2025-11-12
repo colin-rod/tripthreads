@@ -65,7 +65,7 @@ serve(async req => {
           id,
           name,
           owner_id,
-          owner:users!trips_owner_id_fkey (
+          owner:profiles!trips_owner_id_fkey (
             id,
             email,
             full_name
