@@ -35,6 +35,17 @@ export function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
 
+  // Ensure portal container exists
+  React.useEffect(() => {
+    if (typeof document !== 'undefined' && !document.getElementById('date-picker-portal')) {
+      const portalDiv = document.createElement('div')
+      portalDiv.id = 'date-picker-portal'
+      portalDiv.style.position = 'relative'
+      portalDiv.style.zIndex = '100'
+      document.body.appendChild(portalDiv)
+    }
+  }, [])
+
   return (
     <div className={cn('relative', className)}>
       <Button
@@ -76,12 +87,12 @@ export function DatePicker({
       <style jsx global>{`
         /* Portal container */
         #date-picker-portal {
-          z-index: 9999 !important;
+          z-index: 100 !important;
         }
 
         /* Popper wrapper */
         .date-picker-popper {
-          z-index: 9999 !important;
+          z-index: 100 !important;
         }
 
         /* Calendar container */
@@ -94,6 +105,15 @@ export function DatePicker({
             0 4px 6px -4px rgb(0 0 0 / 0.1);
           font-family: inherit;
           padding: 0.75rem;
+          pointer-events: auto;
+        }
+
+        .react-datepicker-popper {
+          pointer-events: auto;
+        }
+
+        .react-datepicker {
+          pointer-events: auto;
         }
 
         /* Calendar header */
