@@ -31,7 +31,7 @@ export async function getMediaFiles(supabase: SupabaseClient<Database>, tripId: 
     .select(
       `
       *,
-      user:users!user_id (
+      user:profiles!user_id (
         id,
         full_name,
         avatar_url
@@ -123,7 +123,7 @@ export async function getMediaFileById(supabase: SupabaseClient<Database>, fileI
     .select(
       `
       *,
-      user:users!user_id (
+      user:profiles!user_id (
         id,
         full_name,
         avatar_url
@@ -274,7 +274,7 @@ export async function canUploadPhoto(
 ): Promise<{ canUpload: boolean; remaining: number; total: number; limit: number }> {
   // Get user's plan
   const { data: user, error: userError } = await supabase
-    .from('users')
+    .from('profiles')
     .select('plan')
     .eq('id', userId)
     .single()

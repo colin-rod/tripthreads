@@ -38,7 +38,7 @@ export async function getTripItineraryItems(
       participants:itinerary_item_participants (
         id,
         user_id,
-        user:users!user_id (
+        user:profiles!user_id (
           id,
           full_name,
           avatar_url
@@ -111,7 +111,7 @@ export async function getItineraryItem(
       participants:itinerary_item_participants (
         id,
         user_id,
-        user:users!user_id (
+        user:profiles!user_id (
           id,
           full_name,
           avatar_url
@@ -155,7 +155,7 @@ export async function getItineraryItemParticipants(
       `
       id,
       user_id,
-      user:users!user_id (
+      user:profiles!user_id (
         id,
         full_name,
         avatar_url,

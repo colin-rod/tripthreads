@@ -89,7 +89,7 @@ export function ChatThread({
         .select(
           `
           user_id,
-          user:users!user_id (
+          user:profiles!user_id (
             id,
             full_name,
             email,
@@ -162,7 +162,7 @@ export function ChatThread({
           // Fetch user data if it's a user message
           if (newMessage.user_id) {
             const { data: userData } = await supabase
-              .from('users')
+              .from('profiles')
               .select('id, full_name, email, avatar_url')
               .eq('id', newMessage.user_id)
               .single()

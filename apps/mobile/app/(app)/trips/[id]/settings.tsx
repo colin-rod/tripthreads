@@ -110,7 +110,7 @@ export default function TripSettingsScreen() {
         .select(
           `
           *,
-          user:users!trip_participants_user_id_fkey(id, full_name, email)
+          user:profiles!trip_participants_user_id_fkey(id, full_name, email)
         `
         )
         .eq('trip_id', params.id)

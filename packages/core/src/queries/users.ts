@@ -12,8 +12,8 @@ import type { Database } from '../types/database'
 // Note: Avatar utilities (compressAvatar, generateAvatarPath) are platform-specific
 // and should be imported from @tripthreads/web or @tripthreads/mobile
 
-type User = Database['public']['Tables']['users']['Row']
-type UserUpdate = Database['public']['Tables']['users']['Update']
+type User = Database['public']['Tables']['profiles']['Row']
+type UserUpdate = Database['public']['Tables']['profiles']['Update']
 
 /**
  * Get current user profile
@@ -30,7 +30,7 @@ export async function getCurrentUser(supabase: SupabaseClient<Database>): Promis
     return null
   }
 
-  const { data, error } = await supabase.from('users').select('*').eq('id', authUser.id).single()
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', authUser.id).single()
 
   if (error) {
     console.error('Error fetching user profile:', error)
@@ -186,7 +186,7 @@ export async function completeProfile(
 
   // Update user profile
   const { data: updatedUser, error } = await supabase
-    .from('users')
+    .from('profiles')
     .update(updateData)
     .eq('id', authUser.id)
     .select()
@@ -258,7 +258,7 @@ export async function updateProfile(
 
   // Update user profile
   const { data: updatedUser, error } = await supabase
-    .from('users')
+    .from('profiles')
     .update(updateData)
     .eq('id', authUser.id)
     .select()
