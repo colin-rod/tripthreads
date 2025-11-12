@@ -398,7 +398,7 @@ TripThreads uses **Supabase (PostgreSQL 15+)** for the database with strict **Ro
 
 ### Core Tables (Phase 1-2 ✅)
 
-- ✅ `users` - User profiles and auth
+- ✅ `profiles` - User profiles and auth
 - ✅ `trips` - Trip metadata with base currency
 - ✅ `trip_participants` - User-trip relationships with roles
 - ✅ `trip_invites` - Email-based invitations

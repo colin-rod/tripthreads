@@ -72,7 +72,7 @@ export type Database = {
             foreignKeyName: 'access_requests_responded_by_fkey'
             columns: ['responded_by']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
@@ -86,7 +86,7 @@ export type Database = {
             foreignKeyName: 'access_requests_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -185,7 +185,7 @@ export type Database = {
             foreignKeyName: 'chat_messages_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -298,7 +298,7 @@ export type Database = {
             foreignKeyName: 'expense_participants_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -354,14 +354,14 @@ export type Database = {
             foreignKeyName: 'expenses_created_by_fkey'
             columns: ['created_by']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
             foreignKeyName: 'expenses_payer_id_fkey'
             columns: ['payer_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
@@ -522,7 +522,7 @@ export type Database = {
             foreignKeyName: 'itinerary_item_participants_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -584,7 +584,7 @@ export type Database = {
             foreignKeyName: 'itinerary_items_created_by_fkey'
             columns: ['created_by']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
@@ -642,7 +642,46 @@ export type Database = {
             foreignKeyName: 'media_files_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'message_reactions_message_id_fkey'
+            columns: ['message_id']
+            isOneToOne: false
+            referencedRelation: 'chat_messages'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'message_reactions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -724,6 +763,122 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          notification_preferences: Json | null
+          plan: string
+          plan_expires_at: string | null
+          profile_completed_at: string | null
+          stripe_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          notification_preferences?: Json | null
+          plan?: string
+          plan_expires_at?: string | null
+          profile_completed_at?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          notification_preferences?: Json | null
+          plan?: string
+          plan_expires_at?: string | null
+          profile_completed_at?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      settlements: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          from_user_id: string
+          id: string
+          note: string | null
+          settled_at: string | null
+          settled_by: string | null
+          status: string
+          to_user_id: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          from_user_id: string
+          id?: string
+          note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status?: string
+          to_user_id: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          from_user_id?: string
+          id?: string
+          note?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status?: string
+          to_user_id?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'settlements_from_user_id_fkey'
+            columns: ['from_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_settled_by_fkey'
+            columns: ['settled_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_to_user_id_fkey'
+            columns: ['to_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'settlements_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       trip_invites: {
         Row: {
           accepted_at: string | null
@@ -769,7 +924,7 @@ export type Database = {
             foreignKeyName: 'trip_invites_invited_by_fkey'
             columns: ['invited_by']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
@@ -820,7 +975,7 @@ export type Database = {
             foreignKeyName: 'trip_participants_invited_by_fkey'
             columns: ['invited_by']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
@@ -834,7 +989,7 @@ export type Database = {
             foreignKeyName: 'trip_participants_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -881,52 +1036,10 @@ export type Database = {
             foreignKeyName: 'trips_owner_id_fkey'
             columns: ['owner_id']
             isOneToOne: false
-            referencedRelation: 'users'
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
-      }
-      users: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          notification_preferences: Json | null
-          plan: string
-          plan_expires_at: string | null
-          profile_completed_at: string | null
-          stripe_customer_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id: string
-          notification_preferences?: Json | null
-          plan?: string
-          plan_expires_at?: string | null
-          profile_completed_at?: string | null
-          stripe_customer_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          notification_preferences?: Json | null
-          plan?: string
-          plan_expires_at?: string | null
-          profile_completed_at?: string | null
-          stripe_customer_id?: string | null
-          updated_at?: string
-        }
-        Relationships: []
       }
     }
     Views: {

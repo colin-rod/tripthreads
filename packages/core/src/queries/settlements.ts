@@ -128,9 +128,9 @@ async function getPersistedSettlements(
     .select(
       `
       *,
-      from_user:users!settlements_from_user_id_fkey(id, full_name, avatar_url),
-      to_user:users!settlements_to_user_id_fkey(id, full_name, avatar_url),
-      settled_by_user:users!settlements_settled_by_fkey(id, full_name, avatar_url)
+      from_user:profiles!settlements_from_user_id_fkey(id, full_name, avatar_url),
+      to_user:profiles!settlements_to_user_id_fkey(id, full_name, avatar_url),
+      settled_by_user:profiles!settlements_settled_by_fkey(id, full_name, avatar_url)
     `
     )
     .eq('trip_id', tripId)

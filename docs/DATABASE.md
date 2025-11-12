@@ -189,7 +189,7 @@ git commit -m "feat(db): add expenses table with RLS policies"
 
 ### Core Entities
 
-#### Users (`users` table)
+#### Users (`profiles` table)
 
 ✅ **Status:** Implemented (Phase 1)
 
