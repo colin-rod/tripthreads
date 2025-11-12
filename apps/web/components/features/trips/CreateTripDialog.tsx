@@ -11,7 +11,7 @@
  * - Loading state during submission
  */
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -51,7 +51,10 @@ interface CreateTripDialogProps {
 export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const supabase = useMemo(() => createClient(), [])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isOwnerLoading, setIsOwnerLoading] = useState(false)
+  const [ownerId, setOwnerId] = useState<string | null>(null)
 
   const form = useForm<CreateTripInput>({
     resolver: zodResolver(createTripSchema),
@@ -64,27 +67,82 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
       cover_image_url: null,
     },
   })
+  const { setValue } = form
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    let isMounted = true
+    setIsOwnerLoading(true)
+
+    const loadOwner = async () => {
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser()
+
+        if (!isMounted) {
+          return
+        }
+
+        if (error || !user) {
+          setOwnerId(null)
+          toast({
+            title: 'Authentication required',
+            description: 'You must be logged in to create a trip.',
+            variant: 'destructive',
+          })
+          onOpenChange(false)
+          return
+        }
+
+        setOwnerId(user.id)
+        setValue('owner_id', user.id, { shouldDirty: false, shouldValidate: true })
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+        console.error('Error loading user for trip:', error)
+        toast({
+          title: 'Error creating trip',
+          description: 'Unable to load your account info. Please try again.',
+          variant: 'destructive',
+        })
+        onOpenChange(false)
+      } finally {
+        if (isMounted) {
+          setIsOwnerLoading(false)
+        }
+      }
+    }
+
+    void loadOwner()
+
+    return () => {
+      isMounted = false
+    }
+  }, [open, supabase, setValue, toast, onOpenChange])
 
   async function onSubmit(values: CreateTripInput) {
+    if (!ownerId) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in to create a trip.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const supabase = createClient()
-
-      // Get current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError || !user) {
-        throw new Error('You must be logged in to create a trip')
-      }
-
       // Create trip with current user as owner
       const tripData = {
         ...values,
-        owner_id: user.id,
+        owner_id: ownerId,
       }
 
       const trip = await createTrip(supabase, tripData)
@@ -122,6 +180,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <input type="hidden" {...form.register('owner_id')} />
             {/* Trip Name */}
             <FormField
               control={form.control}
@@ -240,8 +299,14 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} data-tour="create-trip-submit">
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                disabled={isSubmitting || isOwnerLoading}
+                data-tour="create-trip-submit"
+              >
+                {(isSubmitting || isOwnerLoading) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Create Trip
               </Button>
             </DialogFooter>

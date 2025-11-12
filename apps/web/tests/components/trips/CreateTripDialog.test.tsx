@@ -22,41 +22,19 @@ declare module '@jest/globals' {
 const createTripMock = jest.fn()
 const createClientMock = jest.fn()
 
-const calendarMocks: Array<{
+type DatePickerMockProps = {
   disabled?: (date: Date) => boolean
-  onSelect?: (date: Date | undefined) => void
-}> = []
+  onChange?: (date: Date | null) => void
+}
 
-jest.mock('@/components/ui/calendar', () => {
-  return {
-    Calendar: (props: {
-      disabled?: (date: Date) => boolean
-      onSelect?: (date: Date | undefined) => void
-    }) => {
-      calendarMocks.push({ disabled: props.disabled, onSelect: props.onSelect })
-      return <div data-testid={`calendar-mock-${calendarMocks.length}`} />
-    },
-  }
-})
+const datePickerMocks: DatePickerMockProps[] = []
 
-jest.mock('@/components/ui/popover', () => {
-  const passthrough = ({
-    children,
-    ...rest
-  }: {
-    children?: React.ReactNode
-    [key: string]: unknown
-  }) => (
-    <div data-testid="popover-mock" {...rest}>
-      {children}
-    </div>
-  )
-  return {
-    Popover: passthrough,
-    PopoverTrigger: passthrough,
-    PopoverContent: passthrough,
-  }
-})
+jest.mock('@/components/ui/date-picker', () => ({
+  DatePicker: (props: DatePickerMockProps) => {
+    datePickerMocks.push(props)
+    return <div data-testid={`date-picker-mock-${datePickerMocks.length}`} />
+  },
+}))
 
 const mockRouterPush = jest.fn()
 
@@ -69,7 +47,7 @@ jest.mock('next/navigation', () => ({
 
 const mockToast = jest.fn()
 
-jest.mock('@/components/ui/use-toast', () => ({
+jest.mock('@/hooks/use-toast', () => ({
   __esModule: true,
   useToast: () => ({
     toast: mockToast,
@@ -106,7 +84,7 @@ jest.mock('@tripthreads/core', () => {
           }
         ),
       end_date: z.string().datetime('Invalid end date format'),
-      owner_id: z.union([z.string().uuid('Invalid owner ID'), z.literal('')]).optional(),
+      owner_id: z.string().min(1).optional(),
       cover_image_url: z.string().url('Invalid image URL').optional().nullable(),
     })
     .refine(
@@ -153,7 +131,7 @@ describe('CreateTripDialog', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    calendarMocks.length = 0
+    datePickerMocks.length = 0
     createTripMock.mockReset()
     createClientMock.mockReset()
     mockGetUser.mockResolvedValue({
@@ -177,7 +155,15 @@ describe('CreateTripDialog', () => {
 
     render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
 
-    await waitFor(() => expect(calendarMocks.length).toBe(2))
+    const getLatestPickers = () => {
+      expect(datePickerMocks.length).toBeGreaterThanOrEqual(2)
+      return datePickerMocks.slice(-2)
+    }
+    await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+    const submitButton = screen.getByRole('button', { name: /create trip/i })
+    await waitFor(() => expect(mockGetUser).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(submitButton).not.toBeDisabled())
 
     const nameInput = screen.getByLabelText(/trip name/i)
     await user.type(nameInput, 'Alpine Adventure')
@@ -188,11 +174,13 @@ describe('CreateTripDialog', () => {
     endDate.setDate(endDate.getDate() + 5)
 
     act(() => {
-      calendarMocks[0].onSelect?.(startDate)
-      calendarMocks[1].onSelect?.(endDate)
+      const [startPicker, endPicker] = getLatestPickers()
+      expect(typeof startPicker.onChange).toBe('function')
+      expect(typeof endPicker.onChange).toBe('function')
+      startPicker.onChange?.(startDate)
+      endPicker.onChange?.(endDate)
     })
 
-    const submitButton = screen.getByRole('button', { name: /create trip/i })
     const cancelButton = screen.getByRole('button', { name: /cancel/i })
     const form = submitButton.closest('form')
     expect(form).not.toBeNull()
@@ -253,8 +241,7 @@ describe('CreateTripDialog', () => {
     })
   })
 
-  it('shows a destructive toast and keeps the dialog open when authentication fails', async () => {
-    const user = userEvent.setup()
+  it('closes the dialog and shows a destructive toast when authentication fails', async () => {
     const onOpenChange = jest.fn()
 
     mockGetUser.mockResolvedValueOnce({
@@ -264,53 +251,18 @@ describe('CreateTripDialog', () => {
 
     render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
 
-    await waitFor(() => expect(calendarMocks.length).toBe(2))
-
-    const nameInput = screen.getByLabelText(/trip name/i)
-    await user.type(nameInput, 'Weekend Escape')
-
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() + 1)
-    const endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + 2)
-
-    act(() => {
-      calendarMocks[0].onSelect?.(startDate)
-      calendarMocks[1].onSelect?.(endDate)
-    })
-
-    const submitButton = screen.getByRole('button', { name: /create trip/i })
-    const cancelButton = screen.getByRole('button', { name: /cancel/i })
-    const form = submitButton.closest('form')
-    expect(form).not.toBeNull()
-
-    await act(async () => {
-      fireEvent.submit(form!)
-    })
-
-    await waitFor(() => expect(createClientMock).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(mockGetUser).toHaveBeenCalledTimes(1))
-    await waitFor(() => expect(mockToast).toHaveBeenCalled())
-
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Error creating trip',
-        variant: 'destructive',
-      })
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Authentication required',
+          variant: 'destructive',
+        })
+      )
     )
-
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
     expect(createTripMock).not.toHaveBeenCalled()
     expect(mockRouterPush).not.toHaveBeenCalled()
-    expect(onOpenChange).not.toHaveBeenCalledWith(false)
-
-    await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(submitButton) as any).not.toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(cancelButton) as any).not.toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(nameInput) as any).not.toBeDisabled()
-    })
   })
 
   it('prevents selecting dates in the past for both calendars', async () => {
@@ -318,14 +270,19 @@ describe('CreateTripDialog', () => {
 
     render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
 
-    await waitFor(() => expect(calendarMocks.length).toBe(2))
+    await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
 
-    const [startCalendar, endCalendar] = calendarMocks
+    const getDatePickers = () => {
+      expect(datePickerMocks.length).toBeGreaterThanOrEqual(2)
+      return datePickerMocks.slice(-2)
+    }
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const yesterday = new Date(today)
     yesterday.setDate(today.getDate() - 1)
+
+    let [startCalendar, endCalendar] = getDatePickers()
 
     expect(startCalendar.disabled?.(yesterday)).toBe(true)
     expect(startCalendar.disabled?.(today)).toBe(false)
@@ -336,13 +293,15 @@ describe('CreateTripDialog', () => {
     const futureStart = new Date(today)
     futureStart.setDate(futureStart.getDate() + 3)
     act(() => {
-      startCalendar.onSelect?.(futureStart)
+      ;[startCalendar, endCalendar] = getDatePickers()
+      startCalendar.onChange?.(futureStart)
     })
 
     const beforeStart = new Date(futureStart)
     beforeStart.setDate(beforeStart.getDate() - 1)
     const afterStart = new Date(futureStart)
     afterStart.setDate(afterStart.getDate() + 2)
+    ;[, endCalendar] = getDatePickers()
 
     expect(endCalendar.disabled?.(beforeStart)).toBe(true)
     expect(endCalendar.disabled?.(afterStart)).toBe(false)

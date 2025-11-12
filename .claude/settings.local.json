@@ -28,7 +28,9 @@
       "Bash(git fetch:*)",
       "Bash(supabase status:*)",
       "Bash(npx eslint:*)",
-      "Bash(supabase db:*)"
+      "Bash(supabase db:*)",
+      "Bash(supabase link --help:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

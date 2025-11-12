@@ -12,7 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["apps/web/*"]
-    }
+    },
+    "jsx": "react-jsx"
   },
   "exclude": ["node_modules", "dist", ".next", ".expo"]
 }
