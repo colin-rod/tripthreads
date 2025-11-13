@@ -33,7 +33,8 @@
       "Bash(psql:*)",
       "Bash(supabase migration list:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm run generate-types:*)"
+      "Bash(npm run generate-types:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
