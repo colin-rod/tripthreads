@@ -32,7 +32,8 @@
       "Bash(supabase link --help:*)",
       "Bash(psql:*)",
       "Bash(supabase migration list:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run generate-types:*)"
     ],
     "deny": [],
     "ask": []
