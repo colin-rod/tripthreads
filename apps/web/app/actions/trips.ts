@@ -24,15 +24,29 @@ import { createTrip as createTripQuery, type CreateTripInput } from '@tripthread
 export async function createTrip(input: Omit<CreateTripInput, 'owner_id'>) {
   const supabase = await createClient()
 
-  // Get authenticated user
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+  // Debug: Log all cookies
+  const cookieStore = await (await import('next/headers')).cookies()
+  const allCookies = cookieStore.getAll()
+  console.log(
+    'All cookies:',
+    allCookies.map(c => ({ name: c.name, hasValue: !!c.value }))
+  )
 
-  if (authError || !user) {
+  // Get authenticated session
+  const {
+    data: { session },
+    error: authError,
+  } = await supabase.auth.getSession()
+
+  console.log('Session:', session ? 'exists' : 'null')
+  console.log('User:', session?.user?.id)
+
+  if (authError || !session?.user) {
+    console.error('Auth error in createTrip:', authError)
     throw new Error('You must be logged in to create a trip')
   }
+
+  const user = session.user
 
   // Create trip with current user as owner
   const tripData: CreateTripInput = {
