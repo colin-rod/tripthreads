@@ -159,7 +159,7 @@ const { data: accessRequests } = await supabase
     id,
     user_id,
     requested_at,
-    user:users!access_requests_user_id_fkey (
+    user:profiles!access_requests_user_id_fkey (
       id,
       full_name,
       avatar_url,

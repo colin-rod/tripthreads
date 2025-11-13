@@ -178,7 +178,7 @@ async function getTripParticipants(
 ): Promise<TripParticipant[]> {
   const { data, error } = await supabase
     .from('trip_participants')
-    .select('user_id, users:profiles!user_id(full_name)')
+    .select('user_id, user:profiles!user_id(full_name)')
     .eq('trip_id', tripId)
 
   if (error) {
@@ -191,7 +191,7 @@ async function getTripParticipants(
 
   return data.map(p => ({
     user_id: p.user_id,
-    full_name: p.users?.full_name ?? '',
+    full_name: p.user?.full_name ?? '',
   }))
 }
 

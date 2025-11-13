@@ -285,7 +285,7 @@ export async function getChatMessages(tripId: string, limit = 50) {
       .select(
         `
         *,
-        user:user_id (
+        user:profiles!user_id (
           id,
           full_name,
           email,
@@ -578,7 +578,7 @@ export async function getReactions(
         id,
         emoji,
         user_id,
-        users:user_id (
+        user:profiles!user_id (
           id,
           full_name
         )

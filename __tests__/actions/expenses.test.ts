@@ -373,8 +373,8 @@ describe('createExpense integration', () => {
     const insertedExpenses: any[] = []
     const insertedParticipants: any[] = []
     const tripParticipantsRows = [
-      { user_id: 'user-1', users: { full_name: 'Alice Example' } },
-      { user_id: 'user-2', users: { full_name: 'Bob Example' } },
+      { user_id: 'user-1', user: { full_name: 'Alice Example' } },
+      { user_id: 'user-2', user: { full_name: 'Bob Example' } },
     ]
 
     const supabase = {
@@ -399,7 +399,7 @@ describe('createExpense integration', () => {
                 return builder
               }
 
-              if (columns === 'user_id, users:profiles!user_id(full_name)') {
+              if (columns === 'user_id, user:profiles!user_id(full_name)') {
                 return {
                   eq: jest.fn().mockResolvedValue({
                     data: tripParticipantsRows,
