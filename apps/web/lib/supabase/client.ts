@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
 
@@ -13,14 +13,7 @@ function initializeSupabaseClient() {
     return createMissingSupabaseClient()
   }
 
-  return createSupabaseClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    },
-  })
+  return createBrowserClient<Database>(env.supabaseUrl, env.supabaseAnonKey)
 }
 
 export function createClient() {
