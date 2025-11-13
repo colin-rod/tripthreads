@@ -28,13 +28,10 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
   const { id } = await params
 
   // Fetch trip data
-  let trip
-  try {
-    trip = await getTripById(supabase, id)
-  } catch (error) {
+  const trip = await getTripById(supabase, id).catch(error => {
     console.error('Error loading trip:', error)
     notFound()
-  }
+  })
 
   // Get current user
   const {
@@ -47,7 +44,7 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
 
   // Verify user is a participant
   const isParticipant = trip.trip_participants?.some(
-    (participant: (typeof trip.trip_participants)[number]) => participant.user?.id === user.id
+    participant => participant.user?.id === user.id
   )
 
   if (!isParticipant) {
