@@ -11,9 +11,8 @@
  * - Loading state during submission
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 
@@ -40,8 +39,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { DatePicker } from '@/components/ui/date-picker'
 import { useToast } from '@/hooks/use-toast'
 
-import { createClient } from '@/lib/supabase/client'
-import { createTrip, createTripSchema, type CreateTripInput } from '@tripthreads/core'
+import { createTrip } from '@/app/actions/trips'
+import type { CreateTripInput } from '@tripthreads/core'
 
 interface CreateTripDialogProps {
   open: boolean
@@ -51,111 +50,44 @@ interface CreateTripDialogProps {
 export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const supabase = useMemo(() => createClient(), [])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isOwnerLoading, setIsOwnerLoading] = useState(false)
-  const [ownerId, setOwnerId] = useState<string | null>(null)
 
-  const form = useForm<CreateTripInput>({
-    resolver: zodResolver(createTripSchema),
+  type CreateTripFormInput = Omit<CreateTripInput, 'owner_id'>
+
+  const form = useForm<CreateTripFormInput>({
     defaultValues: {
       name: '',
       description: '',
       start_date: '',
       end_date: '',
-      owner_id: '',
       cover_image_url: null,
     },
   })
-  const { setValue } = form
 
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    let isMounted = true
-    setIsOwnerLoading(true)
-
-    const loadOwner = async () => {
-      try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser()
-
-        if (!isMounted) {
-          return
-        }
-
-        if (error || !user) {
-          setOwnerId(null)
-          toast({
-            title: 'Authentication required',
-            description: 'You must be logged in to create a trip.',
-            variant: 'destructive',
-          })
-          onOpenChange(false)
-          return
-        }
-
-        setOwnerId(user.id)
-        setValue('owner_id', user.id, { shouldDirty: false, shouldValidate: true })
-      } catch (error) {
-        if (!isMounted) {
-          return
-        }
-        console.error('Error loading user for trip:', error)
-        toast({
-          title: 'Error creating trip',
-          description: 'Unable to load your account info. Please try again.',
-          variant: 'destructive',
-        })
-        onOpenChange(false)
-      } finally {
-        if (isMounted) {
-          setIsOwnerLoading(false)
-        }
-      }
-    }
-
-    void loadOwner()
-
-    return () => {
-      isMounted = false
-    }
-  }, [open, supabase, setValue, toast, onOpenChange])
-
-  async function onSubmit(values: CreateTripInput) {
-    if (!ownerId) {
-      toast({
-        title: 'Authentication required',
-        description: 'Please sign in to create a trip.',
-        variant: 'destructive',
-      })
-      return
-    }
-
+  async function onSubmit(values: Omit<CreateTripInput, 'owner_id'>) {
     setIsSubmitting(true)
 
     try {
-      // Create trip with current user as owner
-      const tripData = {
-        ...values,
-        owner_id: ownerId,
-      }
+      const result = await createTrip(values)
 
-      const trip = await createTrip(supabase, tripData)
+      if (!result.success || !result.trip) {
+        toast({
+          title: 'Error creating trip',
+          description: result.error || 'An unexpected error occurred',
+          variant: 'destructive',
+        })
+        return
+      }
 
       toast({
         title: 'Trip created!',
-        description: `${trip.name} has been created successfully.`,
+        description: `${result.trip.name} has been created successfully.`,
       })
 
       // Close dialog and navigate to trip detail page
       onOpenChange(false)
       form.reset()
-      router.push(`/trips/${trip.id}`)
+      router.push(`/trips/${result.trip.id}`)
     } catch (error) {
       console.error('Error creating trip:', error)
       toast({
@@ -180,7 +112,6 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <input type="hidden" {...form.register('owner_id')} />
             {/* Trip Name */}
             <FormField
               control={form.control}
@@ -299,14 +230,8 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || isOwnerLoading}
-                data-tour="create-trip-submit"
-              >
-                {(isSubmitting || isOwnerLoading) && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+              <Button type="submit" disabled={isSubmitting} data-tour="create-trip-submit">
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Trip
               </Button>
             </DialogFooter>
