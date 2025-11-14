@@ -31,6 +31,8 @@ export default async function TripChatPage({ params }: TripChatPageProps) {
   const trip = await getTripById(supabase, id).catch(error => {
     console.error('Error loading trip:', error)
     notFound()
+    // TypeScript doesn't know notFound() never returns, so we add this to satisfy the type checker
+    throw new Error('Not found')
   })
 
   // Get current user

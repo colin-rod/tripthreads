@@ -12,6 +12,28 @@ type TripInsert = Database['public']['Tables']['trips']['Insert']
 type TripUpdate = Database['public']['Tables']['trips']['Update']
 type RelationshipTarget = 'profiles' | 'users'
 
+// Return types for trip queries
+type UserProfile = {
+  id: string
+  full_name: string
+  avatar_url: string | null
+  email?: string
+}
+
+type TripParticipant = {
+  id: string
+  role: string
+  joined_at?: string
+  join_start_date?: string | null
+  join_end_date?: string | null
+  user: UserProfile
+}
+
+export type TripWithParticipants = Database['public']['Tables']['trips']['Row'] & {
+  owner: UserProfile
+  trip_participants: TripParticipant[]
+}
+
 const buildTripListSelect = (relationship: RelationshipTarget) => `
       *,
       owner:${relationship}!owner_id (
@@ -71,7 +93,9 @@ const shouldFallbackToUsers = (error: PostgrestError | null, attempted: Relation
  * @returns Array of trips with participants
  * @throws Error if query fails
  */
-export async function getUserTrips(supabase: SupabaseClient<Database>) {
+export async function getUserTrips(
+  supabase: SupabaseClient<Database>
+): Promise<TripWithParticipants[]> {
   const attempt = await supabase
     .from('trips')
     .select(buildTripListSelect('profiles'))
@@ -87,7 +111,7 @@ export async function getUserTrips(supabase: SupabaseClient<Database>) {
       .order('start_date', { ascending: false })
 
     if (!fallback.error) {
-      return fallback.data
+      return fallback.data as unknown as TripWithParticipants[]
     }
 
     console.error('Error fetching user trips:', fallback.error)
@@ -99,7 +123,7 @@ export async function getUserTrips(supabase: SupabaseClient<Database>) {
     throw new Error(`Failed to fetch trips: ${attempt.error.message}`)
   }
 
-  return attempt.data
+  return attempt.data as unknown as TripWithParticipants[]
 }
 
 /**
@@ -113,7 +137,10 @@ export async function getUserTrips(supabase: SupabaseClient<Database>) {
  * @returns Trip with owner and participants
  * @throws Error if trip not found or user lacks access
  */
-export async function getTripById(supabase: SupabaseClient<Database>, tripId: string) {
+export async function getTripById(
+  supabase: SupabaseClient<Database>,
+  tripId: string
+): Promise<TripWithParticipants> {
   const attempt = await supabase
     .from('trips')
     .select(buildTripDetailSelect('profiles'))
@@ -131,7 +158,7 @@ export async function getTripById(supabase: SupabaseClient<Database>, tripId: st
       .single()
 
     if (!fallback.error) {
-      return fallback.data
+      return fallback.data as unknown as TripWithParticipants
     }
 
     console.error('Error fetching trip:', fallback.error)
@@ -149,7 +176,7 @@ export async function getTripById(supabase: SupabaseClient<Database>, tripId: st
     throw new Error(`Failed to fetch trip: ${attempt.error.message}`)
   }
 
-  return attempt.data
+  return attempt.data as unknown as TripWithParticipants
 }
 
 /**

@@ -34,7 +34,8 @@
       "Bash(supabase migration list:*)",
       "Bash(npm run dev:*)",
       "Bash(npm run generate-types:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm ls:*)"
     ],
     "deny": [],
     "ask": []
