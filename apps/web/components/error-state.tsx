@@ -1,3 +1,5 @@
+'use client'
+
 import { AlertTriangle, WifiOff, Lock, FileQuestion, ServerCrash, LucideIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card'
