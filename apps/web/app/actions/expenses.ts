@@ -237,6 +237,17 @@ export async function createExpense(input: CreateExpenseInput) {
 
     const { user } = participantResult as AssertTripParticipantSuccess
 
+    console.log('[createExpense] User ID:', user.id)
+    console.log('[createExpense] Trip ID:', input.tripId)
+
+    // Debug: Check if RLS helper function would pass
+    const { data: rlsCheck } = await supabase.rpc('is_trip_participant_with_role', {
+      p_trip_id: input.tripId,
+      p_user_id: user.id,
+      p_roles: ['owner', 'participant'],
+    })
+    console.log('[createExpense] RLS check result:', rlsCheck)
+
     const tripParticipants = await getTripParticipants(supabase, input.tripId)
 
     const payerResult = resolvePayer(input.payer, {
@@ -265,19 +276,23 @@ export async function createExpense(input: CreateExpenseInput) {
       }
     }
 
+    const expenseData = {
+      trip_id: input.tripId,
+      amount: input.amount,
+      currency: input.currency,
+      description: input.description,
+      category: input.category || 'other',
+      payer_id: payerResult.payerId,
+      date: input.date || new Date().toISOString(),
+      fx_rate: fxRateResult.fxRate,
+      created_by: user.id,
+    }
+
+    console.log('[createExpense] Inserting expense:', expenseData)
+
     const { data: expense, error: expenseError } = await supabase
       .from('expenses')
-      .insert({
-        trip_id: input.tripId,
-        amount: input.amount,
-        currency: input.currency,
-        description: input.description,
-        category: input.category || 'other',
-        payer_id: payerResult.payerId,
-        date: input.date || new Date().toISOString(),
-        fx_rate: fxRateResult.fxRate,
-        created_by: user.id,
-      })
+      .insert(expenseData)
       .select()
       .single()
 
