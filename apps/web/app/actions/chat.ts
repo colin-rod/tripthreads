@@ -10,6 +10,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import type { Database } from '@/types/database'
 import {
   moveAttachmentToGallery as moveToGallery,
   removeFromGallery as removeGalleryItem,
@@ -564,6 +565,9 @@ export async function addReaction(messageId: string, emoji: string) {
  * Get all reactions for a message, grouped by emoji
  */
 export type ReactionData = { emoji: string; count: number; userIds: string[] }
+type ReactionWithUser = Database['public']['Tables']['message_reactions']['Row'] & {
+  user: { id: string; full_name: string | null } | null
+}
 
 export async function getReactions(
   messageId: string
@@ -578,7 +582,7 @@ export async function getReactions(
         id,
         emoji,
         user_id,
-        users:user_id (
+        user:profiles!message_reactions_user_id_fkey (
           id,
           full_name
         )
@@ -597,7 +601,8 @@ export async function getReactions(
     }
 
     // Group reactions by emoji and count
-    const grouped = reactions.reduce(
+    const reactionsWithUsers = (reactions ?? []) as ReactionWithUser[]
+    const grouped = reactionsWithUsers.reduce(
       (acc, reaction) => {
         if (!acc[reaction.emoji]) {
           acc[reaction.emoji] = {
@@ -607,10 +612,13 @@ export async function getReactions(
           }
         }
         acc[reaction.emoji].count++
-        acc[reaction.emoji].userIds.push(reaction.user_id)
+        const reactionUserId = reaction.user?.id ?? reaction.user_id
+        if (reactionUserId) {
+          acc[reaction.emoji].userIds.push(reactionUserId)
+        }
         return acc
       },
-      {} as Record<string, { emoji: string; count: number; userIds: string[] }>
+      {} as Record<string, ReactionData>
     )
 
     return {
