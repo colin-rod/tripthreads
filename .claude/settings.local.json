@@ -35,7 +35,11 @@
       "Bash(npm run dev:*)",
       "Bash(npm run generate-types:*)",
       "Bash(pkill:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(supabase link:*)",
+      "Bash(curl:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(packages/core/src/types/database.ts)"
     ],
     "deny": [],
     "ask": []
