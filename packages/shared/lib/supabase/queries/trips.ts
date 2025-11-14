@@ -8,24 +8,12 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@tripthreads/core'
 
+import { logSupabaseError } from './logging'
+
 type TripInsert = Database['public']['Tables']['trips']['Insert']
 type TripUpdate = Database['public']['Tables']['trips']['Update']
 
-/**
- * Get all trips the current user is a participant in
- *
- * Returns trips sorted by start_date (descending - upcoming trips first).
- * Includes participant count and owner information.
- *
- * @param supabase - Authenticated Supabase client
- * @returns Array of trips with participants
- * @throws Error if query fails
- */
-export async function getUserTrips(supabase: SupabaseClient<Database>) {
-  const { data, error } = await supabase
-    .from('trips')
-    .select(
-      `
+const TRIP_LIST_SELECT = `
       *,
       owner:profiles!owner_id (
         id,
@@ -42,33 +30,8 @@ export async function getUserTrips(supabase: SupabaseClient<Database>) {
         )
       )
     `
-    )
-    .order('start_date', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching user trips:', error)
-    throw new Error(`Failed to fetch trips: ${error.message}`)
-  }
-
-  return data
-}
-
-/**
- * Get a single trip by ID
- *
- * Returns full trip details including owner and all participants.
- * RLS ensures user can only access trips they're a participant in.
- *
- * @param supabase - Authenticated Supabase client
- * @param tripId - UUID of the trip
- * @returns Trip with owner and participants
- * @throws Error if trip not found or user lacks access
- */
-export async function getTripById(supabase: SupabaseClient<Database>, tripId: string) {
-  const { data, error } = await supabase
-    .from('trips')
-    .select(
-      `
+const TRIP_DETAIL_SELECT = `
       *,
       owner:profiles!owner_id (
         id,
@@ -90,12 +53,55 @@ export async function getTripById(supabase: SupabaseClient<Database>, tripId: st
         )
       )
     `
-    )
+
+/**
+ * Get all trips the current user is a participant in
+ *
+ * Returns trips sorted by start_date (descending - upcoming trips first).
+ * Includes participant count and owner information.
+ *
+ * @param supabase - Authenticated Supabase client
+ * @returns Array of trips with participants
+ * @throws Error if query fails
+ */
+export async function getUserTrips(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase
+    .from('trips')
+    .select(TRIP_LIST_SELECT)
+    .order('start_date', { ascending: false })
+
+  if (error) {
+    logSupabaseError(error, { operation: 'getUserTrips', select: TRIP_LIST_SELECT })
+    throw new Error(`Failed to fetch trips: ${error.message}`)
+  }
+
+  return data
+}
+
+/**
+ * Get a single trip by ID
+ *
+ * Returns full trip details including owner and all participants.
+ * RLS ensures user can only access trips they're a participant in.
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param tripId - UUID of the trip
+ * @returns Trip with owner and participants
+ * @throws Error if trip not found or user lacks access
+ */
+export async function getTripById(supabase: SupabaseClient<Database>, tripId: string) {
+  const { data, error } = await supabase
+    .from('trips')
+    .select(TRIP_DETAIL_SELECT)
     .eq('id', tripId)
     .single()
 
   if (error) {
-    console.error('Error fetching trip:', error)
+    logSupabaseError(error, {
+      operation: 'getTripById',
+      tripId,
+      select: TRIP_DETAIL_SELECT,
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you do not have access')
     }
@@ -127,7 +133,11 @@ export async function createTrip(supabase: SupabaseClient<Database>, trip: TripI
     .single()
 
   if (tripError) {
-    console.error('Error creating trip:', tripError)
+    logSupabaseError(tripError, {
+      operation: 'createTrip',
+      ownerId: trip.owner_id || undefined,
+      select: 'insert into trips returning *',
+    })
     if (tripError.code === '23514') {
       // Check constraint violation
       throw new Error('Invalid date range: end date must be on or after start date')
@@ -145,7 +155,12 @@ export async function createTrip(supabase: SupabaseClient<Database>, trip: TripI
   })
 
   if (participantError) {
-    console.error('Error adding owner as participant:', participantError)
+    logSupabaseError(participantError, {
+      operation: 'createTrip.addOwnerParticipant',
+      tripId: tripData.id,
+      ownerId: trip.owner_id || undefined,
+      select: 'insert into trip_participants returning *',
+    })
     // Try to clean up the trip if participant insert fails
     await supabase.from('trips').delete().eq('id', tripData.id)
     throw new Error(`Failed to create trip: ${participantError.message}`)
@@ -182,7 +197,11 @@ export async function updateTrip(
     .single()
 
   if (error) {
-    console.error('Error updating trip:', error)
+    logSupabaseError(error, {
+      operation: 'updateTrip',
+      tripId,
+      select: 'update trips returning *',
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you are not the owner')
     }
@@ -213,7 +232,11 @@ export async function deleteTrip(supabase: SupabaseClient<Database>, tripId: str
   const { error } = await supabase.from('trips').delete().eq('id', tripId)
 
   if (error) {
-    console.error('Error deleting trip:', error)
+    logSupabaseError(error, {
+      operation: 'deleteTrip',
+      tripId,
+      select: 'delete from trips',
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you are not the owner')
     }

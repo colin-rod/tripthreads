@@ -36,6 +36,7 @@ export type {
 
 // Re-export lib modules for backwards compatibility
 export * from '../lib/supabase/queries/trips'
+export * from '../lib/supabase/queries/logging'
 export * from '../lib/supabase/queries/users'
 export * from '../lib/supabase/queries/invites'
 export * from '../lib/validation/trip'

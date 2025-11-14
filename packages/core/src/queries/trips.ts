@@ -8,6 +8,8 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '../types/database'
 
+import { logSupabaseError } from '../../../shared/lib/supabase/queries/logging'
+
 type TripInsert = Database['public']['Tables']['trips']['Insert']
 type TripUpdate = Database['public']['Tables']['trips']['Update']
 
@@ -93,7 +95,7 @@ export async function getUserTrips(
     .order('start_date', { ascending: false })
 
   if (error) {
-    console.error('Error fetching user trips:', error)
+    logSupabaseError(error, { operation: 'getUserTrips', select: TRIP_LIST_SELECT })
     throw new Error(`Failed to fetch trips: ${error.message}`)
   }
 
@@ -122,7 +124,11 @@ export async function getTripById(
     .single()
 
   if (error) {
-    console.error('Error fetching trip:', error)
+    logSupabaseError(error, {
+      operation: 'getTripById',
+      tripId,
+      select: TRIP_DETAIL_SELECT,
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you do not have access')
     }
@@ -151,7 +157,11 @@ export async function createTrip(supabase: SupabaseClient<Database>, trip: TripI
     .single()
 
   if (tripError) {
-    console.error('Error creating trip:', tripError)
+    logSupabaseError(tripError, {
+      operation: 'createTrip',
+      ownerId: trip.owner_id || undefined,
+      select: 'insert into trips returning *',
+    })
     if (tripError.code === '23514') {
       // Check constraint violation
       throw new Error('Invalid date range: end date must be on or after start date')
@@ -191,7 +201,11 @@ export async function updateTrip(
     .single()
 
   if (error) {
-    console.error('Error updating trip:', error)
+    logSupabaseError(error, {
+      operation: 'updateTrip',
+      tripId,
+      select: 'update trips returning *',
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you are not the owner')
     }
@@ -222,7 +236,11 @@ export async function deleteTrip(supabase: SupabaseClient<Database>, tripId: str
   const { error } = await supabase.from('trips').delete().eq('id', tripId)
 
   if (error) {
-    console.error('Error deleting trip:', error)
+    logSupabaseError(error, {
+      operation: 'deleteTrip',
+      tripId,
+      select: 'delete from trips',
+    })
     if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you are not the owner')
     }
