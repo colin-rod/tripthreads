@@ -182,10 +182,8 @@ export async function getTripById(
 /**
  * Create a new trip
  *
- * Automatically adds the owner as a participant with 'owner' role.
- * This is a two-step operation:
- * 1. Insert trip
- * 2. Insert trip_participant record for owner
+ * Automatically adds the owner as a participant with 'owner' role via database trigger.
+ * The on_trip_created trigger calls create_trip_owner_participant() to handle this.
  *
  * @param supabase - Authenticated Supabase client
  * @param trip - Trip data (owner_id must match auth.uid())
@@ -193,7 +191,6 @@ export async function getTripById(
  * @throws Error if creation fails or RLS blocks operation
  */
 export async function createTrip(supabase: SupabaseClient<Database>, trip: TripInsert) {
-  // Step 1: Insert trip
   const { data: tripData, error: tripError } = await supabase
     .from('trips')
     .insert(trip)
@@ -209,22 +206,7 @@ export async function createTrip(supabase: SupabaseClient<Database>, trip: TripI
     throw new Error(`Failed to create trip: ${tripError.message}`)
   }
 
-  // Step 2: Add owner as participant
-  const { error: participantError } = await supabase.from('trip_participants').insert({
-    trip_id: tripData.id,
-    user_id: trip.owner_id,
-    role: 'owner',
-    invited_by: trip.owner_id,
-    joined_at: new Date().toISOString(),
-  })
-
-  if (participantError) {
-    console.error('Error adding owner as participant:', participantError)
-    // Try to clean up the trip if participant insert fails
-    await supabase.from('trips').delete().eq('id', tripData.id)
-    throw new Error(`Failed to create trip: ${participantError.message}`)
-  }
-
+  // Owner is automatically added as participant by database trigger
   return tripData
 }
 
