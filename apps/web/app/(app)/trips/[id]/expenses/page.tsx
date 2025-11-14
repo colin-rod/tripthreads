@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserExpensesForTrip, getTripById, getSettlementSummary } from '@tripthreads/core'
 import { ExpenseListView } from '@/components/features/expenses'
 import { SettlementSummary } from '@/components/features/expenses/settlements'
-import { EmptyExpenses } from '@/components/empty-state'
+import { StaticEmptyExpenses } from '@/components/empty-state-static'
 
 interface TripExpensesPageProps {
   params: Promise<{
@@ -121,7 +121,7 @@ export default async function TripExpensesPage({ params }: TripExpensesPageProps
             />
           </>
         ) : (
-          <EmptyExpenses />
+          <StaticEmptyExpenses />
         )}
       </div>
     </div>
