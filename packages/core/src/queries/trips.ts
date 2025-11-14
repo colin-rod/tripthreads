@@ -5,12 +5,11 @@
  * All operations respect Row-Level Security (RLS) policies.
  */
 
-import { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '../types/database'
 
 type TripInsert = Database['public']['Tables']['trips']['Insert']
 type TripUpdate = Database['public']['Tables']['trips']['Update']
-type RelationshipTarget = 'profiles' | 'users'
 
 // Return types for trip queries
 type UserProfile = {
@@ -34,9 +33,9 @@ export type TripWithParticipants = Database['public']['Tables']['trips']['Row'] 
   trip_participants: TripParticipant[]
 }
 
-const buildTripListSelect = (relationship: RelationshipTarget) => `
+const TRIP_LIST_SELECT = `
       *,
-      owner:${relationship}!owner_id (
+      owner:profiles!owner_id (
         id,
         full_name,
         avatar_url
@@ -44,7 +43,7 @@ const buildTripListSelect = (relationship: RelationshipTarget) => `
       trip_participants (
         id,
         role,
-        user:${relationship}!user_id (
+        user:profiles!user_id (
           id,
           full_name,
           avatar_url
@@ -52,9 +51,9 @@ const buildTripListSelect = (relationship: RelationshipTarget) => `
       )
     `
 
-const buildTripDetailSelect = (relationship: RelationshipTarget) => `
+const TRIP_DETAIL_SELECT = `
       *,
-      owner:${relationship}!owner_id (
+      owner:profiles!owner_id (
         id,
         full_name,
         avatar_url,
@@ -66,7 +65,7 @@ const buildTripDetailSelect = (relationship: RelationshipTarget) => `
         joined_at,
         join_start_date,
         join_end_date,
-        user:${relationship}!user_id (
+        user:profiles!user_id (
           id,
           full_name,
           avatar_url,
@@ -74,14 +73,6 @@ const buildTripDetailSelect = (relationship: RelationshipTarget) => `
         )
       )
     `
-
-const shouldFallbackToUsers = (error: PostgrestError | null, attempted: RelationshipTarget) => {
-  if (!error || attempted === 'users') {
-    return false
-  }
-
-  return error.code === 'PGRST200'
-}
 
 /**
  * Get all trips the current user is a participant in
@@ -96,34 +87,17 @@ const shouldFallbackToUsers = (error: PostgrestError | null, attempted: Relation
 export async function getUserTrips(
   supabase: SupabaseClient<Database>
 ): Promise<TripWithParticipants[]> {
-  const attempt = await supabase
+  const { data, error } = await supabase
     .from('trips')
-    .select(buildTripListSelect('profiles'))
+    .select(TRIP_LIST_SELECT)
     .order('start_date', { ascending: false })
 
-  if (attempt.error && shouldFallbackToUsers(attempt.error, 'profiles')) {
-    console.warn(
-      'getUserTrips: falling back to public.users relationship because the profiles relationship may not be available yet'
-    )
-    const fallback = await supabase
-      .from('trips')
-      .select(buildTripListSelect('users'))
-      .order('start_date', { ascending: false })
-
-    if (!fallback.error) {
-      return fallback.data as unknown as TripWithParticipants[]
-    }
-
-    console.error('Error fetching user trips:', fallback.error)
-    throw new Error(`Failed to fetch trips: ${fallback.error.message}`)
+  if (error) {
+    console.error('Error fetching user trips:', error)
+    throw new Error(`Failed to fetch trips: ${error.message}`)
   }
 
-  if (attempt.error) {
-    console.error('Error fetching user trips:', attempt.error)
-    throw new Error(`Failed to fetch trips: ${attempt.error.message}`)
-  }
-
-  return attempt.data as unknown as TripWithParticipants[]
+  return data as unknown as TripWithParticipants[]
 }
 
 /**
@@ -141,42 +115,21 @@ export async function getTripById(
   supabase: SupabaseClient<Database>,
   tripId: string
 ): Promise<TripWithParticipants> {
-  const attempt = await supabase
+  const { data, error } = await supabase
     .from('trips')
-    .select(buildTripDetailSelect('profiles'))
+    .select(TRIP_DETAIL_SELECT)
     .eq('id', tripId)
     .single()
 
-  if (attempt.error && shouldFallbackToUsers(attempt.error, 'profiles')) {
-    console.warn(
-      'getTripById: falling back to public.users relationship because the profiles relationship may not be available yet'
-    )
-    const fallback = await supabase
-      .from('trips')
-      .select(buildTripDetailSelect('users'))
-      .eq('id', tripId)
-      .single()
-
-    if (!fallback.error) {
-      return fallback.data as unknown as TripWithParticipants
-    }
-
-    console.error('Error fetching trip:', fallback.error)
-    if (fallback.error.code === 'PGRST116') {
+  if (error) {
+    console.error('Error fetching trip:', error)
+    if (error.code === 'PGRST116') {
       throw new Error('Trip not found or you do not have access')
     }
-    throw new Error(`Failed to fetch trip: ${fallback.error.message}`)
+    throw new Error(`Failed to fetch trip: ${error.message}`)
   }
 
-  if (attempt.error) {
-    console.error('Error fetching trip:', attempt.error)
-    if (attempt.error.code === 'PGRST116') {
-      throw new Error('Trip not found or you do not have access')
-    }
-    throw new Error(`Failed to fetch trip: ${attempt.error.message}`)
-  }
-
-  return attempt.data as unknown as TripWithParticipants
+  return data as unknown as TripWithParticipants
 }
 
 /**
