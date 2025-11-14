@@ -32,21 +32,18 @@ export async function createTrip(input: Omit<CreateTripInput, 'owner_id'>) {
     allCookies.map(c => ({ name: c.name, hasValue: !!c.value }))
   )
 
-  // Get authenticated session
+  // Get authenticated user (validates token and sets auth context for RLS)
   const {
-    data: { session },
+    data: { user },
     error: authError,
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getUser()
 
-  console.log('Session:', session ? 'exists' : 'null')
-  console.log('User:', session?.user?.id)
+  console.log('User:', user?.id)
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     console.error('Auth error in createTrip:', authError)
     throw new Error('You must be logged in to create a trip')
   }
-
-  const user = session.user
 
   // Create trip with current user as owner
   const tripData: CreateTripInput = {
