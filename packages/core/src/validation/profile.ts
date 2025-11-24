@@ -56,10 +56,34 @@ export const completeProfileSchema = z.object({
 export const updateProfileSchema = completeProfileSchema.partial()
 
 /**
+ * Schema for password change
+ *
+ * Validates:
+ * - Current password: Required
+ * - New password: Min 8 chars, at least one letter and one number
+ * - Confirm password: Must match new password
+ */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+/**
  * Type inference from schemas
  */
 export type CompleteProfileInput = z.infer<typeof completeProfileSchema>
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
 /**
  * Validate profile completion data
@@ -79,4 +103,14 @@ export function validateCompleteProfile(data: unknown) {
  */
 export function validateUpdateProfile(data: unknown) {
   return updateProfileSchema.safeParse(data)
+}
+
+/**
+ * Validate password change data
+ *
+ * @param data - Password change data to validate
+ * @returns Validation result with data or error
+ */
+export function validateChangePassword(data: unknown) {
+  return changePasswordSchema.safeParse(data)
 }

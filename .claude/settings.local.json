@@ -39,7 +39,8 @@
       "Bash(supabase link:*)",
       "Bash(curl:*)",
       "Bash(supabase gen types:*)",
-      "Bash(packages/core/src/types/database.ts)"
+      "Bash(packages/core/src/types/database.ts)",
+      "Bash(npx shadcn@latest add:*)"
     ],
     "deny": [],
     "ask": []
