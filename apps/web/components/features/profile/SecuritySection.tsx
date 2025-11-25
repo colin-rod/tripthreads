@@ -3,7 +3,8 @@
  *
  * Handles account security settings:
  * - Password change (with current password verification)
- * - Delete account (placeholder for future implementation)
+ * - Data export (GDPR compliance)
+ * - Account deletion (GDPR compliance)
  */
 
 'use client'
@@ -11,13 +12,15 @@
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Lock, Trash2 } from 'lucide-react'
+import { Lock, Trash2, FileJson, FileSpreadsheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator'
+import { DeleteAccountDialog } from './DeleteAccountDialog'
 import { changePassword } from '@/app/actions/profile'
+import { exportUserData } from '@/app/actions/data-export'
 import {
   changePasswordSchema,
   type ChangePasswordInput,
@@ -31,6 +34,8 @@ export function SecuritySection({ onUpdate }: SecuritySectionProps) {
   const { toast } = useToast()
   const [isChangingPassword, setIsChangingPassword] = React.useState(false)
   const [newPasswordValue, setNewPasswordValue] = React.useState('')
+  const [isExportingData, setIsExportingData] = React.useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 
   const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
@@ -60,6 +65,37 @@ export function SecuritySection({ onUpdate }: SecuritySectionProps) {
       })
     } finally {
       setIsChangingPassword(false)
+    }
+  }
+
+  const handleExportData = async (format: 'json' | 'csv') => {
+    try {
+      setIsExportingData(true)
+      const result = await exportUserData(format)
+
+      // Create blob and trigger download
+      const blob = new Blob([result.data], { type: result.mimeType })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = result.filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Data exported',
+        description: `Your data has been exported as ${format.toUpperCase()}.`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to export data',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsExportingData(false)
     }
   }
 
@@ -133,7 +169,36 @@ export function SecuritySection({ onUpdate }: SecuritySectionProps) {
         </form>
       </div>
 
-      {/* Delete account section (placeholder) */}
+      {/* Data export section (GDPR) */}
+      <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-800">
+        <div>
+          <h4 className="text-sm font-medium mb-1">Export Your Data</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Download all your data in JSON or CSV format (GDPR compliant)
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => handleExportData('json')}
+            disabled={isExportingData}
+          >
+            <FileJson className="h-4 w-4 mr-2" />
+            Export as JSON
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleExportData('csv')}
+            disabled={isExportingData}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Export as CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Delete account section */}
       <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-800">
         <div>
           <h4 className="text-sm font-medium mb-1 text-red-600">Delete Account</h4>
@@ -142,15 +207,12 @@ export function SecuritySection({ onUpdate }: SecuritySectionProps) {
           </p>
         </div>
 
-        <Button
-          variant="destructive"
-          disabled
-          className="opacity-50 cursor-not-allowed"
-          title="Account deletion coming soon"
-        >
+        <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete Account (Coming Soon)
+          Delete Account
         </Button>
+
+        <DeleteAccountDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} />
       </div>
     </div>
   )

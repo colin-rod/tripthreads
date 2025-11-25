@@ -79,11 +79,45 @@ export const changePasswordSchema = z
   })
 
 /**
+ * Schema for data export
+ *
+ * Validates:
+ * - Format: 'json' or 'csv'
+ */
+export const dataExportSchema = z.object({
+  format: z.enum(['json', 'csv'], {
+    errorMap: () => ({ message: 'Format must be either JSON or CSV' }),
+  }),
+})
+
+/**
+ * Schema for account deletion
+ *
+ * Validates:
+ * - Current password: Required for verification
+ * - Confirmation: User must acknowledge permanence
+ * - Trip handling: What to do with owned trips (optional, set during flow)
+ */
+export const deleteAccountSchema = z.object({
+  currentPassword: z.string().min(1, 'Password is required to delete your account'),
+  confirmDeletion: z.boolean().refine(val => val === true, {
+    message: 'You must confirm that you understand this action is permanent',
+  }),
+  tripDeletionStrategy: z
+    .enum(['transfer', 'delete'], {
+      errorMap: () => ({ message: 'Invalid trip deletion strategy' }),
+    })
+    .optional(),
+})
+
+/**
  * Type inference from schemas
  */
 export type CompleteProfileInput = z.infer<typeof completeProfileSchema>
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
+export type DataExportInput = z.infer<typeof dataExportSchema>
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>
 
 /**
  * Validate profile completion data
@@ -113,4 +147,24 @@ export function validateUpdateProfile(data: unknown) {
  */
 export function validateChangePassword(data: unknown) {
   return changePasswordSchema.safeParse(data)
+}
+
+/**
+ * Validate data export request
+ *
+ * @param data - Export request data to validate
+ * @returns Validation result with data or error
+ */
+export function validateDataExport(data: unknown) {
+  return dataExportSchema.safeParse(data)
+}
+
+/**
+ * Validate account deletion request
+ *
+ * @param data - Account deletion data to validate
+ * @returns Validation result with data or error
+ */
+export function validateDeleteAccount(data: unknown) {
+  return deleteAccountSchema.safeParse(data)
 }
