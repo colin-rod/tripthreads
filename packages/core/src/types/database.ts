@@ -919,6 +919,7 @@ export type Database = {
           join_end_date: string | null
           join_start_date: string | null
           joined_at: string
+          notification_preferences: Json | null
           role: string
           trip_id: string
           user_id: string
@@ -930,6 +931,7 @@ export type Database = {
           join_end_date?: string | null
           join_start_date?: string | null
           joined_at?: string
+          notification_preferences?: Json | null
           role?: string
           trip_id: string
           user_id: string
@@ -941,6 +943,7 @@ export type Database = {
           join_end_date?: string | null
           join_start_date?: string | null
           joined_at?: string
+          notification_preferences?: Json | null
           role?: string
           trip_id?: string
           user_id?: string

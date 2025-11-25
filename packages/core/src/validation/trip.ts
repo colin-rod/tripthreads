@@ -114,10 +114,39 @@ export const updateTripSchema = z
   )
 
 /**
+ * Schema for trip notification preferences
+ *
+ * Validates per-trip notification preferences for a participant.
+ * Each event type can be:
+ * - null = inherit from global preferences
+ * - true = enable for this trip
+ * - false = disable for this trip
+ *
+ * Event types:
+ * - invites: Trip invitation notifications
+ * - itinerary: Itinerary change notifications (flights, stays, activities)
+ * - expenses: Expense creation/update notifications
+ * - photos: Photo upload notifications
+ * - chat: Chat message notifications
+ * - settlements: Settlement status change notifications
+ */
+export const tripNotificationPreferencesSchema = z
+  .object({
+    invites: z.boolean().nullable().optional(),
+    itinerary: z.boolean().nullable().optional(),
+    expenses: z.boolean().nullable().optional(),
+    photos: z.boolean().nullable().optional(),
+    chat: z.boolean().nullable().optional(),
+    settlements: z.boolean().nullable().optional(),
+  })
+  .strict() // Disallow extra keys
+
+/**
  * Type inference from schemas
  */
 export type CreateTripInput = z.infer<typeof createTripSchema>
 export type UpdateTripInput = z.infer<typeof updateTripSchema>
+export type TripNotificationPreferences = z.infer<typeof tripNotificationPreferencesSchema>
 
 /**
  * Validate trip creation data
@@ -137,4 +166,14 @@ export function validateCreateTrip(data: unknown) {
  */
 export function validateUpdateTrip(data: unknown) {
   return updateTripSchema.safeParse(data)
+}
+
+/**
+ * Validate trip notification preferences
+ *
+ * @param data - Notification preferences to validate
+ * @returns Validation result with data or error
+ */
+export function validateTripNotificationPreferences(data: unknown) {
+  return tripNotificationPreferencesSchema.safeParse(data)
 }

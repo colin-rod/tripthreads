@@ -208,10 +208,12 @@ interface User {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `email`
 
 **RLS Policies:**
+
 - Users can read their own data
 - Users can update their own profile
 - Service role can manage all users
@@ -238,11 +240,13 @@ interface Trip {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `owner_id`
 - Index on `(start_date, end_date)` for date range queries
 
 **RLS Policies:**
+
 - Users can only see trips they're participants in
 - Only owners can delete trips
 - Participants can update trip details (based on role)
@@ -263,20 +267,41 @@ interface TripParticipant {
   invited_by: string // FK → users.id
   can_view_start_date?: string // ISO 8601 (partial joiner visibility)
   can_view_end_date?: string // ISO 8601 (partial joiner visibility)
+  notification_preferences?: {
+    invites?: boolean | null // Trip invitations (null = inherit from global)
+    itinerary?: boolean | null // Itinerary changes (null = inherit from global)
+    expenses?: boolean | null // Expense updates (null = inherit from global)
+    photos?: boolean | null // Photo uploads (null = inherit from global)
+    chat?: boolean | null // Chat messages (null = inherit from global)
+    settlements?: boolean | null // Settlement status changes (null = inherit from global)
+  } | null // JSONB column, NULL = inherit all from global profiles.notification_preferences
   created_at: string
 }
 ```
 
+**Notification Preferences:**
+
+- Stored as JSONB column for flexibility
+- `null` (or missing key) = inherit from global `profiles.notification_preferences`
+- `true` = enable for this specific trip (overrides global)
+- `false` = disable for this specific trip (overrides global)
+- Event types: invites, itinerary, expenses, photos, chat, settlements
+- Delivery channels (email/push) inherit from global settings
+
 **Indexes:**
+
 - Primary key on `id`
 - Unique index on `(trip_id, user_id)`
 - Index on `user_id`
 - Index on `trip_id`
+- GIN index on `notification_preferences` (for JSONB queries)
 
 **RLS Policies:**
+
 - Users can see participants of trips they belong to
 - Only trip owners can modify participant roles
 - Participants can leave trips (delete their own participation)
+- Participants can update their own notification preferences
 
 ---
 
@@ -299,12 +324,14 @@ interface TripInvite {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `invitee_email`
 - Index on `status`
 
 **RLS Policies:**
+
 - Trip participants can view invites for their trips
 - Only owners/participants can create invites
 - Invitees can view their own invites
@@ -329,12 +356,14 @@ interface AccessRequest {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `requester_id`
 - Unique index on `(trip_id, requester_id)` to prevent duplicate requests
 
 **RLS Policies:**
+
 - Trip owners can view all access requests for their trips
 - Requesters can view their own access requests
 - Trip owners can update request status (approve/reject)
@@ -368,12 +397,14 @@ interface ItineraryItem {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `(start_time, end_time)` for timeline queries
 - Index on `type`
 
 **RLS Policies:**
+
 - Participants see items from their join date forward
 - Viewers see all items (read-only)
 - Participants can create/edit/delete items
@@ -404,6 +435,7 @@ interface Expense {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `payer_id`
@@ -411,6 +443,7 @@ interface Expense {
 - Index on `category` for filtering
 
 **RLS Policies:**
+
 - Participants see expenses they're involved in
 - Owners see all expenses
 - Viewers cannot see expenses
@@ -435,12 +468,14 @@ interface ExpenseParticipant {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Unique index on `(expense_id, user_id)`
 - Index on `user_id`
 - Index on `expense_id`
 
 **RLS Policies:**
+
 - Users can see their own expense participations
 - Trip participants can see all expense participants for trip expenses
 
@@ -466,6 +501,7 @@ interface Settlement {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `from_user_id`
@@ -473,6 +509,7 @@ interface Settlement {
 - Index on `status`
 
 **RLS Policies:**
+
 - Users can see settlements they're involved in (from or to)
 - Trip owners can see all settlements for their trips
 - Only involved users can update settlement status
@@ -496,11 +533,13 @@ interface FxRate {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Unique index on `(date, from_currency, to_currency)`
 - Index on `date` for temporal queries
 
 **RLS Policies:**
+
 - Public read access (FX rates are public data)
 - Only service role can insert/update
 
@@ -522,12 +561,14 @@ interface ChatMessage {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `user_id`
 - Index on `created_at` for chronological display
 
 **RLS Policies:**
+
 - Trip participants can read messages for their trips
 - Trip participants can create messages
 - Only message author can update their own messages
@@ -549,11 +590,13 @@ interface MessageReaction {
 ```
 
 **Indexes:**
+
 - Primary key on `id`
 - Unique index on `(message_id, user_id, emoji)` to prevent duplicate reactions
 - Index on `message_id`
 
 **RLS Policies:**
+
 - Trip participants can view reactions on messages in their trips
 - Users can create their own reactions
 - Users can delete their own reactions
@@ -579,12 +622,14 @@ interface MediaFile {
 ```
 
 **Planned Indexes:**
+
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `user_id`
 - Index on `date_taken` for chronological display
 
 **Planned RLS Policies:**
+
 - All trip participants see all photos
 - Viewers can see photos (read-only)
 - Participants can upload photos
@@ -607,11 +652,13 @@ interface PushToken {
 ```
 
 **Planned Indexes:**
+
 - Primary key on `id`
 - Unique index on `(user_id, token)` to prevent duplicates
 - Index on `user_id`
 
 **Planned RLS Policies:**
+
 - Users can manage their own push tokens
 - Service role can read all tokens for sending notifications
 
@@ -655,16 +702,19 @@ chat_messages
 All tables use RLS to enforce access control:
 
 ### Trips
+
 - Users can only see trips they're participants in
 - Only owners can delete trips
 
 ### Itinerary Items
+
 - Participants see items from their join date forward
 - Viewers see all items (read-only)
 - Participants can create/edit items
 - Partial joiners only see items within their visibility date range
 
 ### Expenses
+
 - Participants see expenses they're involved in
 - Owners see all expenses
 - Viewers cannot see expenses
@@ -672,11 +722,13 @@ All tables use RLS to enforce access control:
 - Expense proration: Partial joiners' shares are automatically adjusted based on their join/leave dates
 
 ### Chat Messages
+
 - Trip participants can read all messages in their trips
 - Participants can create messages
 - Authors can edit/delete their own messages
 
 ### Media Files [Phase 3]
+
 - All trip participants see all photos
 - Viewers can see photos (read-only)
 - Participants can upload photos
@@ -717,6 +769,7 @@ All tables use RLS to enforce access control:
 ### Phase 3: Media & Pro Features
 
 📋 **Planned:**
+
 - `media_files` table for photo/video storage
 - Stripe integration fields (customer_id, subscription_id)
 - Pro tier limits enforcement
@@ -724,12 +777,14 @@ All tables use RLS to enforce access control:
 ### Phase 4: Push Notifications & Recap
 
 📋 **Planned:**
+
 - `push_tokens` table for notification delivery
 - `trip_recaps` table for PDF generation metadata
 
 ### Phase 5: Post-MVP
 
 📋 **Potential:**
+
 - Real-time presence tracking
 - Task/checklist tables
 - Poll/voting tables
@@ -742,11 +797,13 @@ All tables use RLS to enforce access control:
 ### Implemented Optimizations
 
 ✅ **Indexes:**
+
 - All foreign keys have indexes
 - Composite indexes on common query patterns (e.g., `trip_id + date`)
 - Unique constraints prevent duplicate data
 
 ✅ **RLS Optimization:**
+
 - Recent fixes eliminated infinite recursion
 - Efficient date range checks for partial joiners
 - Minimized number of policy checks per query
@@ -754,6 +811,7 @@ All tables use RLS to enforce access control:
 ### Future Optimizations
 
 📋 **Planned:**
+
 - Materialized views for complex ledger calculations
 - Partitioning for large media tables
 - Redis caching for frequently accessed data (trip metadata, user profiles)
@@ -778,6 +836,7 @@ All tables use RLS to enforce access control:
 ---
 
 **For more documentation:**
+
 - [TESTING.md](TESTING.md) - Testing strategy and examples
 - [CICD.md](CICD.md) - Deployment pipeline
 - [CLAUDE.md](../CLAUDE.md) - Main project documentation

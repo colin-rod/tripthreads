@@ -12,6 +12,9 @@ import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
+import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
+import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
+import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 
 interface TripSettingsPageProps {
   params: Promise<{
@@ -49,6 +52,27 @@ export default async function TripSettingsPage({ params }: TripSettingsPageProps
     ...p,
     role: p.role as TripRole,
   }))
+
+  // Fetch current participant's notification preferences
+  const { data: currentParticipant } = await supabase
+    .from('trip_participants')
+    .select('notification_preferences')
+    .eq('trip_id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  const tripNotificationPreferences =
+    currentParticipant?.notification_preferences as TripNotificationPreferences | null
+
+  // Fetch user's global notification preferences
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('notification_preferences')
+    .eq('id', user.id)
+    .single()
+
+  const globalNotificationPreferences = (profile?.notification_preferences ||
+    {}) as GlobalNotificationPreferences
 
   return (
     <div className="container mx-auto h-full max-w-7xl overflow-y-auto p-6">
@@ -104,6 +128,20 @@ export default async function TripSettingsPage({ params }: TripSettingsPageProps
 
         {/* Pending Invitations (owners only) */}
         {isOwner && <PendingInvitesList tripId={trip.id} isOwner={isOwner} />}
+
+        {/* Notification Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Preferences</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TripNotificationPreferencesSection
+              tripId={trip.id}
+              tripPreferences={tripNotificationPreferences}
+              globalPreferences={globalNotificationPreferences}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
