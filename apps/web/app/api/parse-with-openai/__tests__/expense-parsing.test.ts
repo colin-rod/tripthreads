@@ -200,8 +200,8 @@ describe('Expense Parsing Integration Tests', () => {
         expect(payload.success).toBe(true)
         expect(payload.expenseResult.amount).toBe(testCase.expectedResponse.amount)
 
-        if (testCase.expectedResponse.paidBy) {
-          expect(payload.expenseResult.paidBy).toBe(testCase.expectedResponse.paidBy)
+        if (testCase.expectedResponse.payer) {
+          expect(payload.expenseResult.payer).toBe(testCase.expectedResponse.payer)
         }
       })
     })

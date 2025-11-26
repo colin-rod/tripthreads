@@ -44,8 +44,6 @@ const mockUser: User = {
   stripe_customer_id: null,
   notification_preferences: null,
   profile_completed_at: new Date().toISOString(),
-  subscription_currency: null,
-  subscription_price_id: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 }

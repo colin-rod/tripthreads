@@ -163,7 +163,7 @@ describe('CreateTripDialog', () => {
 
     const submitButton = screen.getByRole('button', { name: /create trip/i })
     await waitFor(() => expect(mockGetUser).toHaveBeenCalledTimes(1))
-    await waitFor(() => expect(submitButton).not.toBeDisabled())
+    await waitFor(() => expect(submitButton.hasAttribute('disabled')).toBe(false))
 
     const nameInput = screen.getByLabelText(/trip name/i)
     await user.type(nameInput, 'Alpine Adventure')
