@@ -181,11 +181,12 @@ describe('Expense and Settlement Integration Tests', () => {
 
       expect(settlements).toHaveLength(1)
       expect(settlements[0]).toEqual({
-        from_id: 'user-2',
-        from_name: 'Bob',
-        to_id: 'user-1',
-        to_name: 'Alice',
+        from_user_id: 'user-2',
+        from_user_name: 'Bob',
+        to_user_id: 'user-1',
+        to_user_name: 'Alice',
         amount: 3000,
+        currency: 'USD',
       })
     })
 

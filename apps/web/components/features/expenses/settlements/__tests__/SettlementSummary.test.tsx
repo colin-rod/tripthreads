@@ -14,7 +14,9 @@ import type { SettlementSummary as SettlementSummaryType } from '@tripthreads/co
 
 // Mock the server action
 jest.mock('@/app/actions/settlements', () => ({
-  markSettlementAsPaidAction: jest.fn().mockResolvedValue({ success: true }),
+  markSettlementAsPaidAction: jest
+    .fn<() => Promise<{ success: boolean; error?: string }>>()
+    .mockResolvedValue({ success: true }),
 }))
 
 // Mock useToast

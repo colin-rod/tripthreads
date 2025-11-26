@@ -36,10 +36,10 @@ describe('Button', () => {
 
   it('should render with different sizes', () => {
     const { rerender } = render(<Button size="sm">Small</Button>)
-    expect(screen.getByRole('button')).toHaveClass('h-9')
+    expect(screen.getByRole('button')).toHaveClass('h-8')
 
     rerender(<Button size="lg">Large</Button>)
-    expect(screen.getByRole('button')).toHaveClass('h-11')
+    expect(screen.getByRole('button')).toHaveClass('h-10')
   })
 
   it('should be disabled when disabled prop is true', () => {

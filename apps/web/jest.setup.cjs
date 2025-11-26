@@ -3,6 +3,8 @@ require('@testing-library/jest-dom')
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('jest-canvas-mock')
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+require('whatwg-fetch')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadEnvConfig } = require('@next/env')
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path')
