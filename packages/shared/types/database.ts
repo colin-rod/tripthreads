@@ -742,9 +742,11 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           full_name: string | null
           id: string
+          is_deleted: boolean
           notification_preferences: Json | null
           plan: string
           plan_expires_at: string | null
@@ -755,9 +757,11 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           full_name?: string | null
           id: string
+          is_deleted?: boolean
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
@@ -768,9 +772,11 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          is_deleted?: boolean
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
@@ -919,6 +925,7 @@ export type Database = {
           join_end_date: string | null
           join_start_date: string | null
           joined_at: string
+          notification_preferences: Json | null
           role: string
           trip_id: string
           user_id: string
@@ -930,6 +937,7 @@ export type Database = {
           join_end_date?: string | null
           join_start_date?: string | null
           joined_at?: string
+          notification_preferences?: Json | null
           role?: string
           trip_id: string
           user_id: string
@@ -941,6 +949,7 @@ export type Database = {
           join_end_date?: string | null
           join_start_date?: string | null
           joined_at?: string
+          notification_preferences?: Json | null
           role?: string
           trip_id?: string
           user_id?: string
@@ -1021,6 +1030,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymize_user_account: {
+        Args: { p_trip_deletion_strategy?: string; p_user_id: string }
+        Returns: Json
+      }
       calculate_days_joined: {
         Args: { p_participant_id: string }
         Returns: number
@@ -1039,6 +1052,17 @@ export type Database = {
       }
       generate_invite_token: { Args: never; Returns: string }
       get_invite_with_trip_details: { Args: { p_token: string }; Returns: Json }
+      get_owned_trips_for_deletion: {
+        Args: { p_user_id: string }
+        Returns: {
+          can_transfer: boolean
+          oldest_participant_id: string
+          oldest_participant_name: string
+          participant_count: number
+          trip_id: string
+          trip_name: string
+        }[]
+      }
       get_user_trip_join_date: {
         Args: { p_trip_id: string; p_user_id: string }
         Returns: string
