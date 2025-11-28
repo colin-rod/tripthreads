@@ -1298,6 +1298,512 @@ posthog.capture('subscription_completed', {
 
 ---
 
+## Measurement Funnels
+
+TripThreads tracks 6 key user funnels to measure product success and identify optimization opportunities.
+
+---
+
+### 1. User Acquisition Funnel
+
+**Goal:** Convert visitors to registered users
+
+**Steps:**
+
+1. **Landing Page Visit** (not tracked - external analytics)
+2. **Signup Page Viewed** (not tracked - page view analytics)
+3. `signup` - User creates account
+4. `onboarding_started` - User begins first-run onboarding
+5. `onboarding_step_viewed` - User progresses through onboarding steps
+6. `onboarding_completed` - User finishes onboarding
+
+**Drop-off Points:**
+
+- Signup form abandonment → Monitor with session recordings
+- Onboarding skip rate → Track `onboarding_skipped` event
+- Early onboarding exit → Track which step user exits on
+
+**Success Metrics:**
+
+- Signup conversion rate: **Target 5%+** (visitors → signups)
+- Onboarding completion rate: **Target 70%+** (signups → completed onboarding)
+- Time to complete onboarding: **Target <3 minutes**
+
+**PostHog Funnel Configuration:**
+
+```
+signup → onboarding_started → onboarding_completed
+```
+
+---
+
+### 2. Trip Creation Funnel
+
+**Goal:** Convert new users to trip creators
+
+**Steps:**
+
+1. `onboarding_completed` or `login` - User authenticated
+2. **Trips Page Viewed** (not tracked - page view analytics)
+3. **Create Trip Button Clicked** (not tracked - inferred from next event)
+4. `trip_created` - User creates first trip
+5. `invite_sent` - User invites first participant (optional but encouraged)
+6. `invite_accepted` - Participant joins trip
+
+**Drop-off Points:**
+
+- Create button → Form abandonment → Track time between page view and `trip_created`
+- Trip created → No invites sent → Track ratio of trips with 1 participant vs. multiple
+
+**Success Metrics:**
+
+- First trip creation rate: **Target 60%+** (new users → create trip within 7 days)
+- Multi-participant trip rate: **Target 40%+** (trips with ≥2 participants)
+- Invite acceptance rate: **Target 70%+** (invites sent → accepted)
+- Time to first trip: **Target <5 minutes** (signup → trip created)
+
+**PostHog Funnel Configuration:**
+
+```
+signup → trip_created
+trip_created → invite_sent → invite_accepted
+```
+
+---
+
+### 3. Expense Tracking Funnel
+
+**Goal:** Drive engagement with core expense feature
+
+**Steps:**
+
+1. `trip_created` - Trip exists
+2. **Expenses Tab Viewed** (not tracked - page view analytics)
+3. `expense_added_nl` or `expense_added_manual` - First expense added
+4. `expense_added_nl` or `expense_added_manual` - Second+ expense added
+5. **Settlements Viewed** (not tracked - page view analytics)
+6. `settlement_created` - Settlements generated
+7. `settlement_marked_paid` - User marks settlement as paid
+
+**Drop-off Points:**
+
+- Trip created → No expenses → Track "empty trip" rate
+- Single expense → No follow-up → Track repeat usage
+- Settlements generated → Not paid → Track settlement completion rate
+
+**Success Metrics:**
+
+- Expense adoption rate: **Target 50%+** (trips → trips with ≥1 expense)
+- Repeat expense rate: **Target 80%+** (users who add ≥2 expenses)
+- Natural language usage: **Target 60%+** (NL vs. manual expense creation)
+- Settlement completion rate: **Target 30%+** (settlements → marked paid)
+
+**PostHog Funnel Configuration:**
+
+```
+trip_created → expense_added_nl → expense_added_nl
+settlement_created → settlement_marked_paid
+```
+
+---
+
+### 4. Itinerary Building Funnel
+
+**Goal:** Measure itinerary feature adoption
+
+**Steps:**
+
+1. `trip_created` - Trip exists
+2. **Itinerary Tab Viewed** (not tracked - page view analytics)
+3. `item_added_nl` or `item_added_manual` - First itinerary item
+4. `item_added_nl` or `item_added_manual` - Second+ item added
+5. `item_edited` - User refines itinerary (optional)
+
+**Drop-off Points:**
+
+- Trip created → No itinerary → Track "itinerary-less trip" rate
+- Single item → No follow-up → Track depth of itinerary usage
+
+**Success Metrics:**
+
+- Itinerary adoption rate: **Target 40%+** (trips → trips with ≥1 item)
+- Items per trip: **Target 3+ average**
+- Natural language usage: **Target 50%+** (NL vs. manual item creation)
+- Edit rate: **Target 20%+** (items created → edited)
+
+**PostHog Funnel Configuration:**
+
+```
+trip_created → item_added_nl → item_added_nl
+```
+
+---
+
+### 5. Free-to-Pro Conversion Funnel
+
+**Goal:** Convert free users to paid Pro subscribers
+
+**Steps:**
+
+1. **Limit Reached** (not tracked - inferred from upgrade page views)
+2. `upgrade_viewed` - User views Pro upgrade page
+3. `checkout_started` - User clicks "Upgrade to Pro"
+4. **Stripe Checkout Opened** (tracked by Stripe)
+5. `subscription_completed` - Payment successful
+
+**Drop-off Points:**
+
+- Limit reached → No upgrade view → Track limit hit count vs. upgrade views
+- Upgrade viewed → No checkout → Measure pricing page effectiveness
+- Checkout started → No completion → Stripe abandonment analytics
+
+**Success Metrics:**
+
+- Conversion rate (free → paid): **Target 5%+** (within 30 days of signup)
+- Upgrade view → Checkout rate: **Target 30%+**
+- Checkout → Completion rate: **Target 80%+** (industry standard)
+- Annual vs. Monthly: **Target 40%+ annual** (higher LTV)
+
+**PostHog Funnel Configuration:**
+
+```
+upgrade_viewed → checkout_started → subscription_completed
+```
+
+**Upgrade Triggers to Track:**
+
+We should add events for when users hit limits:
+
+- `participant_limit_reached` (Free: 10 participants)
+- `photo_limit_reached` (Free: 50 photos)
+- `trip_limit_reached` (if we add free tier trip limits)
+
+**These events are MISSING from current schema and should be added.**
+
+---
+
+### 6. Engagement & Retention Funnel
+
+**Goal:** Measure ongoing product engagement
+
+**Steps:**
+
+1. `login` - User returns to app
+2. **Trip Viewed** (not tracked - page view analytics)
+3. Any engagement event:
+   - `expense_added_nl` / `expense_added_manual`
+   - `item_added_nl` / `item_added_manual`
+   - `invite_sent`
+   - `settlement_marked_paid`
+4. `login` (7 days later) - User returns within a week
+
+**Drop-off Points:**
+
+- Login → No engagement → Track "inactive login" rate
+- Single action → No return → Measure feature stickiness
+
+**Success Metrics:**
+
+- Day 1 retention: **Target 40%+** (signup → login next day)
+- Day 7 retention: **Target 30%+** (signup → login within 7 days)
+- Day 30 retention: **Target 20%+** (signup → login within 30 days)
+- Weekly active users (WAU): **Track trend**
+- Monthly active users (MAU): **Track trend**
+- DAU/MAU ratio: **Target 20%+** (stickiness)
+
+**PostHog Retention Analysis:**
+
+```
+signup → login (within 1/7/30 days)
+```
+
+---
+
+## Event Priority Matrix
+
+### Priority Levels
+
+- **P0 (Critical)** - MVP blockers, required for production launch
+- **P1 (High)** - Important for product analytics, needed within 1 month of launch
+- **P2 (Medium)** - Nice-to-have, can be added post-launch
+- **P3 (Low)** - Future enhancements, Phase 3+ features
+
+---
+
+### P0 - Critical (MVP Blockers)
+
+These events are **required before production launch**:
+
+| Event                  | Category        | Funnel                      | Current Status     | Implementation File                                               |
+| ---------------------- | --------------- | --------------------------- | ------------------ | ----------------------------------------------------------------- |
+| `signup`               | Authentication  | User Acquisition            | ❌ Not implemented | `apps/web/app/(auth)/signup/page.tsx:31`                          |
+| `login`                | Authentication  | User Acquisition, Retention | ❌ Not implemented | `apps/web/app/(auth)/login/page.tsx`                              |
+| `onboarding_started`   | Onboarding      | User Acquisition            | ✅ Implemented     | `apps/web/components/features/onboarding/Onboarding.tsx:60`       |
+| `onboarding_completed` | Onboarding      | User Acquisition            | ✅ Implemented     | `apps/web/components/features/onboarding/Onboarding.tsx:75`       |
+| `trip_created`         | Trip Management | Trip Creation               | ❌ Not implemented | `apps/web/components/features/trips/CreateTripDialog.tsx:71`      |
+| `expense_added_nl`     | Expenses        | Expense Tracking            | ❌ Not implemented | `apps/web/components/features/expenses/ExpenseInput.tsx`          |
+| `expense_added_manual` | Expenses        | Expense Tracking            | ❌ Not implemented | `apps/web/components/features/expenses/ExpenseFormDialog.tsx:308` |
+
+**Total P0 Events:** 7 events
+**Implemented:** 2/7 (29%)
+**Missing:** 5 events
+
+---
+
+### P1 - High Priority (Within 1 Month)
+
+These events are **important for analytics** but not launch blockers:
+
+| Event                    | Category        | Funnel             | Current Status            | Implementation File                                                              |
+| ------------------------ | --------------- | ------------------ | ------------------------- | -------------------------------------------------------------------------------- |
+| `logout`                 | Authentication  | Retention          | ❌ Not implemented        | `apps/web/lib/auth/auth-context.tsx`                                             |
+| `onboarding_skipped`     | Onboarding      | User Acquisition   | ✅ Implemented            | `apps/web/components/features/onboarding/Onboarding.tsx:84`                      |
+| `tour_started`           | Tour            | User Acquisition   | ✅ Implemented            | `apps/web/components/features/tour/Tour.tsx:74`                                  |
+| `tour_completed`         | Tour            | User Acquisition   | ✅ Implemented            | `apps/web/components/features/tour/Tour.tsx:88`                                  |
+| `tour_dismissed`         | Tour            | User Acquisition   | ⚠️ BUG (uses console.log) | `apps/web/components/features/tour/Tour.tsx:128-131`                             |
+| `invite_sent`            | Trip Management | Trip Creation      | ❌ Not implemented        | `apps/web/components/features/trips/InviteDialog.tsx`                            |
+| `invite_accepted`        | Trip Management | Trip Creation      | ❌ Not implemented        | `apps/web/app/invite/[token]/page.tsx`                                           |
+| `item_added_nl`          | Itinerary       | Itinerary Building | ❌ Not implemented        | `apps/web/components/features/itinerary/ItineraryInput.tsx`                      |
+| `item_added_manual`      | Itinerary       | Itinerary Building | ❌ Not implemented        | `apps/web/components/features/itinerary/ItineraryItemDialog.tsx:154`             |
+| `settlement_created`     | Settlements     | Expense Tracking   | ❌ Not implemented        | Backend settlement calculation                                                   |
+| `settlement_marked_paid` | Settlements     | Expense Tracking   | ❌ Not implemented        | `apps/web/components/features/expenses/settlements/MarkSettlementPaidDialog.tsx` |
+
+**Total P1 Events:** 11 events
+**Implemented:** 3/11 (27%)
+**Buggy:** 1/11 (9%)
+**Missing:** 7 events
+
+---
+
+### P2 - Medium Priority (Post-Launch)
+
+These events are **nice-to-have** and can be added after launch:
+
+| Event                          | Category        | Funnel           | Current Status     |
+| ------------------------------ | --------------- | ---------------- | ------------------ |
+| `onboarding_step_viewed`       | Onboarding      | User Acquisition | ✅ Implemented     |
+| `onboarding_platform_detected` | Onboarding      | A/B Testing      | ✅ Implemented     |
+| `tour_step_advanced`           | Tour            | User Acquisition | ✅ Implemented     |
+| `tour_skipped`                 | Tour            | User Acquisition | ✅ Implemented     |
+| `trip_deleted`                 | Trip Management | Engagement       | ❌ Not implemented |
+| `expense_edited`               | Expenses        | Engagement       | ❌ Not implemented |
+| `expense_deleted`              | Expenses        | Engagement       | ❌ Not implemented |
+| `item_edited`                  | Itinerary       | Engagement       | ❌ Not implemented |
+| `item_deleted`                 | Itinerary       | Engagement       | ❌ Not implemented |
+
+**Total P2 Events:** 9 events
+**Implemented:** 4/9 (44%)
+**Missing:** 5 events
+
+---
+
+### P3 - Low Priority (Phase 3+ Features)
+
+These events are for **future features** not yet built:
+
+| Event                    | Category     | Funnel      | Phase   | Current Status     |
+| ------------------------ | ------------ | ----------- | ------- | ------------------ |
+| `upgrade_viewed`         | Monetization | Free-to-Pro | Phase 3 | ❌ Not implemented |
+| `checkout_started`       | Monetization | Free-to-Pro | Phase 3 | ❌ Not implemented |
+| `subscription_completed` | Monetization | Free-to-Pro | Phase 3 | ❌ Not implemented |
+| `photo_uploaded`         | Media        | Engagement  | Phase 3 | ❌ Not implemented |
+| `video_uploaded`         | Media        | Engagement  | Phase 3 | ❌ Not implemented |
+| `feed_viewed`            | Media        | Engagement  | Phase 3 | ❌ Not implemented |
+| `went_offline`           | Offline Sync | Reliability | Phase 2 | ❌ Not implemented |
+| `sync_completed`         | Offline Sync | Reliability | Phase 2 | ❌ Not implemented |
+| `sync_failed`            | Offline Sync | Reliability | Phase 2 | ❌ Not implemented |
+
+**Total P3 Events:** 9 events
+**Implemented:** 0/9 (0%)
+**Missing:** 9 events (expected - features not built yet)
+
+---
+
+### Missing Events Identified
+
+During schema review, these events should be **added**:
+
+#### Limit Hit Events (P1 - High Priority for Free-to-Pro funnel)
+
+**`participant_limit_reached`**
+
+**When:** User tries to add 11th participant (Free tier limit: 10)
+
+**Properties:**
+
+```typescript
+{
+  trip_id: string
+  current_count: number // Should be 10
+  attempted_action: 'invite' | 'accept_request' // What triggered the limit
+}
+```
+
+**File:** `apps/web/components/features/trips/InviteDialog.tsx`
+
+---
+
+**`photo_limit_reached`**
+
+**When:** User tries to upload 51st photo (Free tier limit: 50)
+
+**Properties:**
+
+```typescript
+{
+  trip_id: string
+  current_count: number // Should be 50
+}
+```
+
+**File:** TBD (photo upload component, Phase 3)
+
+---
+
+**`chat_message_sent`**
+
+**When:** User sends a message in trip chat
+
+**Properties:**
+
+```typescript
+{
+  trip_id: string
+  is_ai_response: boolean // Whether this is an AI assistant response
+  has_mentions: boolean // Whether message includes @mentions
+}
+```
+
+**File:** `apps/web/components/features/chat/ChatInput.tsx` (if exists)
+
+**Priority:** P2 (Medium - measures chat engagement)
+
+---
+
+### Priority Summary
+
+| Priority          | Total Events | Implemented | Buggy | Missing | % Complete |
+| ----------------- | ------------ | ----------- | ----- | ------- | ---------- |
+| **P0 (Critical)** | 7            | 2           | 0     | 5       | 29%        |
+| **P1 (High)**     | 11           | 3           | 1     | 7       | 27%        |
+| **P2 (Medium)**   | 9            | 4           | 0     | 5       | 44%        |
+| **P3 (Low)**      | 9            | 0           | 0     | 9       | 0%         |
+| **New (To Add)**  | 3            | 0           | 0     | 3       | 0%         |
+| **TOTAL**         | **39**       | **9**       | **1** | **29**  | **23%**    |
+
+---
+
+## Success Metrics by Funnel
+
+### 1. User Acquisition Success
+
+| Metric                      | Target | Measurement                                     |
+| --------------------------- | ------ | ----------------------------------------------- |
+| Signup conversion rate      | 5%+    | Visitors → `signup`                             |
+| Onboarding completion       | 70%+   | `signup` → `onboarding_completed`               |
+| Onboarding skip rate        | <20%   | `onboarding_skipped` / `onboarding_started`     |
+| Time to onboarding complete | <3 min | Time between `onboarding_started` → `completed` |
+| Google OAuth adoption       | 40%+   | `signup` with method=google vs. total           |
+
+**PostHog Insights:**
+
+- Funnel: `signup` → `onboarding_started` → `onboarding_completed`
+- Retention: Day 1 return rate
+- Trend: Signups per week
+
+---
+
+### 2. Trip Creation Success
+
+| Metric                      | Target   | Measurement                                |
+| --------------------------- | -------- | ------------------------------------------ |
+| First trip creation rate    | 60%+     | Users with ≥1 `trip_created` within 7 days |
+| Multi-participant trip rate | 40%+     | `trip_created` → `invite_sent`             |
+| Invite acceptance rate      | 70%+     | `invite_sent` → `invite_accepted`          |
+| Time to first trip          | <5 min   | Time between `signup` → `trip_created`     |
+| Trips per user (30 days)    | 1.5+ avg | Count of `trip_created` per user           |
+
+**PostHog Insights:**
+
+- Funnel: `signup` → `trip_created` → `invite_sent` → `invite_accepted`
+- Trend: Trips created per week
+- Breakdown: Trips by participant count
+
+---
+
+### 3. Expense Tracking Success
+
+| Metric                      | Target | Measurement                                     |
+| --------------------------- | ------ | ----------------------------------------------- |
+| Expense adoption rate       | 50%+   | Trips with ≥1 expense                           |
+| Repeat expense rate         | 80%+   | Users with ≥2 expenses in same trip             |
+| NL vs. Manual expense ratio | 60% NL | `expense_added_nl` / total expenses             |
+| Expenses per trip           | 5+ avg | Count of expenses per trip                      |
+| Settlement completion rate  | 30%+   | `settlement_marked_paid` / `settlement_created` |
+
+**PostHog Insights:**
+
+- Funnel: `trip_created` → `expense_added_nl` → `expense_added_nl`
+- Trend: Expenses added per week
+- Breakdown: NL vs. Manual expense creation
+
+---
+
+### 4. Itinerary Building Success
+
+| Metric                   | Target | Measurement                         |
+| ------------------------ | ------ | ----------------------------------- |
+| Itinerary adoption rate  | 40%+   | Trips with ≥1 itinerary item        |
+| Items per trip           | 3+ avg | Count of items per trip             |
+| NL vs. Manual item ratio | 50% NL | `item_added_nl` / total items       |
+| Edit rate                | 20%+   | `item_edited` / total items created |
+
+**PostHog Insights:**
+
+- Funnel: `trip_created` → `item_added_nl`
+- Trend: Itinerary items added per week
+- Breakdown: Items by type (flight, stay, activity)
+
+---
+
+### 5. Free-to-Pro Conversion Success
+
+| Metric                     | Target     | Measurement                                        |
+| -------------------------- | ---------- | -------------------------------------------------- |
+| Conversion rate (30 days)  | 5%+        | Users with `subscription_completed` within 30 days |
+| Upgrade view → Checkout    | 30%+       | `checkout_started` / `upgrade_viewed`              |
+| Checkout → Completion      | 80%+       | `subscription_completed` / `checkout_started`      |
+| Annual vs. Monthly         | 40% annual | Breakdown of plan property                         |
+| Participant limit hit rate | Track      | `participant_limit_reached` count                  |
+| Photo limit hit rate       | Track      | `photo_limit_reached` count                        |
+
+**PostHog Insights:**
+
+- Funnel: `upgrade_viewed` → `checkout_started` → `subscription_completed`
+- Trend: Subscriptions per week
+- Breakdown: Monthly vs. Annual plan selection
+
+---
+
+### 6. Engagement & Retention Success
+
+| Metric               | Target      | Measurement                                  |
+| -------------------- | ----------- | -------------------------------------------- |
+| Day 1 retention      | 40%+        | Users who `login` within 1 day of `signup`   |
+| Day 7 retention      | 30%+        | Users who `login` within 7 days of `signup`  |
+| Day 30 retention     | 20%+        | Users who `login` within 30 days of `signup` |
+| DAU/MAU (stickiness) | 20%+        | Daily active / Monthly active users          |
+| WAU/MAU              | 60%+        | Weekly active / Monthly active users         |
+| Session frequency    | 3+ per week | `login` events per user per week             |
+
+**PostHog Insights:**
+
+- Retention: `signup` → `login` (1/7/30 day windows)
+- Trend: DAU, WAU, MAU over time
+- Stickiness: DAU/MAU ratio
+
+---
+
 ## Implementation Status
 
 ### Summary

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth/auth-context'
+import { PostHogProvider } from '@/lib/analytics/posthog-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased font-sans">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <PostHogProvider>{children}</PostHogProvider>
+        </AuthProvider>
         <Toaster />
         <SonnerToaster position="top-right" />
       </body>
