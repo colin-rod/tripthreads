@@ -764,6 +764,267 @@ All tables use RLS to enforce access control:
 
 ---
 
+## Notification System
+
+### Overview
+
+✅ **Status:** Implemented (CRO-767 - Phase 2.5)
+
+The notification system uses Supabase Edge Functions triggered by database events to send email notifications when trip events occur. It respects user preferences with a three-state inheritance model (trip-specific override, global fallback, or default false).
+
+### Architecture
+
+**Components:**
+
+1. **Database Triggers** - Invoke edge functions on INSERT/UPDATE events
+2. **Edge Functions** - Process events and send notifications via Resend API
+3. **Notification Logs** - Audit trail for all notification attempts
+4. **Shared Utilities** - Reusable preference checking and filtering logic
+
+### notification_logs Table
+
+```sql
+CREATE TABLE public.notification_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('invites', 'itinerary', 'expenses', 'photos', 'chat', 'settlements')),
+  notification_type TEXT NOT NULL CHECK (notification_type IN ('email', 'push')),
+  status TEXT NOT NULL CHECK (status IN ('sent', 'skipped', 'failed')),
+  skip_reason TEXT,
+  error_message TEXT,
+  metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+**Purpose:**
+
+- Audit trail for all notification delivery attempts
+- Testing without external API calls
+- Analytics on notification engagement
+- Debugging failed deliveries
+
+**Indexes:**
+
+- `idx_notification_logs_trip_id` - Filter by trip
+- `idx_notification_logs_user_id` - Filter by user
+- `idx_notification_logs_event_type` - Filter by event type
+- `idx_notification_logs_status` - Filter by status
+- `idx_notification_logs_created_at` - Time-based queries
+- `idx_notification_logs_trip_event_created` - Composite for trip analytics
+
+**RLS Policies:**
+
+- Users can read their own logs
+- Trip participants can read logs for their trips
+- Service role can insert logs (edge functions)
+
+### Edge Functions
+
+**Implemented Functions:**
+
+| Function                            | Trigger Event                               | Description                                |
+| ----------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| `send-access-request-email`         | `access_requests` INSERT                    | Notify trip owner of access request        |
+| `send-invite-accepted-notification` | `trip_participants` INSERT                  | Notify existing participants of new member |
+| `send-itinerary-notification`       | `itinerary_items` INSERT/UPDATE             | Notify participants of itinerary changes   |
+| `send-expense-notification`         | `expenses` INSERT                           | Notify participants of new expense         |
+| `send-settlement-notification`      | `settlements` UPDATE (pending → settled)    | Notify both parties of settlement          |
+| `send-chat-notification`            | `chat_messages` INSERT (user messages only) | Notify participants of new chat message    |
+| `send-photo-notification`           | `media_files` INSERT (Phase 3)              | Stub for future photo notifications        |
+
+**Shared Utilities** (`supabase/functions/_shared/notifications.ts`):
+
+- `getEffectivePreference()` - Implements preference inheritance logic
+- `fetchNotificationRecipients()` - Fetches trip participants with preferences
+- `filterRecipientsAndLog()` - Filters by preferences and logs decisions
+- `sendEmailNotification()` - Sends email via Resend API
+- `logNotification()` - Records notification attempt
+- `checkUserPreference()` - Checks if user should be notified
+
+### Notification Preferences
+
+**Three-State Inheritance Model:**
+
+1. **Trip-Specific Override** - `trip_participants.notification_preferences[event_type]`
+   - `true` = enabled for this trip
+   - `false` = disabled for this trip
+   - `null` = inherit from global
+
+2. **Global Default** - `profiles.notification_preferences[channel_event_type]`
+   - `true` = enabled globally
+   - `false` = disabled globally
+
+3. **System Default** - `false` (opt-in model)
+   - If no preference set, don't send notifications
+
+**Example:**
+
+```typescript
+// User has global expense notifications enabled
+profiles.notification_preferences = {
+  email_expense_updates: true,
+  email_trip_updates: false,
+}
+
+// But disabled for specific trip
+trip_participants.notification_preferences = {
+  expenses: false,
+}
+
+// Result: No expense notifications for this trip
+// Chat/itinerary notifications still disabled (global = false)
+```
+
+**Event Type to Global Preference Mapping:**
+
+| Event Type    | Email Global Key        | Push Global Key        |
+| ------------- | ----------------------- | ---------------------- |
+| `invites`     | `email_trip_invites`    | `push_trip_invites`    |
+| `itinerary`   | `email_trip_updates`    | `push_trip_updates`    |
+| `expenses`    | `email_expense_updates` | `push_expense_updates` |
+| `photos`      | `email_trip_updates`    | `push_trip_updates`    |
+| `chat`        | `email_trip_updates`    | `push_trip_updates`    |
+| `settlements` | `email_expense_updates` | `push_expense_updates` |
+
+### Database Triggers
+
+**Trigger Functions:**
+
+```sql
+-- Invite accepted
+CREATE TRIGGER on_trip_participant_insert
+  AFTER INSERT ON trip_participants
+  FOR EACH ROW EXECUTE FUNCTION notify_invite_accepted();
+
+-- Itinerary change
+CREATE TRIGGER on_itinerary_item_insert
+  AFTER INSERT ON itinerary_items
+  FOR EACH ROW EXECUTE FUNCTION notify_itinerary_change();
+
+CREATE TRIGGER on_itinerary_item_update
+  AFTER UPDATE ON itinerary_items
+  FOR EACH ROW EXECUTE FUNCTION notify_itinerary_change();
+
+-- Expense added
+CREATE TRIGGER on_expense_insert
+  AFTER INSERT ON expenses
+  FOR EACH ROW EXECUTE FUNCTION notify_expense_added();
+
+-- Settlement status change
+CREATE TRIGGER on_settlement_status_change
+  AFTER UPDATE ON settlements
+  FOR EACH ROW EXECUTE FUNCTION notify_settlement_status_change();
+
+-- Chat message
+CREATE TRIGGER on_chat_message_insert
+  AFTER INSERT ON chat_messages
+  FOR EACH ROW EXECUTE FUNCTION notify_chat_message();
+```
+
+**How Triggers Work:**
+
+1. Database event occurs (INSERT/UPDATE)
+2. Trigger function invokes edge function via `pg_net.http_post()`
+3. Edge function receives webhook payload
+4. Edge function processes event and sends notifications
+5. All decisions logged to `notification_logs`
+
+### Notification Flow
+
+**Example: New Expense Added**
+
+1. User creates expense → INSERT into `expenses` table
+2. `on_expense_insert` trigger fires
+3. Trigger invokes `send-expense-notification` edge function
+4. Edge function:
+   - Fetches expense details with trip/user info
+   - Fetches all trip participants (excluding expense creator)
+   - Filters by notification preferences:
+     - Check trip-specific `expenses` preference
+     - Fall back to global `email_expense_updates`
+     - Default to `false` if not set
+   - Sends email to each recipient via Resend API
+   - Logs each notification attempt (sent/skipped/failed)
+5. Recipients receive email with expense details
+
+### Testing
+
+**Unit Tests** (`supabase/functions/_shared/__tests__/notifications.test.ts`):
+
+- Preference inheritance logic (27 tests)
+- Event type to global preference mapping
+- Edge cases (null, undefined, empty objects)
+- Real-world scenarios
+
+**Integration Tests** (`supabase/functions/__tests__/integration/notification-flow.test.ts`):
+
+- End-to-end notification delivery (mocked API)
+- Recipient filtering with mixed preferences
+- Email delivery success/failure
+- Notification logging
+
+**Running Tests:**
+
+```bash
+cd supabase/functions/_shared
+deno test --allow-env --allow-net __tests__/notifications.test.ts
+
+cd supabase/functions
+deno test --allow-env --allow-net __tests__/integration/notification-flow.test.ts
+```
+
+### Email Templates
+
+All edge functions use responsive HTML email templates with:
+
+- TripThreads branding (🧵 logo, orange accent color)
+- Event-specific content (expense details, itinerary changes, etc.)
+- Call-to-action button (View Trip, Reply in Chat, etc.)
+- Preference management links
+- Responsive design for mobile/desktop
+
+### Rate Limiting Considerations
+
+**Current Implementation:**
+
+- No rate limiting on edge functions
+- Each event triggers individual emails
+- Chat notifications include warning about potential spam
+
+**Future Improvements (if needed):**
+
+- Batch notifications for high-frequency events (chat)
+- Digest emails (e.g., daily summary instead of per-message)
+- Per-user rate limits in edge functions
+- Notification throttling for noisy trips
+
+### Environment Variables
+
+Edge functions require:
+
+```bash
+# Supabase (auto-provided)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Resend API (must set in Supabase Dashboard)
+RESEND_API_KEY=re_your_api_key
+
+# Frontend URL (for email links)
+FRONTEND_URL=https://tripthreads.com
+```
+
+### Migration Files
+
+- ✅ `20251128000001_create_notification_logs.sql` - Creates notification_logs table
+- ✅ `20251128000001_create_notification_logs_rollback.sql` - Rollback migration
+- ✅ `20251128000002_create_notification_triggers.sql` - Creates trigger functions
+- ✅ `20251128000002_create_notification_triggers_rollback.sql` - Rollback triggers
+
+---
+
 ## Future Schema Additions
 
 ### Phase 3: Media & Pro Features

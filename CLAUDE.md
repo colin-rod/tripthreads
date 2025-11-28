@@ -143,6 +143,19 @@ git push origin main       # Deploy to production
 - ✅ Message reactions (emoji)
 - ✅ Mentions (user tagging)
 
+#### Email Notifications
+
+- ✅ Edge functions for trip event notifications (CRO-767)
+- ✅ Access request notifications
+- ✅ Invite accepted notifications
+- ✅ Itinerary change notifications
+- ✅ Expense added notifications
+- ✅ Settlement status notifications
+- ✅ Chat message notifications
+- ✅ Notification preference inheritance (trip-specific overrides global)
+- ✅ Notification logging for testing and analytics
+- ✅ Responsive HTML email templates via Resend
+
 #### Developer Experience
 
 - ✅ Jest testing framework (migrated from Vitest)
@@ -171,8 +184,7 @@ git push origin main       # Deploy to production
 
 #### Phase 4: Push & Launch
 
-- 📋 Push notifications (web + mobile)
-- 📋 Notification preferences
+- 📋 Push notifications (web + mobile) - email notifications ✅ complete
 - 📋 Trip recap delivery
 - 📋 App store submission (iOS + Android)
 

@@ -9,10 +9,13 @@
  * Environment Variables:
  * - RESEND_API_KEY: API key for Resend email service
  * - FRONTEND_URL: Base URL of the frontend application
+ *
+ * CRO-767: Updated to check notification preferences before sending
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { getEffectivePreference, logNotification } from '../_shared/notifications.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'http://localhost:3000'
@@ -88,6 +91,59 @@ serve(async req => {
     const requester = request.user
     const trip = request.trip
     const organizer = trip.owner
+
+    // Check organizer's notification preferences
+    // Step 1: Fetch trip-specific preferences
+    const { data: tripParticipant } = await supabase
+      .from('trip_participants')
+      .select('notification_preferences')
+      .eq('trip_id', trip.id)
+      .eq('user_id', organizer.id)
+      .single()
+
+    // Step 2: Fetch global preferences
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('notification_preferences')
+      .eq('id', organizer.id)
+      .single()
+
+    // Step 3: Check if organizer wants 'invites' notifications via email
+    const shouldNotify = getEffectivePreference(
+      'invites',
+      tripParticipant?.notification_preferences || null,
+      profile?.notification_preferences || null,
+      'email'
+    )
+
+    if (!shouldNotify) {
+      console.log('Notification skipped - organizer has invites notifications disabled')
+
+      // Log the skipped notification
+      await logNotification(supabase, {
+        trip_id: trip.id,
+        user_id: organizer.id,
+        event_type: 'invites',
+        notification_type: 'email',
+        status: 'skipped',
+        skip_reason: 'preferences_disabled',
+        metadata: {
+          requester_email: requester.email,
+          requester_name: requester.full_name,
+        },
+      })
+
+      return new Response(
+        JSON.stringify({
+          message: 'Notification skipped - user preferences',
+          organizerId: organizer.id,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
 
     // Build approval/rejection links
     const approveUrl = `${FRONTEND_URL}/api/access-requests/${request.id}/approve`
@@ -234,6 +290,21 @@ serve(async req => {
     if (!emailResponse.ok) {
       const error = await emailResponse.text()
       console.error('Error sending email:', error)
+
+      // Log failed notification
+      await logNotification(supabase, {
+        trip_id: trip.id,
+        user_id: organizer.id,
+        event_type: 'invites',
+        notification_type: 'email',
+        status: 'failed',
+        error_message: `Resend API error: ${emailResponse.status} ${emailResponse.statusText}`,
+        metadata: {
+          requester_email: requester.email,
+          requester_name: requester.full_name,
+        },
+      })
+
       return new Response(JSON.stringify({ error: 'Failed to send email' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -242,6 +313,20 @@ serve(async req => {
 
     const emailResult = await emailResponse.json()
     console.log('Email sent successfully:', emailResult)
+
+    // Log successful notification
+    await logNotification(supabase, {
+      trip_id: trip.id,
+      user_id: organizer.id,
+      event_type: 'invites',
+      notification_type: 'email',
+      status: 'sent',
+      metadata: {
+        email_id: emailResult.id,
+        requester_email: requester.email,
+        requester_name: requester.full_name,
+      },
+    })
 
     return new Response(JSON.stringify({ success: true, emailId: emailResult.id }), {
       status: 200,
