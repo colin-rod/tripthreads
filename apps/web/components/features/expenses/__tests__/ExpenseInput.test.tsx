@@ -749,6 +749,7 @@ describe('ExpenseInput Component', () => {
           splitCount: 4,
           participants: null,
           customSplits: null,
+          percentageSplits: null,
         })
       })
     })
