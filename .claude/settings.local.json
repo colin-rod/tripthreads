@@ -40,7 +40,11 @@
       "Bash(curl:*)",
       "Bash(supabase gen types:*)",
       "Bash(packages/core/src/types/database.ts)",
-      "Bash(npx shadcn@latest add:*)"
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(git restore:*)",
+      "Bash(node -e:*)",
+      "Bash(1)",
+      "Bash(node --version:*)"
     ],
     "deny": [],
     "ask": []

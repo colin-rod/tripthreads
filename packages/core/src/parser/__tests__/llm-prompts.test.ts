@@ -1,8 +1,25 @@
 /**
  * LLM Prompt Unit Tests
  *
- * Tests for the OpenAI prompt templates used in AI-based parsing.
- * Validates prompt structure, few-shot examples, and JSON schema correctness.
+ * Acceptance Criteria Coverage:
+ * - AC#3: LLM Prompt Tests - 100% (45 tests) ✅
+ *
+ * Test Coverage:
+ * - System prompt validation (ISO standards, minor units, JSON-only output)
+ * - Date parser prompt structure and schema
+ * - Expense parser prompt structure and schema
+ * - Few-shot examples validity (all parse as valid JSON)
+ * - Currency handling (EUR, USD, GBP, JPY, CHF)
+ * - Split types (equal, percentage, custom, by_shares)
+ * - Minor unit conversions (€60 → 6000, ¥2500 → 2500)
+ * - Edge cases (empty input, special characters, quotes, newlines)
+ *
+ * Test Count: 45 tests
+ *
+ * Gap: None - 100% coverage achieved
+ *
+ * How to run:
+ * npm test -- packages/core/src/parser/__tests__/llm-prompts.test.ts
  */
 
 import { getDateParserPrompt, getExpenseParserPrompt, SYSTEM_PROMPT } from '../llm-prompts'
