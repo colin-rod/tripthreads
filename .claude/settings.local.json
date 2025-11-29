@@ -44,7 +44,8 @@
       "Bash(git restore:*)",
       "Bash(node -e:*)",
       "Bash(1)",
-      "Bash(node --version:*)"
+      "Bash(node --version:*)",
+      "Bash(npm --workspace=apps/web test -- tests/components/app.test.tsx)"
     ],
     "deny": [],
     "ask": []
