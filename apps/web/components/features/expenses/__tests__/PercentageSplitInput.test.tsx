@@ -2,6 +2,7 @@
  * Unit tests for PercentageSplitInput component
  */
 
+import '@testing-library/jest-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { PercentageSplitInput } from '../PercentageSplitInput'
 
@@ -59,8 +60,9 @@ describe('PercentageSplitInput', () => {
       />
     )
 
-    const aliceInput = screen.getByDisplayValue('50')
-    fireEvent.change(aliceInput, { target: { value: '60' } })
+    // Use getAllByDisplayValue and select the first one (Alice's input)
+    const inputs = screen.getAllByDisplayValue('50')
+    fireEvent.change(inputs[0], { target: { value: '60' } })
 
     expect(mockOnChange).toHaveBeenCalledWith({
       '1': 60,
