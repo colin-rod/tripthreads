@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * API Route Tests - parse-with-openai
  *
  * Acceptance Criteria Coverage:

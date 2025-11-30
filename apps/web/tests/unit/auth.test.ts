@@ -11,22 +11,21 @@ import type {
 
 // Mock Supabase client
 jest.mock('../../lib/supabase/client', () => {
-  const mockFn = () => jest.fn()
   return {
     supabase: {
       auth: {
-        signUp: mockFn(),
-        signInWithPassword: mockFn(),
-        signInWithOAuth: mockFn(),
-        signOut: mockFn(),
-        getSession: mockFn(),
-        onAuthStateChange: mockFn(),
+        signUp: jest.fn(),
+        signInWithPassword: jest.fn(),
+        signInWithOAuth: jest.fn(),
+        signOut: jest.fn(),
+        getSession: jest.fn(),
+        onAuthStateChange: jest.fn(),
       },
-      from: mockFn(() => ({
-        insert: mockFn(() => ({ error: null })),
-        select: mockFn(() => ({
-          eq: mockFn(() => ({
-            single: mockFn(() => ({ data: null, error: null })),
+      from: jest.fn(() => ({
+        insert: jest.fn(() => ({ error: null })),
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn(() => ({ data: null, error: null })),
           })),
         })),
       })),
@@ -47,7 +46,7 @@ describe('Authentication', () => {
         user_metadata: { full_name: 'Test User' },
       }
 
-      const signUpMock = supabase.auth.signUp as unknown as jest.Mock
+      const signUpMock = supabase.auth.signUp as any
       signUpMock.mockResolvedValue({
         data: { user: mockUser as unknown as User, session: null },
         error: null,
@@ -79,7 +78,7 @@ describe('Authentication', () => {
     it('should handle sign up errors', async () => {
       const mockError = new Error('Email already registered')
 
-      const signUpMock = supabase.auth.signUp as unknown as jest.Mock
+      const signUpMock = supabase.auth.signUp as any
       signUpMock.mockResolvedValue({
         data: { user: null, session: null },
         error: mockError,
@@ -102,7 +101,7 @@ describe('Authentication', () => {
         },
       }
 
-      const signInWithPasswordMock = supabase.auth.signInWithPassword as unknown as jest.Mock
+      const signInWithPasswordMock = supabase.auth.signInWithPassword as any
       signInWithPasswordMock.mockResolvedValue({
         data: { session: mockSession as Session, user: mockSession.user as unknown as User },
         error: null,
@@ -124,7 +123,7 @@ describe('Authentication', () => {
     it('should handle invalid credentials', async () => {
       const mockError = new Error('Invalid login credentials')
 
-      const signInWithPasswordMock = supabase.auth.signInWithPassword as unknown as jest.Mock
+      const signInWithPasswordMock = supabase.auth.signInWithPassword as any
       signInWithPasswordMock.mockResolvedValue({
         data: { session: null, user: null },
         error: mockError,
@@ -146,7 +145,7 @@ describe('Authentication', () => {
         error: null,
       } as unknown as OAuthResponse
 
-      const signInWithOAuthMock = supabase.auth.signInWithOAuth as unknown as jest.Mock
+      const signInWithOAuthMock = supabase.auth.signInWithOAuth as any
       signInWithOAuthMock.mockResolvedValue(oauthResponse)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -174,7 +173,7 @@ describe('Authentication', () => {
         error: mockError,
       } as unknown as OAuthResponse
 
-      const signInWithOAuthMock = supabase.auth.signInWithOAuth as unknown as jest.Mock
+      const signInWithOAuthMock = supabase.auth.signInWithOAuth as any
       signInWithOAuthMock.mockResolvedValue(oauthErrorResponse)
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -187,7 +186,7 @@ describe('Authentication', () => {
 
   describe('Sign Out', () => {
     it('should successfully sign out user', async () => {
-      const signOutMock = supabase.auth.signOut as unknown as jest.Mock
+      const signOutMock = supabase.auth.signOut as any
       signOutMock.mockResolvedValue({
         error: null,
       })
@@ -201,7 +200,7 @@ describe('Authentication', () => {
     it('should handle sign out errors', async () => {
       const mockError = new Error('Sign out failed') as unknown as AuthError
 
-      const signOutMock = supabase.auth.signOut as unknown as jest.Mock
+      const signOutMock = supabase.auth.signOut as any
       signOutMock.mockResolvedValue({
         error: mockError,
       })
@@ -222,7 +221,7 @@ describe('Authentication', () => {
         },
       }
 
-      const getSessionMock = supabase.auth.getSession as unknown as jest.Mock
+      const getSessionMock = supabase.auth.getSession as any
       getSessionMock.mockResolvedValue({
         data: { session: mockSession as Session },
         error: null,
@@ -235,7 +234,7 @@ describe('Authentication', () => {
     })
 
     it('should return null for no active session', async () => {
-      const getSessionMock = supabase.auth.getSession as unknown as jest.Mock
+      const getSessionMock = supabase.auth.getSession as any
       getSessionMock.mockResolvedValue({
         data: { session: null },
         error: null,

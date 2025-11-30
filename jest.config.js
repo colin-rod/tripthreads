@@ -11,6 +11,8 @@ module.exports = {
   roots: ['<rootDir>/__tests__', '<rootDir>/apps'],
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  setupFiles: ['<rootDir>/apps/web/jest.polyfills.cjs'],
+  setupFilesAfterEnv: ['<rootDir>/apps/web/jest.setup.cjs'],
   moduleNameMapper: {
     ...moduleNameMapper,
     '\\.(css|less|sass|scss)$': '<rootDir>/__mocks__/styleMock.js',

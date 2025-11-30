@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Performance Baseline Tests - parse-with-openai
  *
  * Acceptance Criteria Coverage:

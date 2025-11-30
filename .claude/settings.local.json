@@ -45,7 +45,21 @@
       "Bash(node -e:*)",
       "Bash(1)",
       "Bash(node --version:*)",
-      "Bash(npm --workspace=apps/web test -- tests/components/app.test.tsx)"
+      "Bash(npm --workspace=apps/web test -- tests/components/app.test.tsx)",
+      "Bash(npm --workspace=apps/web test -- tests/unit)",
+      "Bash(jobs)",
+      "Bash(npm --version:*)",
+      "Bash(export PATH=\"/usr/local/bin:/usr/bin:/bin:$HOME/.nvm/versions/node/v20.18.1/bin:$PATH\")",
+      "Bash(xargs kill:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(brew install:*)",
+      "Bash(rm:*)",
+      "Bash(sudo rm:*)",
+      "Bash(export NVM_DIR=\"$HOME/.nvm\")",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(nvm use:*)",
+      "Bash(nvm install:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Security & Input Validation Tests - parse-with-openai
  *
  * Acceptance Criteria Coverage:

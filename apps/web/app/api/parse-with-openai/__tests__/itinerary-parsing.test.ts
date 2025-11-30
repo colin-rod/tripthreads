@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Itinerary Parsing Integration Tests
  *
  * Acceptance Criteria Coverage:

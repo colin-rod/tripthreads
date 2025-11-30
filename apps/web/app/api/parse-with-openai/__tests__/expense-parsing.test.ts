@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Expense Parsing Integration Tests
  *
  * Acceptance Criteria Coverage:
