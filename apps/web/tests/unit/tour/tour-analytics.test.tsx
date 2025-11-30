@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom'
 import { render, fireEvent, waitFor, screen } from '@testing-library/react'
 import { Tour } from '@/components/features/tour/Tour'
 import { posthog } from '@/lib/analytics/posthog'

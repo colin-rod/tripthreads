@@ -8,7 +8,8 @@
     "./parser": "./src/parser/index.ts",
     "./types/parser": "./src/types/parser.ts",
     "./queries/media": "./src/queries/media.ts",
-    "./validation/trip": "./src/validation/trip.ts"
+    "./validation/trip": "./src/validation/trip.ts",
+    "./validation/profile": "./src/validation/profile.ts"
   },
   "scripts": {
     "test": "jest",

@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom'
 import { render, fireEvent, waitFor, screen } from '@testing-library/react'
 import { Onboarding } from '@/components/features/onboarding/Onboarding'
 import { posthog } from '@/lib/analytics/posthog'

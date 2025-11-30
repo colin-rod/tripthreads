@@ -55,7 +55,7 @@ const createMockSupabase = (): SupabaseMock => ({
   },
 })
 
-const createClientMock = createClient as unknown as jest.MockedFunction<() => Promise<any>>
+const createClientMock = createClient as jest.MockedFunction<typeof createClient>
 const revalidatePathMock = revalidatePath as jest.MockedFunction<typeof revalidatePath>
 const captureExceptionMock = Sentry.captureException as jest.MockedFunction<
   typeof Sentry.captureException
@@ -63,12 +63,8 @@ const captureExceptionMock = Sentry.captureException as jest.MockedFunction<
 
 // Type-safe references to mocked media functions (module is mocked above)
 const mediaQueryModule = jest.requireMock('../../../../../packages/core/src/queries/media') as any
-const moveAttachmentToGalleryMock = mediaQueryModule.moveAttachmentToGallery as jest.MockedFunction<
-  () => Promise<{ success: boolean; mediaFileId?: string; error?: string }>
->
-const removeFromGalleryMock = mediaQueryModule.removeFromGallery as jest.MockedFunction<
-  () => Promise<{ success: boolean; error?: string }>
->
+const moveAttachmentToGalleryMock = mediaQueryModule.moveAttachmentToGallery as unknown as jest.Mock
+const removeFromGalleryMock = mediaQueryModule.removeFromGallery as unknown as jest.Mock
 
 const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
 

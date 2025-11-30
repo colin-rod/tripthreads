@@ -10,9 +10,9 @@
 export function isMobile(): boolean {
   if (typeof window === 'undefined') return false
 
-  // Check user agent
+  // Check user agent (excluding tablets like iPad)
   const userAgent = window.navigator.userAgent.toLowerCase()
-  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i
+  const mobileRegex = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i
 
   // Check screen size as fallback
   const isMobileWidth = window.innerWidth < 768

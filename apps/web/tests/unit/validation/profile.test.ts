@@ -126,7 +126,9 @@ describe('Profile Validation', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(
-          result.error.issues.some(issue => issue.message.includes('at least 8 characters'))
+          result.error.issues.some((issue: { message: string }) =>
+            issue.message.includes('at least 8 characters')
+          )
         ).toBe(true)
       }
     })
@@ -142,7 +144,9 @@ describe('Profile Validation', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(
-          result.error.issues.some(issue => issue.message.includes('at least one letter'))
+          result.error.issues.some((issue: { message: string }) =>
+            issue.message.includes('at least one letter')
+          )
         ).toBe(true)
       }
     })
@@ -158,7 +162,9 @@ describe('Profile Validation', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(
-          result.error.issues.some(issue => issue.message.includes('at least one number'))
+          result.error.issues.some((issue: { message: string }) =>
+            issue.message.includes('at least one number')
+          )
         ).toBe(true)
       }
     })
@@ -173,7 +179,11 @@ describe('Profile Validation', () => {
       const result = changePasswordSchema.safeParse(data)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues.some(issue => issue.message.includes('do not match'))).toBe(true)
+        expect(
+          result.error.issues.some((issue: { message: string }) =>
+            issue.message.includes('do not match')
+          )
+        ).toBe(true)
       }
     })
 

@@ -23,6 +23,8 @@
     "paths": {
       "@/*": ["./*"],
       "@tripthreads/core": ["../../packages/core/src/index.ts"],
+      "@tripthreads/core/validation/profile": ["../../packages/core/src/validation/profile.ts"],
+      "@tripthreads/core/validation/trip": ["../../packages/core/src/validation/trip.ts"],
       "@tripthreads/core/*": ["../../packages/core/src/*"]
     }
   },
