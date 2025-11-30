@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * RLS Policy Security Integration Tests
  *
  * Tests RLS policies using Supabase client with real auth contexts.

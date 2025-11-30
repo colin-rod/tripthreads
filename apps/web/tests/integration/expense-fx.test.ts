@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Integration tests for Expense FX Rate Snapshot
  *
  * Tests that expense creation properly fetches and stores FX rate snapshots.

@@ -1,32 +1,4 @@
-// Polyfill Web APIs FIRST before any other imports
-// This must come before whatwg-fetch or any Next.js imports
-const { TextEncoder, TextDecoder } = require('util')
-const { ReadableStream, WritableStream, TransformStream } = require('stream/web')
-
-// Set global TextEncoder/TextDecoder and streams BEFORE loading undici
-global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder
-global.ReadableStream = ReadableStream
-global.WritableStream = WritableStream
-global.TransformStream = TransformStream
-
-// Polyfill Buffer.isAscii for undici (required for Node < 19.2.0)
-if (!Buffer.isAscii) {
-  Buffer.isAscii = function (input) {
-    return Buffer.isEncoding(input) || /^[\x00-\x7F]*$/.test(input.toString())
-  }
-}
-
-const undici = require('undici')
-
-// Set up global Web APIs from undici
-global.Request = undici.Request
-global.Response = undici.Response
-global.Headers = undici.Headers
-global.FormData = undici.FormData
-global.fetch = undici.fetch
-
-// Now load other test dependencies
+// Load other test dependencies (polyfills are in jest.polyfills.cjs)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@testing-library/jest-dom')
 // eslint-disable-next-line @typescript-eslint/no-require-imports

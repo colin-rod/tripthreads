@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Integration Tests: Itinerary CRUD Operations
  *
  * Tests the complete flow of creating, reading, updating, and deleting itinerary items

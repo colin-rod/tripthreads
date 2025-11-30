@@ -1,4 +1,6 @@
 /**
+ * @jest-environment node
+ *
  * Invite System Integration Tests
  *
  * End-to-end tests for the complete invite flow including:
