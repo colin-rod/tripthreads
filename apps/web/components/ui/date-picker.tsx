@@ -87,7 +87,7 @@ export function DatePicker({
         className="hidden"
       />
 
-      <style jsx global>{`
+      <style>{`
         /* Portal container */
         #date-picker-portal {
           z-index: 100 !important;
