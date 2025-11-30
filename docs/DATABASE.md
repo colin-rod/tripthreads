@@ -737,7 +737,16 @@ All tables use RLS to enforce access control:
 
 ## Implemented Migrations
 
-### Phase 1: Core Foundation
+### Baseline (Dec 2025)
+
+- ✅ **`20251201000000_baseline_schema.sql`** - Consolidated production schema
+  - Replaces 31 Phase 1-2 migrations (Jan-Nov 2025)
+  - Archived originals in `supabase/migrations/archive/2025-phase1-phase2/`
+  - Source: Production database dump
+  - Contains: Core tables, RLS policies, triggers, functions, indexes, comments
+  - Eliminates historical complexity (RLS recursion fixes, table renames, search_path issues)
+
+### Phase 1: Core Foundation (Archived)
 
 1. ✅ `20250129000001_create_users_trips_participants.sql` - Core tables
 2. ✅ `20250129000006_add_profile_fields.sql` - User profile enhancements

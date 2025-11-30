@@ -379,7 +379,9 @@ tripthreads/
 │   │   └── types/                  # Shared types
 │   └── web/                        # Web-specific shared code
 ├── supabase/
-│   ├── migrations/                 # ✅ SQL migrations (Phase 1-2)
+│   ├── migrations/                 # ✅ SQL migrations
+│   │   ├── 20251201000000_baseline_schema.sql  # Consolidated baseline
+│   │   └── archive/                # 40 archived files (31 migrations + 9 fixes)
 │   ├── functions/                  # Edge functions
 │   │   ├── fx-rates-sync/          # ✅ FX rate lookup
 │   │   └── send-access-request-email/ # ✅ Email notifications
