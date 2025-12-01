@@ -11,7 +11,6 @@ import {
 } from '@/app/actions/chat'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
 import { parseChatMessage } from '@/lib/chat/parse-mentions'
 import { ParsedItemModal } from './ParsedItemModal'
 import type { MentionableUser } from './MentionAutocomplete'
@@ -467,13 +466,6 @@ export function ChatThread({
             ))}
             <div ref={messagesEndRef} />
           </>
-        )}
-
-        {isProcessing && (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Processing...</span>
-          </div>
         )}
       </div>
 

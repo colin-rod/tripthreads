@@ -16,7 +16,12 @@
       "Bash(npm install:*)",
       "Bash(find:*)",
       "Bash(supabase functions deploy:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(psql:*)",
+      "Bash(supabase status:*)",
+      "Bash(mv:*)",
+      "Bash(npm run generate-types:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

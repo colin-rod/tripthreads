@@ -8,10 +8,11 @@ import { FeedbackModal } from './FeedbackModal'
 export function FloatingFeedbackButton() {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Only show in development
-  if (process.env.NODE_ENV === 'production') {
-    return null
-  }
+  // Temporarily show on all environments for testing
+  // TODO: Re-enable production check after testing
+  // if (process.env.NODE_ENV === 'production') {
+  //   return null
+  // }
 
   return (
     <>
