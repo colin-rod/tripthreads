@@ -22,7 +22,17 @@ interface FeedbackPayload {
   appVersion?: string
 }
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' }
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+}
+
+const JSON_HEADERS = {
+  'Content-Type': 'application/json',
+  ...CORS_HEADERS,
+}
+
 const LINEAR_API_KEY = Deno.env.get('LINEAR_API_KEY')
 const LINEAR_TEAM_ID = Deno.env.get('LINEAR_FEEDBACK_TEAM_ID')
 const LINEAR_FEEDBACK_LABEL_ID = Deno.env.get('LINEAR_FEEDBACK_LABEL_ID')
@@ -49,6 +59,14 @@ const getCategoryLabelId = (category: FeedbackPayload['category']): string | und
 }
 
 serve(async req => {
+  // Handle CORS preflight request
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS,
+    })
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,

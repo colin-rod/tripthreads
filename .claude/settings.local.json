@@ -21,7 +21,10 @@
       "Bash(supabase status:*)",
       "Bash(mv:*)",
       "Bash(npm run generate-types:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npx tsc:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
