@@ -60,7 +60,13 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
       })
 
       if (result.success && result.dateResult) {
-        setParsedResult(result.dateResult)
+        // Convert date strings back to Date objects (they get serialized during API response)
+        const dateResult = {
+          ...result.dateResult,
+          date: new Date(result.dateResult.date),
+          endDate: result.dateResult.endDate ? new Date(result.dateResult.endDate) : undefined,
+        }
+        setParsedResult(dateResult)
       } else {
         setError(result.error || 'Failed to parse itinerary item')
       }
@@ -165,10 +171,10 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Parsing...
+                    Adding...
                   </>
                 ) : (
-                  'Parse'
+                  'Add'
                 )}
               </Button>
             ) : (
