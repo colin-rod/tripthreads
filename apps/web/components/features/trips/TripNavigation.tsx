@@ -6,11 +6,14 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Home, MessageSquare, Calendar, DollarSign, Settings, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet'
+import { TripSwitcher } from './TripSwitcher'
+import { TripWithParticipants } from '@tripthreads/core'
 
 interface TripNavigationProps {
   tripId: string
   tripName: string
+  userTrips: TripWithParticipants[]
 }
 
 const navItems = [
@@ -41,7 +44,7 @@ const navItems = [
   },
 ]
 
-export function TripNavigation({ tripId, tripName }: TripNavigationProps) {
+export function TripNavigation({ tripId, tripName, userTrips }: TripNavigationProps) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
 
@@ -67,9 +70,12 @@ export function TripNavigation({ tripId, tripName }: TripNavigationProps) {
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <SheetHeader className="p-6 border-b">
-              <SheetTitle className="truncate text-left" title={tripName}>
-                {tripName}
-              </SheetTitle>
+              <TripSwitcher
+                currentTripId={tripId}
+                currentTripName={tripName}
+                trips={userTrips}
+                onMobileSheetClose={() => setIsOpen(false)}
+              />
             </SheetHeader>
             <nav className="flex flex-col space-y-1 p-3">
               {navItems.map(item => {
@@ -103,9 +109,7 @@ export function TripNavigation({ tripId, tripName }: TripNavigationProps) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col border-r bg-muted/10">
         <div className="p-6">
-          <h2 className="text-lg font-semibold truncate" title={tripName}>
-            {tripName}
-          </h2>
+          <TripSwitcher currentTripId={tripId} currentTripName={tripName} trips={userTrips} />
         </div>
 
         <nav className="flex-1 space-y-1 px-3">

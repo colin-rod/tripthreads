@@ -15,7 +15,7 @@
 
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getTripById } from '@tripthreads/core'
+import { getTripById, getUserTrips } from '@tripthreads/core'
 import { TripNavigation } from '@/components/features/trips/TripNavigation'
 
 interface TripLayoutProps {
@@ -56,9 +56,18 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     notFound()
   }
 
+  // Fetch all user trips for the trip switcher
+  let trips: Awaited<ReturnType<typeof getUserTrips>> = []
+  try {
+    trips = await getUserTrips(supabase)
+  } catch (error) {
+    console.error('Error loading trips:', error)
+    trips = [] // Graceful fallback to empty array
+  }
+
   return (
     <div className="flex h-screen">
-      <TripNavigation tripId={id} tripName={trip.name} />
+      <TripNavigation tripId={id} tripName={trip.name} userTrips={trips} />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">{children}</main>
