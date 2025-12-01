@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(supabase migration:*)",
+      "Bash(supabase db reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase db execute:*)",
+      "Bash(supabase db remote dump:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

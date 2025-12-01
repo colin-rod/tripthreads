@@ -172,7 +172,19 @@ export function ChatThread({
             }
           }
 
-          setMessages(prev => [...prev, newMessage])
+          // Add message only if it doesn't already exist (prevent duplicates from optimistic updates)
+          setMessages(prev => {
+            const exists = prev.some(msg => msg.id === newMessage.id)
+            if (exists) {
+              // Replace optimistic message with real one
+              return prev.map(msg =>
+                msg.id.toString().startsWith('temp-') && msg.content === newMessage.content
+                  ? newMessage
+                  : msg
+              )
+            }
+            return [...prev, newMessage]
+          })
         }
       )
       .on(
@@ -245,6 +257,31 @@ export function ChatThread({
 
     setIsProcessing(true)
 
+    // Create optimistic message (temporary until real message arrives from DB)
+    const currentUser = participants.find(p => p.id === currentUserId)
+    const optimisticMessage: ChatMessageData = {
+      id: `temp-${Date.now()}`,
+      trip_id: tripId,
+      user_id: currentUserId,
+      message_type: 'user' as const,
+      content,
+      attachments: attachments as any,
+      metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user: currentUser
+        ? {
+            id: currentUser.id,
+            full_name: currentUser.full_name,
+            email: currentUser.email,
+            avatar_url: currentUser.avatar_url ?? null,
+          }
+        : null,
+    }
+
+    // Add optimistic message immediately
+    setMessages(prev => [...prev, optimisticMessage])
+
     try {
       // Check if message contains @TripThread mentions
       const parseResult = await parseChatMessage(content, tripId, {
@@ -258,7 +295,7 @@ export function ChatThread({
         setCurrentModalIndex(0)
 
         // Send the user's message first
-        await createMessage({
+        const result = await createMessage({
           tripId,
           content,
           attachments,
@@ -269,20 +306,44 @@ export function ChatThread({
           },
         })
 
+        // Replace optimistic message with real message
+        if (result.success && result.data) {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === optimisticMessage.id
+                ? { ...(result.data as unknown as ChatMessageData), user: optimisticMessage.user }
+                : msg
+            )
+          )
+        }
+
         // Show modal for first command
         setShowModal(true)
       } else {
         // Regular message without AI parsing
-        await createMessage({
+        const result = await createMessage({
           tripId,
           content,
           attachments,
           mentionedUserIds,
         })
+
+        // Replace optimistic message with real message
+        if (result.success && result.data) {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === optimisticMessage.id
+                ? { ...(result.data as unknown as ChatMessageData), user: optimisticMessage.user }
+                : msg
+            )
+          )
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error)
       toast.error('Failed to send message')
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id))
     } finally {
       setIsProcessing(false)
     }
@@ -300,9 +361,30 @@ export function ChatThread({
     // Close current modal
     setShowModal(false)
 
-    // Send bot confirmation message
+    // Create optimistic bot message
     const botMessage = formatBotMessage(currentCommand)
-    await createBotMessage({
+    const optimisticBotMessage: ChatMessageData = {
+      id: `temp-bot-${Date.now()}`,
+      trip_id: tripId,
+      user_id: null,
+      message_type: 'bot' as const,
+      content: botMessage,
+      attachments: [],
+      metadata: {
+        command: currentCommand.command,
+        hasExpense: currentCommand.hasExpense,
+        hasItinerary: currentCommand.hasItinerary,
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user: null,
+    }
+
+    // Add optimistic bot message immediately
+    setMessages(prev => [...prev, optimisticBotMessage])
+
+    // Send bot confirmation message
+    const result = await createBotMessage({
       tripId,
       content: botMessage,
       metadata: {
@@ -311,6 +393,15 @@ export function ChatThread({
         hasItinerary: currentCommand.hasItinerary,
       },
     })
+
+    // Replace optimistic message with real message
+    if (result.success && result.data) {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === optimisticBotMessage.id ? (result.data as unknown as ChatMessageData) : msg
+        )
+      )
+    }
 
     // Move to next command if any
     if (currentModalIndex < parsedCommands.length - 1) {
