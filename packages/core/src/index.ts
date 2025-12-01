@@ -4,6 +4,7 @@ export * from './types/parser'
 export * from './types/invite'
 export * from './types/itinerary'
 export * from './types/expense'
+export * from './types/feedback'
 
 // Convenience type exports from Database
 import type { Database } from './types/database'
@@ -20,6 +21,7 @@ export * from './utils/fx'
 export * from './utils/expense-splits'
 export * from './utils/settlements'
 export * from './utils/name-matcher'
+export * from './utils/feedback'
 
 // Parser
 export * from './parser'
