@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/auth/auth-context'
 import { PostHogProvider } from '@/lib/analytics/posthog-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
+import { FloatingFeedbackButton } from '@/components/features/feedback/FloatingFeedbackButton'
 
 export const metadata: Metadata = {
   title: 'TripThreads - Collaborative Trip Planning',
@@ -23,6 +24,7 @@ export default function RootLayout({
         </AuthProvider>
         <Toaster />
         <SonnerToaster position="top-right" />
+        <FloatingFeedbackButton />
       </body>
     </html>
   )

@@ -14,7 +14,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 interface FeedbackPayload {
   email: string
   message: string
-  environment: 'production' | 'staging' | 'development'
+  environment?: 'production' | 'staging' | 'development'
   category: 'bug-report' | 'feature-request' | 'general' | 'ux-issue'
   tripId?: string
   screenshotDataUrl?: string
@@ -91,6 +91,9 @@ serve(async req => {
     })
   }
 
+  // Auto-detect environment if not provided
+  const environment = payload.environment || 'production'
+
   const validationErrors: string[] = []
   if (!payload.email || !payload.email.includes('@')) {
     validationErrors.push('A valid email is required')
@@ -98,11 +101,8 @@ serve(async req => {
   if (!payload.message || payload.message.trim().length < 5) {
     validationErrors.push('Feedback message is too short')
   }
-  if (
-    !payload.environment ||
-    !['production', 'staging', 'development'].includes(payload.environment)
-  ) {
-    validationErrors.push('Environment is required')
+  if (!['production', 'staging', 'development'].includes(environment)) {
+    validationErrors.push('Invalid environment')
   }
   if (
     !payload.category ||
@@ -124,7 +124,7 @@ serve(async req => {
   const descriptionParts = [
     `**Email:** ${payload.email}`,
     `**Category:** ${payload.category}`,
-    `**Environment:** ${payload.environment}`,
+    `**Environment:** ${environment}`,
     payload.platform ? `**Platform:** ${payload.platform}` : null,
     payload.appVersion ? `**App Version:** ${payload.appVersion}` : null,
     payload.tripId ? `**Trip ID:** ${payload.tripId}` : null,

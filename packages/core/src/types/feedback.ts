@@ -5,7 +5,7 @@ export type FeedbackCategory = 'bug-report' | 'feature-request' | 'general' | 'u
 export interface SubmitFeedbackPayload {
   email: string
   message: string
-  environment: FeedbackEnvironment
+  environment?: FeedbackEnvironment
   category: FeedbackCategory
   tripId?: string
   screenshotDataUrl?: string
