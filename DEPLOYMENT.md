@@ -79,6 +79,16 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=xxx
 VAPID_PRIVATE_KEY=xxx
 ```
 
+#### Linear Feedback Ingestion (Supabase Edge Function)
+
+Configure these in Supabase project settings for the `submit-feedback` edge function:
+
+```bash
+LINEAR_API_KEY=<YOUR_LINEAR_API_KEY>
+LINEAR_FEEDBACK_TEAM_ID=<LINEAR_TEAM_ID>
+LINEAR_FEEDBACK_LABEL_ID=<LINEAR_LABEL_ID>
+```
+
 ### Mobile (Expo + EAS)
 
 #### app.json Configuration

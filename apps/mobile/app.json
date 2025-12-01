@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tripthreads.app",
-      "associatedDomains": ["applinks:tripthreads.com", "applinks:dev.tripthreads.com"]
+      "associatedDomains": ["applinks:tripthreads.com", "applinks:dev.tripthreads.com"],
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow TripThreads to attach screenshots to your feedback."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +29,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.tripthreads.app",
+      "permissions": ["READ_MEDIA_IMAGES"],
       "intentFilters": [
         {
           "action": "VIEW",

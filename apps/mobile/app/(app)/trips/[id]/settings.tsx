@@ -513,6 +513,24 @@ export default function TripSettingsScreen() {
             </Text>
           </View>
 
+          {/* Feedback */}
+          <View className="mb-6 space-y-2">
+            <Text size="lg" weight="semibold">
+              Share feedback
+            </Text>
+            <Text size="sm" variant="muted">
+              Found a bug or have an idea? Send it to the team and we&apos;ll log it in Linear.
+            </Text>
+            <Button
+              variant="outline"
+              onPress={() =>
+                router.push({ pathname: '/(app)/feedback', params: { tripId: trip.id } })
+              }
+            >
+              📨 Send feedback
+            </Button>
+          </View>
+
           {/* Danger Zone - Only for owners */}
           {isOwner && (
             <View className="mb-6">
