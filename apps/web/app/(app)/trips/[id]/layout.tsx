@@ -61,7 +61,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
       <TripNavigation tripId={id} tripName={trip.name} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   )
 }
