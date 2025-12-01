@@ -260,9 +260,6 @@ serve(async req => {
           id
           url
         }
-        userError {
-          message
-        }
       }
     }
   `
@@ -305,15 +302,12 @@ serve(async req => {
   }
   const issueCreateResult = linearData?.data?.issueCreate
 
-  if (!issueCreateResult?.success || issueCreateResult?.userError) {
-    console.error('Linear issue creation failed:', issueCreateResult?.userError)
-    return new Response(
-      JSON.stringify({ error: issueCreateResult?.userError?.message || 'Linear request failed' }),
-      {
-        status: 500,
-        headers: JSON_HEADERS,
-      }
-    )
+  if (!issueCreateResult?.success) {
+    console.error('Linear issue creation failed:', issueCreateResult)
+    return new Response(JSON.stringify({ error: 'Linear request failed' }), {
+      status: 500,
+      headers: JSON_HEADERS,
+    })
   }
 
   return new Response(
