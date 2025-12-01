@@ -56,13 +56,9 @@ export async function getOwnedTripsForDeletion(): Promise<OwnedTrip[]> {
   }
 
   // Call database function to get owned trips
-  const { data, error } = await supabase.rpc(
-    // @ts-expect-error - Function added in migration 20251124000002, types will be generated after migration
-    'get_owned_trips_for_deletion',
-    {
-      p_user_id: authUser.id,
-    }
-  )
+  const { data, error } = await supabase.rpc('get_owned_trips_for_deletion', {
+    p_user_id: authUser.id,
+  })
 
   if (error) {
     console.error('Error fetching owned trips:', error)
@@ -136,7 +132,6 @@ export async function deleteAccount(
   // Call database function to anonymize account
   // This handles: profile anonymization, trip ownership transfer/deletion, and hard deletes
   const { data: deletionResult, error: deletionError } = await supabase.rpc(
-    // @ts-expect-error - Function added in migration 20251124000002, types will be generated after migration
     'anonymize_user_account',
     {
       p_user_id: authUser.id,
