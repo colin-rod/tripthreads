@@ -40,6 +40,7 @@ const LINEAR_BUG_REPORT_LABEL_ID = Deno.env.get('LINEAR_BUG_REPORT_LABEL_ID')
 const LINEAR_FEATURE_REQUEST_LABEL_ID = Deno.env.get('LINEAR_FEATURE_REQUEST_LABEL_ID')
 const LINEAR_GENERAL_LABEL_ID = Deno.env.get('LINEAR_GENERAL_LABEL_ID')
 const LINEAR_UX_ISSUE_LABEL_ID = Deno.env.get('LINEAR_UX_ISSUE_LABEL_ID')
+const LINEAR_FEEDBACK_PARENT_ISSUE_ID = Deno.env.get('LINEAR_FEEDBACK_PARENT_ISSUE_ID')
 const MAX_SCREENSHOT_CHAR_LENGTH = 7_000_000 // ~5MB base64 data URI
 
 // Supabase client for storage uploads (env vars auto-available in Edge Functions)
@@ -59,6 +60,26 @@ const getCategoryLabelId = (category: FeedbackPayload['category']): string | und
       return LINEAR_UX_ISSUE_LABEL_ID
     default:
       return undefined
+  }
+}
+
+/**
+ * Map category to human-readable display name for title formatting
+ * @param category - Feedback category
+ * @returns Display name (e.g., "Bug Report", "Feature Request")
+ */
+const getCategoryDisplayName = (category: FeedbackPayload['category']): string => {
+  switch (category) {
+    case 'bug-report':
+      return 'Bug Report'
+    case 'feature-request':
+      return 'Feature Request'
+    case 'general':
+      return 'General'
+    case 'ux-issue':
+      return 'UX Issue'
+    default:
+      return 'Feedback'
   }
 }
 
@@ -255,7 +276,15 @@ serve(async req => {
   // Fallback: if no category label is set, don't assign any labels
   // The LINEAR_FEEDBACK_LABEL_ID is a parent group and cannot be used directly
 
-  const title = `User feedback (${payload.platform || 'app'})`
+  // Generate title: [Category] First line of user message (max 60 chars)
+  const categoryName = getCategoryDisplayName(payload.category)
+  const firstLine = payload.message.trim().split('\n')[0]
+  const maxMessageLength = 60
+  const truncatedMessage =
+    firstLine.length > maxMessageLength
+      ? firstLine.substring(0, maxMessageLength) + '...'
+      : firstLine
+  const title = `[${categoryName}] ${truncatedMessage}`
 
   const mutation = `
     mutation CreateFeedbackIssue($input: IssueCreateInput!) {
@@ -283,6 +312,7 @@ serve(async req => {
           description: descriptionParts.join('\n'),
           teamId: LINEAR_TEAM_ID,
           labelIds,
+          ...(LINEAR_FEEDBACK_PARENT_ISSUE_ID && { parentId: LINEAR_FEEDBACK_PARENT_ISSUE_ID }),
         },
       },
     }),

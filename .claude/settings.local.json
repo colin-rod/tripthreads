@@ -26,7 +26,8 @@
       "Bash(supabase gen types:*)",
       "Bash(git restore:*)",
       "Bash(supabase functions logs:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(supabase secrets set:*)"
     ],
     "deny": [],
     "ask": []
