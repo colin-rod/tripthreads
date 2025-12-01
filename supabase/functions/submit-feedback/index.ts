@@ -42,6 +42,10 @@ const LINEAR_GENERAL_LABEL_ID = Deno.env.get('LINEAR_GENERAL_LABEL_ID')
 const LINEAR_UX_ISSUE_LABEL_ID = Deno.env.get('LINEAR_UX_ISSUE_LABEL_ID')
 const MAX_SCREENSHOT_CHAR_LENGTH = 7_000_000 // ~5MB base64 data URI
 
+// Supabase client for storage uploads (env vars auto-available in Edge Functions)
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
 // Map category to label ID
 const getCategoryLabelId = (category: FeedbackPayload['category']): string | undefined => {
   switch (category) {
@@ -55,6 +59,72 @@ const getCategoryLabelId = (category: FeedbackPayload['category']): string | und
       return LINEAR_UX_ISSUE_LABEL_ID
     default:
       return undefined
+  }
+}
+
+/**
+ * Upload base64 screenshot to Supabase Storage
+ * @param screenshotDataUrl - base64 data URL (e.g., "data:image/png;base64,iVBOR...")
+ * @returns Public URL of uploaded screenshot, or null if upload fails
+ */
+async function uploadScreenshotToStorage(screenshotDataUrl: string): Promise<string | null> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Missing Supabase credentials for storage upload')
+    return null
+  }
+
+  try {
+    // Lazy import Supabase client (only load if screenshot exists)
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // Parse base64 data URL format: "data:image/png;base64,iVBORw0KGgo..."
+    const matches = screenshotDataUrl.match(/^data:([^;]+);base64,(.+)$/)
+    if (!matches) {
+      console.error('Invalid data URL format')
+      return null
+    }
+
+    const mimeType = matches[1] // e.g., "image/png"
+    const base64Data = matches[2]
+
+    // Convert base64 to Uint8Array (Deno-compatible)
+    // Note: Deno has built-in atob() for base64 decoding
+    const binaryString = atob(base64Data)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+
+    // Generate unique filename: timestamp-random.ext
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const randomStr = Math.random().toString(36).substring(2, 8)
+    const extension = mimeType.split('/')[1] || 'jpg'
+    const filename = `${timestamp}-${randomStr}.${extension}`
+
+    // Upload to storage
+    const { data, error } = await supabase.storage
+      .from('feedback-screenshots')
+      .upload(filename, bytes, {
+        contentType: mimeType,
+        upsert: false, // Never overwrite (each screenshot is unique)
+      })
+
+    if (error) {
+      console.error('Storage upload error:', error)
+      return null
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('feedback-screenshots').getPublicUrl(data.path)
+
+    console.log(`Screenshot uploaded: ${publicUrl}`)
+    return publicUrl
+  } catch (error) {
+    console.error('Unexpected error during screenshot upload:', error)
+    return null
   }
 }
 
@@ -152,8 +222,26 @@ serve(async req => {
     payload.message.trim(),
   ].filter(Boolean) as string[]
 
+  // Handle screenshot - upload to Supabase Storage and embed URL
   if (payload.screenshotDataUrl) {
-    descriptionParts.push('', '**Screenshot**', `![User screenshot](${payload.screenshotDataUrl})`)
+    const screenshotSize = (payload.screenshotDataUrl.length * 0.75) / 1024 // Approximate KB
+    console.log(`Uploading screenshot (${screenshotSize.toFixed(0)}KB)...`)
+
+    const screenshotUrl = await uploadScreenshotToStorage(payload.screenshotDataUrl)
+
+    if (screenshotUrl) {
+      // Success - embed in Linear issue
+      descriptionParts.push('', '**Screenshot**', `![Feedback Screenshot](${screenshotUrl})`)
+      console.log('Screenshot uploaded and embedded')
+    } else {
+      // Failed - degrade gracefully
+      descriptionParts.push(
+        '',
+        '**Screenshot**',
+        `Screenshot upload failed (${screenshotSize.toFixed(0)}KB). Follow up with user.`
+      )
+      console.warn('Screenshot upload failed - issue created without screenshot')
+    }
   }
 
   const categoryLabelId = getCategoryLabelId(payload.category)
@@ -183,7 +271,7 @@ serve(async req => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${LINEAR_API_KEY}`,
+      Authorization: LINEAR_API_KEY,
     },
     body: JSON.stringify({
       query: mutation,
