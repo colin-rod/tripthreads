@@ -9,7 +9,7 @@ export function FloatingFeedbackButton() {
   const [isOpen, setIsOpen] = useState(false)
 
   // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV === 'production') {
     return null
   }
 
