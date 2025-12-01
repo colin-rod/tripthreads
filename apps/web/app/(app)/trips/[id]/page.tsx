@@ -215,7 +215,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                     <CardTitle className="text-lg">Upload Photos</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <PhotoUpload tripId={trip.id} onUploadComplete={() => {}} />
+                    <PhotoUpload tripId={trip.id} />
                   </CardContent>
                 </Card>
               )}

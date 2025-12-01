@@ -24,7 +24,9 @@
       "Bash(lsof:*)",
       "Bash(npx tsc:*)",
       "Bash(supabase gen types:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(supabase functions logs:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
