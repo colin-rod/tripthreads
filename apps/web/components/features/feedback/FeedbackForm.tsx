@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { FileImage, Loader2, Send } from 'lucide-react'
 import { submitFeedbackToLinear } from '@tripthreads/core/utils/feedback'
-import type { FeedbackEnvironment } from '@tripthreads/core/types/feedback'
+import type { FeedbackEnvironment, FeedbackCategory } from '@tripthreads/core/types/feedback'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,7 @@ import {
 const feedbackSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   environment: z.enum(['production', 'staging', 'development']),
+  category: z.enum(['bug-report', 'feature-request', 'general', 'ux-issue']),
   tripId: z.string().optional(),
   message: z.string().min(10, 'Please share at least 10 characters'),
 })
@@ -54,6 +55,7 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
     defaultValues: {
       email: defaultEmail || '',
       environment: 'production',
+      category: 'general',
       tripId: fallbackTripId,
       message: '',
     },
@@ -112,6 +114,7 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
       form.reset({
         email: values.email,
         environment: values.environment,
+        category: values.category,
         tripId: values.tripId,
         message: '',
       })
@@ -133,17 +136,42 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
     <div className="space-y-6">
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...form.register('email')}
+            />
+            {form.formState.errors.email && (
+              <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                {...form.register('email')}
-              />
-              {form.formState.errors.email && (
-                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              <Label htmlFor="category">Category</Label>
+              <Select
+                onValueChange={value =>
+                  form.setValue('category', value as FeedbackCategory, {
+                    shouldValidate: true,
+                  })
+                }
+                defaultValue={form.getValues('category')}
+              >
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bug-report">Bug Report</SelectItem>
+                  <SelectItem value="feature-request">Feature Request</SelectItem>
+                  <SelectItem value="general">General Feedback</SelectItem>
+                  <SelectItem value="ux-issue">UX Issue</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.category && (
+                <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
               )}
             </div>
 

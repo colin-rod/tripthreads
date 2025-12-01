@@ -11,14 +11,23 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as ImagePicker from 'expo-image-picker'
-import { submitFeedbackToLinear } from '@tripthreads/core/utils/feedback'
-import type { FeedbackEnvironment } from '@tripthreads/core/types/feedback'
+import {
+  submitFeedbackToLinear,
+  type FeedbackEnvironment,
+  type FeedbackCategory,
+} from '@tripthreads/core'
 import { Button } from '../../components/ui/button'
 import { supabase } from '../../lib/supabase/client'
 import { useAuth } from '../../lib/auth/auth-context'
 import { useToast } from '../../hooks/use-toast'
 
 const ENV_OPTIONS: FeedbackEnvironment[] = ['production', 'staging', 'development']
+const CATEGORY_OPTIONS: Array<{ value: FeedbackCategory; label: string }> = [
+  { value: 'bug-report', label: 'Bug Report' },
+  { value: 'feature-request', label: 'Feature Request' },
+  { value: 'general', label: 'General' },
+  { value: 'ux-issue', label: 'UX Issue' },
+]
 
 export default function FeedbackScreen() {
   const router = useRouter()
@@ -33,6 +42,7 @@ export default function FeedbackScreen() {
 
   const [email, setEmail] = useState(user?.email || '')
   const [environment, setEnvironment] = useState<FeedbackEnvironment>('production')
+  const [category, setCategory] = useState<FeedbackCategory>('general')
   const [message, setMessage] = useState('')
   const [tripId, setTripId] = useState(defaultTripId)
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null)
@@ -104,6 +114,7 @@ export default function FeedbackScreen() {
       await submitFeedbackToLinear(supabase, {
         email,
         environment,
+        category,
         message,
         tripId: tripId || undefined,
         screenshotDataUrl: screenshotDataUrl || undefined,
@@ -152,6 +163,27 @@ export default function FeedbackScreen() {
               placeholder="you@example.com"
               placeholderTextColor="#9ca3af"
             />
+          </View>
+
+          <View className="space-y-2">
+            <Text className="text-sm font-medium text-foreground">Category</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {CATEGORY_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setCategory(option.value)}
+                  className={`border rounded-lg px-3 py-2 ${
+                    category === option.value ? 'border-primary bg-primary/10' : 'border-border'
+                  }`}
+                >
+                  <Text
+                    className={`text-center font-medium ${category === option.value ? 'text-primary' : 'text-foreground'}`}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           <View className="space-y-2">
