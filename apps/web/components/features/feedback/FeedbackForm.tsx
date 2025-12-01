@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { FileImage, Loader2, Send } from 'lucide-react'
+import { FileImage, Loader2, Send, X } from 'lucide-react'
 import { submitFeedbackToLinear } from '@tripthreads/core/utils/feedback'
 import type { FeedbackEnvironment, FeedbackCategory } from '@tripthreads/core/types/feedback'
 import { supabase } from '@/lib/supabase/client'
@@ -93,6 +93,44 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
     }
     reader.readAsDataURL(file)
   }
+
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items
+      if (!items) return
+
+      // Look for image items in clipboard
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) {
+            handleScreenshotUpload(file)
+            toast({
+              title: 'Screenshot pasted',
+              description: 'Your screenshot has been added to the feedback.',
+            })
+            event.preventDefault()
+          }
+          break
+        }
+      }
+    },
+    [toast]
+  )
+
+  const handleRemoveScreenshot = () => {
+    setScreenshotDataUrl(null)
+    setScreenshotName(null)
+  }
+
+  // Add paste event listener
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste)
+    return () => {
+      document.removeEventListener('paste', handlePaste)
+    }
+  }, [handlePaste])
 
   const onSubmit = async (values: FeedbackFormValues) => {
     try {
@@ -229,6 +267,9 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
 
           <div className="space-y-2">
             <Label>Screenshot (optional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Upload a file or paste from clipboard (Cmd/Ctrl+V)
+            </p>
             <div className="flex items-center gap-3">
               <input
                 type="file"
@@ -246,7 +287,18 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
                 {screenshotName ? 'Replace screenshot' : 'Upload screenshot'}
               </Button>
               {screenshotName && (
-                <span className="text-sm text-muted-foreground">{screenshotName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{screenshotName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveScreenshot}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
             {screenshotDataUrl && (
