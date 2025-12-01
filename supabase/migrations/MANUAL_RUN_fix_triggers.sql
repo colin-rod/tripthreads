@@ -21,7 +21,7 @@ BEGIN
     url := 'https://tbwbaydyyjokrsjtgerh.supabase.co/functions/v1/send-invite-accepted-notification',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic'
+      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE'
     ),
     body := jsonb_build_object(
       'type', 'INSERT',
@@ -51,7 +51,7 @@ BEGIN
     url := 'https://tbwbaydyyjokrsjtgerh.supabase.co/functions/v1/send-itinerary-notification',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic'
+      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE'
     ),
     body := jsonb_build_object(
       'type', TG_OP,
@@ -94,7 +94,7 @@ BEGIN
     url := 'https://tbwbaydyyjokrsjtgerh.supabase.co/functions/v1/send-expense-notification',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic'
+      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE'
     ),
     body := jsonb_build_object(
       'type', 'INSERT',
@@ -128,7 +128,7 @@ BEGIN
       url := 'https://tbwbaydyyjokrsjtgerh.supabase.co/functions/v1/send-settlement-notification',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic'
+        'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE'
       ),
       body := jsonb_build_object(
         'type', 'UPDATE',
@@ -165,7 +165,7 @@ BEGIN
     url := 'https://tbwbaydyyjokrsjtgerh.supabase.co/functions/v1/send-chat-notification',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTY0NTc1MiwiZXhwIjoyMDc3MjIxNzUyfQ.A-OY9ej45jXDaIsxx1td286zdvuOiEfpryh96MJR0ic'
+      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY_HERE'
     ),
     body := jsonb_build_object(
       'type', 'INSERT',
