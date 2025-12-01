@@ -245,10 +245,15 @@ serve(async req => {
   }
 
   const categoryLabelId = getCategoryLabelId(payload.category)
-  const labelIds = [LINEAR_FEEDBACK_LABEL_ID]
+  const labelIds = []
+
+  // Only use category-specific labels (parent "Feedback" label is a group and cannot be assigned)
   if (categoryLabelId) {
     labelIds.push(categoryLabelId)
   }
+
+  // Fallback: if no category label is set, don't assign any labels
+  // The LINEAR_FEEDBACK_LABEL_ID is a parent group and cannot be used directly
 
   const title = `User feedback (${payload.platform || 'app'})`
 
