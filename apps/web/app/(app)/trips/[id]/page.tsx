@@ -16,9 +16,8 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@tripthreads/shared'
+import { getTripById, isTripOwner } from '@tripthreads/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TripActions } from '@/components/features/trips/TripActions'
@@ -26,25 +25,32 @@ import { InviteButton } from '@/components/features/trips/InviteButton'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
+import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
+import PhotoUpload from '@/components/features/feed/PhotoUpload'
+import PhotoFeed from '@/components/features/feed/PhotoFeed'
 
 interface TripDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
-type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[] ? P : never
+type TripRole = 'owner' | 'participant' | 'viewer'
+type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[]
+  ? Omit<P, 'role'> & { role: TripRole }
+  : never
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
   const supabase = await createClient()
+  const { id } = await params
 
   let trip!: TripWithRelations
   let isOwner = false
 
   try {
-    trip = await getTripById(supabase, params.id)
-    isOwner = await isTripOwner(supabase, params.id)
+    trip = await getTripById(supabase, id)
+    isOwner = await isTripOwner(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
@@ -58,7 +64,10 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const tripParticipants = (trip.trip_participants ?? []) as TripParticipant[]
+  const tripParticipants = (trip.trip_participants ?? []).map(p => ({
+    ...p,
+    role: p.role as TripRole,
+  })) as TripParticipant[]
   const userParticipant = tripParticipants.find(participant => participant.user?.id === user?.id)
   const canEdit = userParticipant?.role !== 'viewer'
 
@@ -122,49 +131,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Participants Sidebar */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Participants</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {trip.trip_participants.map((participant: any) => {
-                const isPartialJoiner = participant.join_start_date && participant.join_end_date
-                return (
-                  <div key={participant.id} className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={participant.user.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {participant.user.full_name
-                          ?.split(' ')
-                          .map((n: string) => n[0])
-                          .join('')
-                          .toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">
-                          {participant.user.full_name || 'Unknown'}
-                        </p>
-                        {isPartialJoiner && (
-                          <Badge variant="outline" className="text-xs">
-                            Partial
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
-                      {isPartialJoiner && (
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                          {format(new Date(participant.join_end_date), 'MMM d')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+          <ParticipantsList participants={tripParticipants} />
         </div>
 
         {/* Main Content Area */}
@@ -241,16 +208,25 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
             {/* Feed Tab */}
             <TabsContent value="feed" className="space-y-6 mt-6">
+              {/* Photo Upload (Participants only) */}
+              {canEdit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Upload Photos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PhotoUpload tripId={trip.id} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Photo Feed (Gallery + Lightbox) */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Trip Feed</CardTitle>
+                  <CardTitle className="text-lg">Trip Photos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No photos or updates yet</p>
-                    <p className="text-sm mt-1">Share photos and memories from your trip</p>
-                  </div>
+                  <PhotoFeed tripId={trip.id} userId={user?.id || ''} />
                 </CardContent>
               </Card>
             </TabsContent>

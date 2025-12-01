@@ -1,31 +1,41 @@
-import { describe, it, expect, beforeEach, vi } from '@jest/globals'
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { supabase } from '../../lib/supabase/client'
+import type {
+  AuthResponse,
+  AuthTokenResponsePassword,
+  Session,
+  User,
+  OAuthResponse,
+  AuthError,
+} from '@supabase/supabase-js'
 
 // Mock Supabase client
-vi.mock('../../lib/supabase/client', () => ({
-  supabase: {
-    auth: {
-      signUp: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signInWithOAuth: vi.fn(),
-      signOut: vi.fn(),
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(),
-    },
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({ error: null })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => ({ data: null, error: null })),
+jest.mock('../../lib/supabase/client', () => {
+  return {
+    supabase: {
+      auth: {
+        signUp: jest.fn(),
+        signInWithPassword: jest.fn(),
+        signInWithOAuth: jest.fn(),
+        signOut: jest.fn(),
+        getSession: jest.fn(),
+        onAuthStateChange: jest.fn(),
+      },
+      from: jest.fn(() => ({
+        insert: jest.fn(() => ({ error: null })),
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn(() => ({ data: null, error: null })),
+          })),
         })),
       })),
-    })),
-  },
-}))
+    },
+  }
+})
 
 describe('Authentication', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('Email/Password Authentication', () => {
@@ -36,10 +46,11 @@ describe('Authentication', () => {
         user_metadata: { full_name: 'Test User' },
       }
 
-      vi.mocked(supabase.auth.signUp).mockResolvedValue({
-        data: { user: mockUser, session: null },
+      const signUpMock = supabase.auth.signUp as any
+      signUpMock.mockResolvedValue({
+        data: { user: mockUser as unknown as User, session: null },
         error: null,
-      } as any)
+      } as AuthResponse)
 
       const { data, error } = await supabase.auth.signUp({
         email: 'test@example.com',
@@ -67,15 +78,16 @@ describe('Authentication', () => {
     it('should handle sign up errors', async () => {
       const mockError = new Error('Email already registered')
 
-      vi.mocked(supabase.auth.signUp).mockResolvedValue({
+      const signUpMock = supabase.auth.signUp as any
+      signUpMock.mockResolvedValue({
         data: { user: null, session: null },
         error: mockError,
-      } as any)
+      } as AuthResponse)
 
       const { error } = await supabase.auth.signUp({
         email: 'existing@example.com',
         password: 'password123',
-      } as any)
+      })
 
       expect(error).toEqual(mockError)
     })
@@ -89,10 +101,11 @@ describe('Authentication', () => {
         },
       }
 
-      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
-        data: { session: mockSession, user: mockSession.user },
+      const signInWithPasswordMock = supabase.auth.signInWithPassword as any
+      signInWithPasswordMock.mockResolvedValue({
+        data: { session: mockSession as Session, user: mockSession.user as unknown as User },
         error: null,
-      } as any)
+      } as AuthTokenResponsePassword)
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: 'test@example.com',
@@ -110,10 +123,11 @@ describe('Authentication', () => {
     it('should handle invalid credentials', async () => {
       const mockError = new Error('Invalid login credentials')
 
-      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
+      const signInWithPasswordMock = supabase.auth.signInWithPassword as any
+      signInWithPasswordMock.mockResolvedValue({
         data: { session: null, user: null },
         error: mockError,
-      } as any)
+      } as AuthTokenResponsePassword)
 
       const { error } = await supabase.auth.signInWithPassword({
         email: 'test@example.com',
@@ -126,10 +140,13 @@ describe('Authentication', () => {
 
   describe('OAuth Authentication', () => {
     it('should initiate Google OAuth flow', async () => {
-      vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
-        data: { provider: 'google', url: 'https://accounts.google.com/...' },
+      const oauthResponse = {
+        data: { provider: 'google', url: null },
         error: null,
-      } as any)
+      } as unknown as OAuthResponse
+
+      const signInWithOAuthMock = supabase.auth.signInWithOAuth as any
+      signInWithOAuthMock.mockResolvedValue(oauthResponse)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -149,12 +166,15 @@ describe('Authentication', () => {
     })
 
     it('should handle OAuth errors', async () => {
-      const mockError = new Error('OAuth provider not configured')
+      const mockError = new Error('OAuth provider not configured') as unknown as AuthError
 
-      vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
-        data: { provider: null, url: null },
+      const oauthErrorResponse = {
+        data: { provider: 'google', url: null },
         error: mockError,
-      } as any)
+      } as unknown as OAuthResponse
+
+      const signInWithOAuthMock = supabase.auth.signInWithOAuth as any
+      signInWithOAuthMock.mockResolvedValue(oauthErrorResponse)
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -166,7 +186,8 @@ describe('Authentication', () => {
 
   describe('Sign Out', () => {
     it('should successfully sign out user', async () => {
-      vi.mocked(supabase.auth.signOut).mockResolvedValue({
+      const signOutMock = supabase.auth.signOut as any
+      signOutMock.mockResolvedValue({
         error: null,
       })
 
@@ -177,9 +198,10 @@ describe('Authentication', () => {
     })
 
     it('should handle sign out errors', async () => {
-      const mockError = new Error('Sign out failed')
+      const mockError = new Error('Sign out failed') as unknown as AuthError
 
-      vi.mocked(supabase.auth.signOut).mockResolvedValue({
+      const signOutMock = supabase.auth.signOut as any
+      signOutMock.mockResolvedValue({
         error: mockError,
       })
 
@@ -199,10 +221,11 @@ describe('Authentication', () => {
         },
       }
 
-      vi.mocked(supabase.auth.getSession).mockResolvedValue({
-        data: { session: mockSession },
+      const getSessionMock = supabase.auth.getSession as any
+      getSessionMock.mockResolvedValue({
+        data: { session: mockSession as Session },
         error: null,
-      } as any)
+      })
 
       const { data, error } = await supabase.auth.getSession()
 
@@ -211,10 +234,11 @@ describe('Authentication', () => {
     })
 
     it('should return null for no active session', async () => {
-      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      const getSessionMock = supabase.auth.getSession as any
+      getSessionMock.mockResolvedValue({
         data: { session: null },
         error: null,
-      } as any)
+      })
 
       const { data, error } = await supabase.auth.getSession()
 

@@ -34,10 +34,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
-import { getTripInvites, revokeInvite, getInviteUrl, type TripInvite } from '@tripthreads/shared'
+import { getTripInvites, revokeInvite, getInviteUrl, type TripInvite } from '@tripthreads/core'
 
 interface PendingInvitesListProps {
   tripId: string

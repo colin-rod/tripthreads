@@ -13,7 +13,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getInviteWithDetails } from '@tripthreads/shared'
+import { getInviteWithDetails } from '@tripthreads/core'
 import { InviteAcceptanceCard } from '@/components/features/invites/InviteAcceptanceCard'
 
 interface InvitePageProps {

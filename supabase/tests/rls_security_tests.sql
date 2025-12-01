@@ -16,10 +16,10 @@
 -- Each test runs with a specific auth.uid() to simulate different users
 
 -- Test Users (from seed.sql):
--- - Alice (ea1854fb-b8f4-480f-899f-af1bcf0218b3): Owner of Paris trip
--- - Benji (0af9094b-dedb-4472-8133-20577fbc8f98): Participant on Paris trip (joined 2025-06-18)
--- - Baylee (29f0dac4-7629-45f8-8fa1-10e0df75ce1b): Viewer on Paris trip
--- - Maya (aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e): Not on Paris trip (isolated)
+-- - Alice (22222222-2222-2222-2222-222222222222): Owner of Paris trip
+-- - Benji (44444444-4444-4444-4444-444444444444): Participant on Paris trip (joined 2025-06-18)
+-- - Baylee (66666666-6666-6666-6666-666666666666): Viewer on Paris trip
+-- - Maya (55555555-5555-5555-5555-555555555555): Not on Paris trip (isolated)
 
 -- Test Trips:
 -- - Paris Trip (10000000-0000-0000-0000-000000000001): Owner = Alice
@@ -103,7 +103,7 @@ SELECT 'TC1.1: Maya cannot read Alice''s Paris trip' AS test_case,
          WHEN NOT EXISTS (
            SELECT 1 FROM public.trips
            WHERE id = '10000000-0000-0000-0000-000000000001'::UUID
-           -- This query would run as Maya (aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e)
+           -- This query would run as Maya (55555555-5555-5555-5555-555555555555)
            -- But we can't set auth context here, so we simulate the check
          ) THEN '✅ PASS (simulated)'
          ELSE '⚠️ MANUAL TEST REQUIRED'
@@ -115,7 +115,7 @@ SELECT 'TC1.2: Benji cannot modify Alice''s Paris trip' AS test_case,
        CASE
          WHEN NOT public.is_trip_owner(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -154,7 +154,7 @@ SELECT 'TC1.5: Viewer (Baylee) can read Paris trip' AS test_case,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+           '66666666-6666-6666-6666-666666666666'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -169,7 +169,7 @@ SELECT 'TC2.1: Maya cannot see Paris trip participants' AS test_case,
        CASE
          WHEN NOT public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+           '55555555-5555-5555-5555-555555555555'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -180,7 +180,7 @@ SELECT 'TC2.2: Alice (owner) can view all Paris trip participants' AS test_case,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -191,7 +191,7 @@ SELECT 'TC2.3: Benji (participant) can view other participants' AS test_case,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -221,7 +221,7 @@ SELECT 'TC3.1: Benji cannot see itinerary items before 2025-06-18' AS test_case,
          WHEN NOT public.can_user_see_item(
            '2025-06-16 14:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -233,7 +233,7 @@ SELECT 'TC3.2: Benji can see itinerary items from 2025-06-18 onward' AS test_cas
          WHEN public.can_user_see_item(
            '2025-06-18 10:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -245,7 +245,7 @@ SELECT 'TC3.3: Alice (owner) sees all itinerary items regardless of date' AS tes
          WHEN public.can_user_see_item(
            '2025-06-10 00:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -272,7 +272,7 @@ SELECT 'TC4.1: Maya cannot see Paris trip expenses' AS test_case,
          WHEN NOT public.can_user_see_expense(
            NOW(),
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+           '55555555-5555-5555-5555-555555555555'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -284,7 +284,7 @@ SELECT 'TC4.2: Alice (owner) can see all Paris trip expenses' AS test_case,
          WHEN public.can_user_see_expense(
            NOW(),
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -296,7 +296,7 @@ SELECT 'TC4.3: Benji (participant) can see expenses from join date' AS test_case
          WHEN public.can_user_see_expense(
            '2025-06-19 13:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -322,7 +322,7 @@ SELECT 'TC4.5: Baylee (viewer) cannot see expenses' AS test_case,
          WHEN NOT public.can_user_see_expense(
            NOW(),
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+           '66666666-6666-6666-6666-666666666666'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -340,7 +340,7 @@ SELECT 'TC5.1: Trip ID enumeration prevention' AS test_case,
            SELECT 1 FROM public.trips
            WHERE id = '20000000-0000-0000-0000-000000000002'::UUID
            -- Maya's Tokyo trip should not be visible to Alice
-           AND NOT public.is_trip_participant(id, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID)
+           AND NOT public.is_trip_participant(id, '22222222-2222-2222-2222-222222222222'::UUID)
          ) THEN '✅ PASS'
          ELSE '⚠️ REQUIRES CLIENT TEST'
        END AS status,
@@ -383,7 +383,7 @@ SELECT 'TC6.1: Alice cannot see Maya''s Tokyo trip' AS test_case,
        CASE
          WHEN NOT public.is_trip_participant(
            '20000000-0000-0000-0000-000000000002'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status,
@@ -471,20 +471,20 @@ SELECT '========================================' AS separator;
 
 -- Count passing tests
 WITH test_results AS (
-  SELECT 'TC1.2' AS test_id, CASE WHEN NOT public.is_trip_owner('10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID) THEN 1 ELSE 0 END AS passed
-  UNION ALL SELECT 'TC1.5', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC2.1', CASE WHEN NOT public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, 'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC2.2', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC2.3', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC3.1', CASE WHEN NOT public.can_user_see_item('2025-06-16 14:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC3.2', CASE WHEN public.can_user_see_item('2025-06-18 10:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC3.3', CASE WHEN public.can_user_see_item('2025-06-10 00:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC4.1', CASE WHEN NOT public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, 'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC4.2', CASE WHEN public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC4.3', CASE WHEN public.can_user_see_expense('2025-06-19 13:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC4.5', CASE WHEN NOT public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID) THEN 1 ELSE 0 END
+  SELECT 'TC1.2' AS test_id, CASE WHEN NOT public.is_trip_owner('10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID) THEN 1 ELSE 0 END AS passed
+  UNION ALL SELECT 'TC1.5', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '66666666-6666-6666-6666-666666666666'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC2.1', CASE WHEN NOT public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '55555555-5555-5555-5555-555555555555'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC2.2', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC2.3', CASE WHEN public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC3.1', CASE WHEN NOT public.can_user_see_item('2025-06-16 14:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC3.2', CASE WHEN public.can_user_see_item('2025-06-18 10:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC3.3', CASE WHEN public.can_user_see_item('2025-06-10 00:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC4.1', CASE WHEN NOT public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, '55555555-5555-5555-5555-555555555555'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC4.2', CASE WHEN public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC4.3', CASE WHEN public.can_user_see_expense('2025-06-19 13:00:00+00'::TIMESTAMPTZ, '10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC4.5', CASE WHEN NOT public.can_user_see_expense(NOW(), '10000000-0000-0000-0000-000000000001'::UUID, '66666666-6666-6666-6666-666666666666'::UUID) THEN 1 ELSE 0 END
   UNION ALL SELECT 'TC5.4', CASE WHEN NOT public.can_user_read_trip_participant('10000000-0000-0000-0000-000000000001'::UUID, '00000000-0000-0000-0000-000000000000'::UUID) THEN 1 ELSE 0 END
-  UNION ALL SELECT 'TC6.1', CASE WHEN NOT public.is_trip_participant('20000000-0000-0000-0000-000000000002'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID) THEN 1 ELSE 0 END
+  UNION ALL SELECT 'TC6.1', CASE WHEN NOT public.is_trip_participant('20000000-0000-0000-0000-000000000002'::UUID, '22222222-2222-2222-2222-222222222222'::UUID) THEN 1 ELSE 0 END
 )
 SELECT
   COUNT(*) AS total_tests,

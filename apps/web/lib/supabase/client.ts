@@ -1,28 +1,39 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@tripthreads/shared'
+import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@tripthreads/core'
 
-// Allow environment variables to be set before import (for testing)
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tbwbaydyyjokrsjtgerh.supabase.co'
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2JheWR5eWpva3JzanRnZXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NDU3NTIsImV4cCI6MjA3NzIyMTc1Mn0.leF3xI7QVNOTWvwNW-V8H0dsIKnlfDtrkiR_8XPhItQ'
+import { createMissingSupabaseClient, getSupabaseEnv } from './env'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+let supabaseSingleton: SupabaseClient<Database> | null = null
+
+function initializeSupabaseClient() {
+  const env = getSupabaseEnv()
+
+  if (!env) {
+    return createMissingSupabaseClient()
+  }
+
+  return createBrowserClient<Database>(env.supabaseUrl, env.supabaseAnonKey)
 }
 
-// Create a singleton client instance
-export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+export function createClient() {
+  if (!supabaseSingleton) {
+    supabaseSingleton = initializeSupabaseClient()
+  }
+
+  return supabaseSingleton
+}
+
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
+  get(_target, prop, _receiver) {
+    const client = createClient()
+    const value = client[prop as keyof SupabaseClient<Database>]
+
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+  set(_target, prop, value) {
+    const client = createClient()
+    ;(client as any)[prop] = value
+    return true
   },
 })
-
-// Export a function for components that need fresh instances
-export function createClient() {
-  return supabase
-}

@@ -14,13 +14,15 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@tripthreads/shared'
+import { getTripById, isTripOwner, type TripWithParticipants } from '@tripthreads/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
+
+type TripParticipant = TripWithParticipants['trip_participants'][number]
 
 interface TripDetailPageProps {
   params: {
@@ -108,7 +110,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
             <CardTitle className="text-lg">Participants</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {trip.trip_participants.map((participant: any) => {
+            {trip.trip_participants.map((participant: TripParticipant) => {
               const isPartialJoiner = participant.join_start_date && participant.join_end_date
               return (
                 <div key={participant.id} className="flex items-center gap-3">
@@ -134,12 +136,14 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground capitalize">{participant.role}</p>
-                    {isPartialJoiner && (
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
-                        {format(new Date(participant.join_end_date), 'MMM d')}
-                      </p>
-                    )}
+                    {isPartialJoiner &&
+                      participant.join_start_date &&
+                      participant.join_end_date && (
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(participant.join_start_date), 'MMM d')} -{' '}
+                          {format(new Date(participant.join_end_date), 'MMM d')}
+                        </p>
+                      )}
                   </div>
                 </div>
               )

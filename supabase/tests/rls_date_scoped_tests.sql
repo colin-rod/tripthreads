@@ -9,11 +9,11 @@
 -- TEST SETUP
 -- ============================================================================
 -- Assumptions from seed.sql:
--- - Alice (temp@test.com / ea1854fb-b8f4-480f-899f-af1bcf0218b3) is owner of Paris trip
--- - Benji (benji@temp.com / 0af9094b-dedb-4472-8133-20577fbc8f98) is partial joiner
+-- - Alice (temp@test.com / 22222222-2222-2222-2222-222222222222) is owner of Paris trip
+-- - Benji (benji@temp.com / 44444444-4444-4444-4444-444444444444) is partial joiner
 --   - Joined Paris trip on 2025-06-18 (3 days after start)
--- - Maya (maya@test.com / aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e) is isolated (no trips)
--- - Baylee (baylee@temp.com / 29f0dac4-7629-45f8-8fa1-10e0df75ce1b) is viewer on multiple trips
+-- - Maya (maya@test.com / 55555555-5555-5555-5555-555555555555) is isolated (no trips)
+-- - Baylee (baylee@temp.com / 66666666-6666-6666-6666-666666666666) is viewer on multiple trips
 
 -- Trip dates for Paris trip:
 -- - Start: 2025-06-15
@@ -28,15 +28,15 @@
 INSERT INTO public.itinerary_items (trip_id, type, title, start_time, created_by)
 VALUES
   -- Before Benji's join date (should NOT be visible to Benji)
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'flight', 'Flight to Paris', '2025-06-15 08:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Eiffel Tower Visit', '2025-06-16 14:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'flight', 'Flight to Paris', '2025-06-15 08:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Eiffel Tower Visit', '2025-06-16 14:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
 
   -- On Benji's join date (should be visible to Benji)
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Louvre Museum', '2025-06-18 10:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Louvre Museum', '2025-06-18 10:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
 
   -- After Benji's join date (should be visible to Benji)
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'stay', 'Hotel Check-in', '2025-06-19 15:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Seine River Cruise', '2025-06-20 18:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID)
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'stay', 'Hotel Check-in', '2025-06-19 15:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'activity', 'Seine River Cruise', '2025-06-20 18:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID)
 ON CONFLICT DO NOTHING;
 
 -- Test as Alice (owner) - should see all 5 items
@@ -71,13 +71,13 @@ WHERE trip_id = '10000000-0000-0000-0000-000000000001'::UUID;
 INSERT INTO public.expenses (trip_id, description, amount, currency, payer_id, date, created_by)
 VALUES
   -- Before Benji's join date (should NOT be visible to Benji)
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'Airport taxi', 3500, 'EUR', 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, '2025-06-15 09:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'Dinner on Day 1', 8500, 'EUR', 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, '2025-06-16 20:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'Airport taxi', 3500, 'EUR', '22222222-2222-2222-2222-222222222222'::UUID, '2025-06-15 09:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'Dinner on Day 1', 8500, 'EUR', '22222222-2222-2222-2222-222222222222'::UUID, '2025-06-16 20:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
 
   -- On/after Benji's join date (should be visible to Benji)
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'Louvre tickets', 4200, 'EUR', 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, '2025-06-18 11:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'Lunch on Day 4', 6500, 'EUR', '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID, '2025-06-19 13:00:00+00'::TIMESTAMPTZ, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'Seine cruise', 5000, 'EUR', 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, '2025-06-20 19:00:00+00'::TIMESTAMPTZ, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID)
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'Louvre tickets', 4200, 'EUR', '22222222-2222-2222-2222-222222222222'::UUID, '2025-06-18 11:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'Lunch on Day 4', 6500, 'EUR', '44444444-4444-4444-4444-444444444444'::UUID, '2025-06-19 13:00:00+00'::TIMESTAMPTZ, '44444444-4444-4444-4444-444444444444'::UUID),
+  ('10000000-0000-0000-0000-000000000001'::UUID, 'Seine cruise', 5000, 'EUR', '22222222-2222-2222-2222-222222222222'::UUID, '2025-06-20 19:00:00+00'::TIMESTAMPTZ, '22222222-2222-2222-2222-222222222222'::UUID)
 ON CONFLICT DO NOTHING;
 
 -- Test as Alice (owner) - should see all 5 expenses
@@ -112,10 +112,10 @@ WHERE trip_id = '10000000-0000-0000-0000-000000000001'::UUID
 -- Create test media files
 INSERT INTO public.media_files (trip_id, user_id, type, url, date_taken)
 VALUES
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, 'photo', 'https://storage/photo1.jpg', '2025-06-15 10:00:00+00'::TIMESTAMPTZ),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, 'photo', 'https://storage/photo2.jpg', '2025-06-16 14:00:00+00'::TIMESTAMPTZ),
-  ('10000000-0000-0000-0000-000000000001'::UUID, '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID, 'photo', 'https://storage/photo3.jpg', '2025-06-19 16:00:00+00'::TIMESTAMPTZ),
-  ('10000000-0000-0000-0000-000000000001'::UUID, 'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID, 'video', 'https://storage/video1.mp4', '2025-06-20 18:00:00+00'::TIMESTAMPTZ)
+  ('10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 'photo', 'https://storage/photo1.jpg', '2025-06-15 10:00:00+00'::TIMESTAMPTZ),
+  ('10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 'photo', 'https://storage/photo2.jpg', '2025-06-16 14:00:00+00'::TIMESTAMPTZ),
+  ('10000000-0000-0000-0000-000000000001'::UUID, '44444444-4444-4444-4444-444444444444'::UUID, 'photo', 'https://storage/photo3.jpg', '2025-06-19 16:00:00+00'::TIMESTAMPTZ),
+  ('10000000-0000-0000-0000-000000000001'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 'video', 'https://storage/video1.mp4', '2025-06-20 18:00:00+00'::TIMESTAMPTZ)
 ON CONFLICT DO NOTHING;
 
 -- Test as Alice (owner) - should see all 4 media files
@@ -156,12 +156,12 @@ WHERE trip_id = '10000000-0000-0000-0000-000000000001'::UUID;
 SELECT 'Benji join date function:' AS test_name,
        public.get_user_trip_join_date(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         '44444444-4444-4444-4444-444444444444'::UUID
        ) AS join_date,
        CASE
          WHEN public.get_user_trip_join_date(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) = '2025-06-18 00:00:00+00'::TIMESTAMPTZ THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -171,13 +171,13 @@ SELECT 'Can Benji see item before join (should be false):' AS test_name,
        public.can_user_see_item(
          '2025-06-16 14:00:00+00'::TIMESTAMPTZ,
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         '44444444-4444-4444-4444-444444444444'::UUID
        ) AS can_see,
        CASE
          WHEN NOT public.can_user_see_item(
            '2025-06-16 14:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -187,13 +187,13 @@ SELECT 'Can Benji see item after join (should be true):' AS test_name,
        public.can_user_see_item(
          '2025-06-20 18:00:00+00'::TIMESTAMPTZ,
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         '44444444-4444-4444-4444-444444444444'::UUID
        ) AS can_see,
        CASE
          WHEN public.can_user_see_item(
            '2025-06-20 18:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -203,13 +203,13 @@ SELECT 'Can Alice (owner) see item before trip start (should be true):' AS test_
        public.can_user_see_item(
          '2025-06-10 00:00:00+00'::TIMESTAMPTZ,
          '10000000-0000-0000-0000-000000000001'::UUID,
-         'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+         '22222222-2222-2222-2222-222222222222'::UUID
        ) AS can_see,
        CASE
          WHEN public.can_user_see_item(
            '2025-06-10 00:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -219,13 +219,13 @@ SELECT 'Can Baylee (viewer) see any date item (should be true):' AS test_name,
        public.can_user_see_item(
          '2025-06-16 00:00:00+00'::TIMESTAMPTZ,
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+         '66666666-6666-6666-6666-666666666666'::UUID
        ) AS can_see,
        CASE
          WHEN public.can_user_see_item(
            '2025-06-16 00:00:00+00'::TIMESTAMPTZ,
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+           '66666666-6666-6666-6666-666666666666'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -238,12 +238,12 @@ SELECT 'Can Baylee (viewer) see any date item (should be true):' AS test_name,
 SELECT 'Alice is owner of Paris trip (should be true):' AS test_name,
        public.is_trip_owner(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+         '22222222-2222-2222-2222-222222222222'::UUID
        ) AS is_owner,
        CASE
          WHEN public.is_trip_owner(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -251,12 +251,12 @@ SELECT 'Alice is owner of Paris trip (should be true):' AS test_name,
 SELECT 'Benji is NOT owner of Paris trip (should be false):' AS test_name,
        public.is_trip_owner(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         '44444444-4444-4444-4444-444444444444'::UUID
        ) AS is_owner,
        CASE
          WHEN NOT public.is_trip_owner(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -265,12 +265,12 @@ SELECT 'Benji is NOT owner of Paris trip (should be false):' AS test_name,
 SELECT 'Alice can read Paris trip participants (should be true):' AS test_name,
        public.can_user_read_trip_participant(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+         '22222222-2222-2222-2222-222222222222'::UUID
        ) AS can_read,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID
+           '22222222-2222-2222-2222-222222222222'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -278,12 +278,12 @@ SELECT 'Alice can read Paris trip participants (should be true):' AS test_name,
 SELECT 'Benji can read Paris trip participants (should be true):' AS test_name,
        public.can_user_read_trip_participant(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+         '44444444-4444-4444-4444-444444444444'::UUID
        ) AS can_read,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID
+           '44444444-4444-4444-4444-444444444444'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -291,12 +291,12 @@ SELECT 'Benji can read Paris trip participants (should be true):' AS test_name,
 SELECT 'Baylee (viewer) can read Paris trip participants (should be true):' AS test_name,
        public.can_user_read_trip_participant(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+         '66666666-6666-6666-6666-666666666666'::UUID
        ) AS can_read,
        CASE
          WHEN public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           '29f0dac4-7629-45f8-8fa1-10e0df75ce1b'::UUID
+           '66666666-6666-6666-6666-666666666666'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;
@@ -304,12 +304,12 @@ SELECT 'Baylee (viewer) can read Paris trip participants (should be true):' AS t
 SELECT 'Maya CANNOT read Paris trip participants (should be false):' AS test_name,
        public.can_user_read_trip_participant(
          '10000000-0000-0000-0000-000000000001'::UUID,
-         'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+         '55555555-5555-5555-5555-555555555555'::UUID
        ) AS can_read,
        CASE
          WHEN NOT public.can_user_read_trip_participant(
            '10000000-0000-0000-0000-000000000001'::UUID,
-           'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e'::UUID
+           '55555555-5555-5555-5555-555555555555'::UUID
          ) THEN '✅ PASS'
          ELSE '❌ FAIL'
        END AS status;

@@ -224,13 +224,13 @@ After creating migrations, generate TypeScript types:
 npm run generate-types
 
 # Or manually
-supabase gen types typescript --local > packages/shared/types/database.ts
+supabase gen types typescript --local > packages/core/src/types/database.ts
 ```
 
-Types are generated in `packages/shared/types/database.ts` and can be imported:
+Types are generated in `packages/core/src/types/database.ts` and can be imported:
 
 ```typescript
-import type { Database } from '@tripthreads/shared/types/database'
+import type { Database } from '@tripthreads/core'
 
 type User = Database['public']['Tables']['users']['Row']
 type Trip = Database['public']['Tables']['trips']['Row']

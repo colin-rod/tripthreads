@@ -1,14 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth/auth-context'
+import { PostHogProvider } from '@/lib/analytics/posthog-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
+import { FloatingFeedbackButton } from '@/components/features/feedback/FloatingFeedbackButton'
 
 export const metadata: Metadata = {
   title: 'TripThreads - Collaborative Trip Planning',
@@ -22,10 +18,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased font-sans`}>
-        <AuthProvider>{children}</AuthProvider>
+      <body className="antialiased font-sans">
+        <AuthProvider>
+          <PostHogProvider>{children}</PostHogProvider>
+        </AuthProvider>
         <Toaster />
         <SonnerToaster position="top-right" />
+        <FloatingFeedbackButton />
       </body>
     </html>
   )

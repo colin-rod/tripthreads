@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import * as SecureStore from 'expo-secure-store'
 import Constants from 'expo-constants'
-import type { Database } from '@tripthreads/shared'
+import type { Database } from '@tripthreads/core'
 
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey

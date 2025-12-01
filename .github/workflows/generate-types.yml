@@ -1,0 +1,93 @@
+name: Generate Supabase Types
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - 'supabase/migrations/**'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'supabase/migrations/**'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  generate-types:
+    name: Generate TypeScript Types
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Generate types from production database
+        run: |
+          npx supabase gen types typescript \
+            --project-id "${{ secrets.SUPABASE_PROJECT_ID }}" \
+            --schema public > packages/shared/types/database.ts
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Check if types changed
+        id: check_changes
+        run: |
+          if git diff --quiet packages/shared/types/database.ts; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push if types changed
+        if: steps.check_changes.outputs.changed == 'true' && github.event_name == 'push'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add packages/shared/types/database.ts
+          git commit -m "chore(types): regenerate Supabase types [skip ci]"
+          git push
+
+      - name: Create PR comment if types changed (on PR)
+        if: steps.check_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Database types need to be regenerated!**\n\nMigration changes detected. Run `npm run generate-types` locally and commit the updated `packages/shared/types/database.ts`.'
+            })
+
+      - name: Fail if types out of sync on PR
+        if: steps.check_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        run: |
+          echo "::error::Database types are out of sync with migrations. Please regenerate types."
+          exit 1
+
+      - name: Upload generated types as artifact
+        if: steps.check_changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-types
+          path: packages/shared/types/database.ts
+          retention-days: 7

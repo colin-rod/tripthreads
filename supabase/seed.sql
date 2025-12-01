@@ -1,194 +1,131 @@
--- Seed Data for Development
--- Description: Sample data for testing TripThreads locally with edge cases
--- Date: 2025-01-29
--- Updated: 2025-10-29 (Added edge case users)
+-- TripThreads Seed Data
+-- Description: Realistic trip data for colin.rods@gmail.com with authenticated users
+-- Date: 2025-11-12
+-- Last Updated: 2025-11-12
 
--- Note: Updated with actual user IDs from Supabase Auth
--- Users: temp, alice, bob, benji, maya, baylee
-
--- ============================================================================
--- TEST COVERAGE MATRIX
--- ============================================================================
--- User          | Role Scenarios                    | Edge Cases
--- ------------- | --------------------------------- | ---------------------------
--- temp          | Multi-trip participant            | Cross-trip collaboration
--- alice         | Pro user, primary trip owner      | Plan tier testing
--- bob           | Regular participant               | Standard collaboration
--- benji         | Partial joiner (joins mid-trip)   | Historical data visibility
--- maya          | Isolated user (no trips)          | Empty state, RLS isolation
--- baylee        | Viewer-only across trips          | Read-only access testing
+-- Main user: colin.rods@gmail.com (a439e5ca-4316-4179-94a5-a65c6f2fa1757)
+-- Uses real authenticated user IDs from the database
 
 -- ============================================================================
--- SAMPLE USERS
+-- NOTE: This seed file assumes users already exist in auth.users
+-- If you need to create test users, do so through the Supabase Auth system first
 -- ============================================================================
 
--- User 1: temp@test.com (Free user, multi-trip participant)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan)
-VALUES (
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID,
-  'temp@test.com',
-  'Temp User',
-  NULL,
-  'free'
-) ON CONFLICT (id) DO NOTHING;
-
--- User 2: alice@temp.com (Pro user, primary trip owner)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan, plan_expires_at)
-VALUES (
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID,
-  'alice@temp.com',
-  'Alice Johnson',
-  NULL,
-  'pro',
-  NOW() + INTERVAL '1 year'
-) ON CONFLICT (id) DO NOTHING;
-
--- User 3: bob@temp.com (Free user, regular participant)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan)
-VALUES (
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID,
-  'bob@temp.com',
-  'Bob Smith',
-  NULL,
-  'free'
-) ON CONFLICT (id) DO NOTHING;
-
--- User 4: benji@temp.com (Free user, partial joiner - tests joined_at filtering)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan)
-VALUES (
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID,
-  'benji@temp.com',
-  'Benji Wilson',
-  NULL,
-  'free'
-) ON CONFLICT (id) DO NOTHING;
-
--- User 5: maya@test.com (Free user, isolated - tests RLS isolation & empty states)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan)
-VALUES (
-  '7ad824d5-c519-4ded-923f-01db919955db'::UUID,
-  'maya@test.com',
-  'Maya Chen',
-  NULL,
-  'free'
-) ON CONFLICT (id) DO NOTHING;
-
--- User 6: baylee@temp.com (Free user, viewer-only - tests read-only access)
-INSERT INTO public.users (id, email, full_name, avatar_url, plan)
-VALUES (
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,
-  'baylee@temp.com',
-  'Baylee Martinez',
-  NULL,
-  'free'
-) ON CONFLICT (id) DO NOTHING;
+-- ============================================================================
+-- USER IDS (from authenticated users in database)
+-- ============================================================================
+-- Colin Rodriguez:    a439e5ca-4316-4179-94a5-a65c6f2fa1757
+-- Colin (alt):        3af67dc9-7357-433c-bd94-c591b40376245
+-- Colin (alt 2):      6393c95c-d146-4f3f-8690-187ef4d5b4ed
+-- C:                  8758acbc-1dbe-4dd8-b7b4-f1dc81eab242
+-- Colin (test):       bed7f4f7-8849-4296-99f8-0b8eeaaf4f86
+-- Benji:              0ef09d9b-dedb-4e72-8f33-205f77bc8f98
+-- (temp@test):        0B30afad-e40a-42b0-a606-983877f72f67
 
 -- ============================================================================
--- SAMPLE TRIPS
+-- TRIPS
 -- ============================================================================
 
--- Trip 1: Paris Adventure (Owner: Alice) - Multi-participant trip
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
+-- Trip 1: Paris Weekend (Recent - Completed)
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
 VALUES (
-  '10000000-0000-0000-0000-000000000001'::UUID,
-  'Paris Adventure 2025',
-  'A week exploring the City of Light with friends',
-  '2025-06-15 00:00:00+00',
-  '2025-06-22 00:00:00+00',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID  -- Alice
+  '11111111-1111-1111-1111-111111111111'::UUID,
+  'Paris Weekend',
+  'A wonderful weekend getaway to the City of Light! Exploring museums, cafes, and the Eiffel Tower.',
+  '2024-10-15 00:00:00+00',
+  '2024-10-18 00:00:00+00',
+  'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, -- colin.rods@gmail.com
+  'EUR',
+  NOW() - INTERVAL '25 days',
+  NOW() - INTERVAL '25 days'
 ) ON CONFLICT (id) DO NOTHING;
 
--- Trip 2: Tokyo Experience (Owner: Bob) - Standard collaboration
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
+-- Trip 2: Japan Adventure (Upcoming - Detailed)
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
 VALUES (
-  '10000000-0000-0000-0000-000000000002'::UUID,
-  'Tokyo Experience',
-  'Exploring Japanese culture and cuisine',
+  '22222222-2222-2222-2222-222222222222'::UUID,
+  'Japan Adventure 2025',
+  'Three weeks exploring Tokyo, Kyoto, Osaka, and the Japanese Alps. Cherry blossom season!',
+  '2025-03-15 00:00:00+00',
+  '2025-04-05 00:00:00+00',
+  'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, -- colin.rods@gmail.com
+  'JPY',
+  NOW() - INTERVAL '10 days',
+  NOW() - INTERVAL '2 days'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Trip 3: Barcelona Summer (In Planning)
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
+VALUES (
+  '33333333-3333-3333-3333-333333333333'::UUID,
+  'Barcelona Summer',
+  'Beach, tapas, and Gaudí architecture. A perfect summer escape!',
+  '2025-06-10 00:00:00+00',
+  '2025-06-17 00:00:00+00',
+  'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, -- colin.rods@gmail.com
+  'EUR',
+  NOW() - INTERVAL '5 days',
+  NOW() - INTERVAL '1 day'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Trip 4: Iceland Road Trip (Future)
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
+VALUES (
+  '44444444-4444-4444-4444-444444444444'::UUID,
+  'Iceland Road Trip',
+  'Ring road adventure with waterfalls, glaciers, and the Northern Lights.',
   '2025-09-01 00:00:00+00',
   '2025-09-10 00:00:00+00',
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID  -- Bob
+  'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, -- colin.rods@gmail.com
+  'ISK',
+  NOW() - INTERVAL '3 days',
+  NOW() - INTERVAL '3 days'
 ) ON CONFLICT (id) DO NOTHING;
 
--- Trip 3: Barcelona Weekend (Owner: Alice) - Viewer-only testing
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
+-- Trip 5: NYC Long Weekend (Recent - with partial joiner)
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
 VALUES (
-  '10000000-0000-0000-0000-000000000003'::UUID,
-  'Barcelona Weekend',
-  'Quick weekend getaway to Barcelona',
-  '2025-04-05 00:00:00+00',
-  '2025-04-07 00:00:00+00',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID  -- Alice
-) ON CONFLICT (id) DO NOTHING;
-
--- Trip 4: London Business Trip (Owner: Temp) - Cross-trip testing
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
-VALUES (
-  '10000000-0000-0000-0000-000000000004'::UUID,
-  'London Business Trip',
-  'Quick business trip to London',
-  '2025-03-10 00:00:00+00',
-  '2025-03-12 00:00:00+00',
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID  -- Temp
-) ON CONFLICT (id) DO NOTHING;
-
--- Trip 5: Iceland Road Trip (Owner: Benji) - Partial joiner as owner
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
-VALUES (
-  '10000000-0000-0000-0000-000000000005'::UUID,
-  'Iceland Road Trip',
-  'Epic road trip around the Ring Road',
-  '2025-07-01 00:00:00+00',
-  '2025-07-14 00:00:00+00',
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID  -- Benji
-) ON CONFLICT (id) DO NOTHING;
-
--- Trip 6: Amsterdam Getaway (Owner: Alice) - Pro tier features testing
-INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id)
-VALUES (
-  '10000000-0000-0000-0000-000000000006'::UUID,
-  'Amsterdam Getaway',
-  'Art, culture, and canals',
-  '2025-08-20 00:00:00+00',
-  '2025-08-25 00:00:00+00',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID  -- Alice
+  '55555555-5555-5555-5555-555555555555'::UUID,
+  'New York City',
+  'The Big Apple - Broadway shows, museums, and amazing food!',
+  '2024-11-01 00:00:00+00',
+  '2024-11-05 00:00:00+00',
+  'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, -- colin.rods@gmail.com
+  'USD',
+  NOW() - INTERVAL '8 days',
+  NOW() - INTERVAL '1 day'
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
--- SAMPLE TRIP PARTICIPANTS
+-- TRIP PARTICIPANTS
 -- ============================================================================
+-- Note: Trip owners are automatically added via trigger, so we only add additional participants
 
--- Note: Trip owners are automatically added as participants via trigger
--- We only need to add additional participants here
-
--- ============================================================================
--- PARIS TRIP PARTICIPANTS (Multi-participant scenario)
--- ============================================================================
--- Alice (owner) - auto-added via trigger
--- Bob (participant)
-INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
-VALUES (
-  '10000000-0000-0000-0000-000000000001'::UUID,
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID,  -- Bob
-  'participant',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
-) ON CONFLICT (trip_id, user_id) DO NOTHING;
+-- Paris Weekend Participants (4 people total including owner)
+-- Colin Rodriguez (owner) - auto-added via trigger
+INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by, joined_at)
+VALUES
+  ('11111111-1111-1111-1111-111111111111'::UUID, '3af67dc9-7357-433c-bd94-c591b40376245'::UUID, 'participant', 'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, NOW() - INTERVAL '24 days'),
+  ('11111111-1111-1111-1111-111111111111'::UUID, '6393c95c-d146-4f3f-8690-187ef4d5b4ed'::UUID, 'participant', 'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, NOW() - INTERVAL '24 days'),
+  ('11111111-1111-1111-1111-111111111111'::UUID, '8758acbc-1dbe-4dd8-b7b4-f1dc81eab242'::UUID, 'participant', 'a439e5ca-4316-4179-94a5-a65c6f2fa1757'::UUID, NOW() - INTERVAL '23 days')
+ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Temp (participant)
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000001'::UUID,
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID,  -- Temp
+  '11111111-1111-1111-1111-111111111111'::UUID,  -- Temp
   'participant',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Benji (participant) - PARTIAL JOINER: joined 3 days into trip
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by, joined_at)
 VALUES (
   '10000000-0000-0000-0000-000000000001'::UUID,
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID,  -- Benji
+  '44444444-4444-4444-4444-444444444444'::UUID,  -- Benji
   'participant',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID,  -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID,  -- Invited by Alice
   '2025-06-18 00:00:00+00'::TIMESTAMPTZ           -- Joined 3 days after start
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
@@ -196,9 +133,9 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000001'::UUID,
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  '66666666-6666-6666-6666-666666666666'::UUID,  -- Baylee
   'viewer',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -209,18 +146,18 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000002'::UUID,
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID,  -- Alice
+  '22222222-2222-2222-2222-222222222222'::UUID,  -- Alice
   'participant',
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID   -- Invited by Bob
+  '33333333-3333-3333-3333-333333333333'::UUID   -- Invited by Bob
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Baylee (viewer) - Read-only access
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000002'::UUID,
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  '66666666-6666-6666-6666-666666666666'::UUID,  -- Baylee
   'viewer',
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID   -- Invited by Bob
+  '33333333-3333-3333-3333-333333333333'::UUID   -- Invited by Bob
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -231,9 +168,9 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000003'::UUID,
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  '66666666-6666-6666-6666-666666666666'::UUID,  -- Baylee
   'viewer',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -244,18 +181,18 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000004'::UUID,
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID,  -- Bob
+  '33333333-3333-3333-3333-333333333333'::UUID,  -- Bob
   'participant',
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID   -- Invited by Temp
+  '11111111-1111-1111-1111-111111111111'::UUID   -- Invited by Temp
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Baylee (viewer)
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000004'::UUID,
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  '66666666-6666-6666-6666-666666666666'::UUID,  -- Baylee
   'viewer',
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID   -- Invited by Temp
+  '11111111-1111-1111-1111-111111111111'::UUID   -- Invited by Temp
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -266,18 +203,18 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000005'::UUID,
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID,  -- Alice
+  '22222222-2222-2222-2222-222222222222'::UUID,  -- Alice
   'participant',
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID   -- Invited by Benji
+  '44444444-4444-4444-4444-444444444444'::UUID   -- Invited by Benji
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Temp (participant)
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000005'::UUID,
-  '0830afad-e40e-42b0-a606-983871772f67'::UUID,  -- Temp
+  '11111111-1111-1111-1111-111111111111'::UUID,  -- Temp
   'participant',
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID   -- Invited by Benji
+  '44444444-4444-4444-4444-444444444444'::UUID   -- Invited by Benji
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -288,27 +225,27 @@ VALUES (
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000006'::UUID,
-  '16515a28-d4f3-4a5e-bda3-e0b4f941c3d1'::UUID,  -- Bob
+  '33333333-3333-3333-3333-333333333333'::UUID,  -- Bob
   'participant',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Benji (participant)
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000006'::UUID,
-  '0af9094b-dedb-4472-8133-20577fbc8f98'::UUID,  -- Benji
+  '44444444-4444-4444-4444-444444444444'::UUID,  -- Benji
   'participant',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- Baylee (viewer)
 INSERT INTO public.trip_participants (trip_id, user_id, role, invited_by)
 VALUES (
   '10000000-0000-0000-0000-000000000006'::UUID,
-  '2297a0ab-b584-453c-81ea-c7bf9b9d37bd'::UUID,  -- Baylee
+  '66666666-6666-6666-6666-666666666666'::UUID,  -- Baylee
   'viewer',
-  'ea1854fb-b8f4-480f-899f-af1bcf0218b3'::UUID   -- Invited by Alice
+  '22222222-2222-2222-2222-222222222222'::UUID   -- Invited by Alice
 ) ON CONFLICT (trip_id, user_id) DO NOTHING;
 
 -- ============================================================================
@@ -359,11 +296,11 @@ VALUES (
 -- ============================================================================
 
 -- Test 1: Verify Maya (isolated user) can't see any trips
--- SET request.jwt.claims.sub = '7ad824d5-c519-4ded-923f-01db919955db';
+-- SET request.jwt.claims.sub = '55555555-5555-5555-5555-555555555555';
 -- SELECT * FROM public.trips;  -- Should return 0 rows
 
 -- Test 2: Verify Alice (owner) can see her trips
--- SET request.jwt.claims.sub = 'ea1854fb-b8f4-480f-899f-af1bcf0218b3';
+-- SET request.jwt.claims.sub = '22222222-2222-2222-2222-222222222222';
 -- SELECT name FROM public.trips;  -- Should return Paris, Barcelona, Amsterdam
 
 -- Test 3: Verify Benji (partial joiner) shows correct joined_at date
@@ -373,13 +310,13 @@ VALUES (
 --   t.start_date
 -- FROM public.trip_participants tp
 -- JOIN public.trips t ON tp.trip_id = t.id
--- WHERE tp.user_id = '0af9094b-dedb-4472-8133-20577fbc8f98'  -- Benji
+-- WHERE tp.user_id = '44444444-4444-4444-4444-444444444444'  -- Benji
 -- ORDER BY t.start_date;
 
 -- Test 4: Verify Baylee (viewer) can see trips but not other users' profiles
--- SET request.jwt.claims.sub = '2297a0ab-b584-453c-81ea-c7bf9b9d37bd';
+-- SET request.jwt.claims.sub = '66666666-6666-6666-6666-666666666666';
 -- SELECT name FROM public.trips;  -- Should return Tokyo, Barcelona, London, Amsterdam
--- SELECT * FROM public.users WHERE id != '2297a0ab-b584-453c-81ea-c7bf9b9d37bd';  -- Should return 0 rows
+-- SELECT * FROM public.users WHERE id != '66666666-6666-6666-6666-666666666666';  -- Should return 0 rows
 
 -- Test 5: Count trips per user (to verify data distribution)
 -- SELECT

@@ -36,11 +36,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useToast } from '@/components/ui/use-toast'
-import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@tripthreads/core'
 
 import { createClient } from '@/lib/supabase/client'
-import { updateTrip, updateTripSchema, type UpdateTripInput } from '@tripthreads/shared'
+import { updateTrip, updateTripSchema, type UpdateTripInput } from '@tripthreads/core'
 
 interface Trip {
   id: string

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card'
@@ -32,7 +33,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       this.props.onError(error, errorInfo)
     }
 
-    // In production, you would log to Sentry or similar
+    // Log to Sentry with component stack context
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+      },
+    })
+
+    // Also log in development for debugging
     if (process.env.NODE_ENV === 'development') {
       console.error('ErrorBoundary caught an error:', error, errorInfo)
     }

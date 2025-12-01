@@ -1,7 +1,32 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep:*)"
+      "Bash(git checkout:*)",
+      "Bash(supabase migration:*)",
+      "Bash(supabase db reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase db execute:*)",
+      "Bash(supabase db remote dump:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm install:*)",
+      "Bash(find:*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(git diff:*)",
+      "Bash(psql:*)",
+      "Bash(supabase status:*)",
+      "Bash(mv:*)",
+      "Bash(npm run generate-types:*)",
+      "Bash(lsof:*)",
+      "Bash(npx tsc:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(git restore:*)",
+      "Bash(supabase functions logs:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

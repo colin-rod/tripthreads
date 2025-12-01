@@ -1,10 +1,12 @@
 {
   "name": "@tripthreads/shared",
   "version": "0.1.0",
+  "deprecated": "This package is deprecated. Use @tripthreads/core instead. See DEPRECATED.md for migration guide.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./parser": "./src/parser/index.ts",
     "./lib/*": "./lib/*",
     "./types/*": "./types/*"
   },
@@ -20,5 +22,8 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@tripthreads/core": "*"
   }
 }

@@ -1,12 +1,14 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { createClient } from '@/lib/supabase/server'
 import {
   getDateParserPrompt,
   getExpenseParserPrompt,
   SYSTEM_PROMPT,
   type LLMParseRequest,
   type LLMParserResult,
-} from '@tripthreads/shared'
+} from '@tripthreads/core'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const DEFAULT_MODEL = 'gpt-4o-mini'
@@ -19,6 +21,16 @@ export async function POST(request: NextRequest) {
   console.log('[OpenAI API] API Key length:', OPENAI_API_KEY?.length || 0)
 
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     // Check for API key
     if (!OPENAI_API_KEY) {
       console.log('[OpenAI API] ERROR: No API key found')
@@ -36,8 +48,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body: LLMParseRequest = await request.json()
-    const { input, parserType, options = {}, model = DEFAULT_MODEL } = body
+    const body: LLMParseRequest & { tripId?: string } = await request.json()
+    const { input, parserType, options = {}, model = DEFAULT_MODEL, tripId } = body
 
     console.log('[OpenAI API] Request parsed:', { input, parserType, model })
 
@@ -55,14 +67,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (tripId) {
+      const { data: participant, error: participantError } = await supabase
+        .from('trip_participants')
+        .select('id')
+        .eq('trip_id', tripId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (participantError) {
+        console.error('[OpenAI API] Error verifying trip participant:', participantError)
+        return NextResponse.json<LLMParserResult>(
+          {
+            success: false,
+            error: 'Unable to verify trip membership',
+            errorType: 'internal_error',
+            model,
+            latencyMs: 0,
+            rawOutput: '',
+          },
+          { status: 500 }
+        )
+      }
+
+      if (!participant) {
+        return NextResponse.json({ error: 'You are not a participant in this trip' }, { status: 403 })
+      }
+    }
+
     // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: OPENAI_API_KEY,
     })
 
     // Build prompt based on parser type
-    const referenceDate = (options as any).referenceDate || new Date().toISOString()
-    const defaultCurrency = (options as any).defaultCurrency || 'USD'
+    const referenceDate =
+      (options as { referenceDate?: string }).referenceDate || new Date().toISOString()
+    const defaultCurrency = (options as { defaultCurrency?: string }).defaultCurrency || 'USD'
 
     console.log('[OpenAI API] Building prompt...')
     const prompt =
@@ -153,12 +194,30 @@ export async function POST(request: NextRequest) {
         'ms'
       )
       return NextResponse.json(result)
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId)
-      console.log('[OpenAI API] Fetch error:', fetchError.name, fetchError.message)
+      const error = fetchError as Error & { name?: string }
+      console.log('[OpenAI API] Fetch error:', error.name, error.message)
 
-      if (fetchError.name === 'AbortError') {
+      if (error.name === 'AbortError') {
         console.log('[OpenAI API] Request timed out after', TIMEOUT_MS, 'ms')
+
+        // Log timeout to Sentry
+        Sentry.captureMessage(`OpenAI API timeout after ${TIMEOUT_MS}ms`, {
+          level: 'warning',
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            parserType,
+          },
+          contexts: {
+            request: {
+              input: input.substring(0, 100), // First 100 chars only
+              model,
+            },
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -174,7 +233,16 @@ export async function POST(request: NextRequest) {
       }
 
       // OpenAI API error
-      if (fetchError.status === 401) {
+      if ('status' in error && error.status === 401) {
+        // Log auth error to Sentry
+        Sentry.captureException(error, {
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            errorType: 'auth',
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -189,7 +257,23 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      if (fetchError.status === 429) {
+      if ('status' in error && error.status === 429) {
+        // Log rate limit to Sentry
+        Sentry.captureMessage('OpenAI rate limit exceeded', {
+          level: 'warning',
+          tags: {
+            feature: 'openai',
+            operation: 'parse',
+            errorType: 'rate_limit',
+          },
+          contexts: {
+            request: {
+              model,
+              parserType,
+            },
+          },
+        })
+
         return NextResponse.json<LLMParserResult>(
           {
             success: false,
@@ -204,10 +288,27 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      throw fetchError
+      throw error
     }
-  } catch (error: any) {
+  } catch (outerError: unknown) {
+    const error = outerError as Error
     console.error('[OpenAI API] Unhandled error:', error)
+
+    // Log unexpected error to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        feature: 'openai',
+        operation: 'parse',
+        errorType: 'unexpected',
+      },
+      contexts: {
+        request: {
+          hasApiKey: !!OPENAI_API_KEY,
+          model: DEFAULT_MODEL,
+        },
+      },
+    })
+
     return NextResponse.json<LLMParserResult>(
       {
         success: false,

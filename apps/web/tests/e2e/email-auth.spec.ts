@@ -28,7 +28,7 @@ test.describe('Email Authentication', () => {
     })
   })
 
-  test('TC1.1: Valid email signup creates user record', async ({ page }) => {
+  test('@smoke TC1.1: Valid email signup creates user record', async ({ page }) => {
     await page.goto('/signup')
 
     // Fill signup form
@@ -85,7 +85,7 @@ test.describe('Email Authentication', () => {
     }
   })
 
-  test('TC1.4: Login with correct credentials succeeds', async ({ page }) => {
+  test('@smoke TC1.4: Login with correct credentials succeeds', async ({ page }) => {
     await page.goto('/login')
 
     // Fill login form

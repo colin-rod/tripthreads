@@ -11,14 +11,19 @@
  * - Loading states and error handling
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { parseWithOpenAI } from '@/lib/parser/openai'
+import type { ParsedExpense, TripParticipant, ParticipantResolutionResult } from '@tripthreads/core'
+import { formatCurrencyFromMinorUnits, matchParticipantNames } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { fetchTripParticipants } from '@/app/actions/expenses'
+import { ParticipantDisambiguationDialog } from './ParticipantDisambiguationDialog'
+import { UnmatchedParticipantDialog } from './UnmatchedParticipantDialog'
 
 interface ExpenseInputProps {
   tripId: string
@@ -28,19 +33,46 @@ interface ExpenseInputProps {
     description: string
     category: string | null
     payer: string | null
-    splitType: 'equal' | 'custom' | 'shares' | 'none'
+    splitType: 'equal' | 'custom' | 'percentage' | 'none'
     splitCount: number | null
     participants: string[] | null
     customSplits: { name: string; amount: number }[] | null
+    percentageSplits?: { name: string; percentage: number }[] | null
   }) => Promise<void>
 }
 
-export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
+export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [parsedResult, setParsedResult] = useState<any>(null)
+  const [parsedResult, setParsedResult] = useState<ParsedExpense | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [tripParticipants, setTripParticipants] = useState<TripParticipant[]>([])
+  const [_participantsLoading, setParticipantsLoading] = useState(true)
+  const [resolutionResult, setResolutionResult] = useState<ParticipantResolutionResult | null>(null)
+  const [showDisambiguationDialog, setShowDisambiguationDialog] = useState(false)
+  const [showUnmatchedDialog, setShowUnmatchedDialog] = useState(false)
+  const [resolvedParticipantIds, setResolvedParticipantIds] = useState<Record<string, string>>({})
+
+  // Fetch trip participants on mount
+  useEffect(() => {
+    async function loadParticipants() {
+      setParticipantsLoading(true)
+      try {
+        const result = await fetchTripParticipants(tripId)
+        if (result.success && result.participants) {
+          setTripParticipants(result.participants)
+        } else {
+          console.error('Failed to fetch trip participants:', result.error)
+        }
+      } catch (err) {
+        console.error('Error loading trip participants:', err)
+      } finally {
+        setParticipantsLoading(false)
+      }
+    }
+    loadParticipants()
+  }, [tripId])
 
   const handleParse = async () => {
     if (!input.trim()) return
@@ -48,6 +80,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
     setLoading(true)
     setError(null)
     setParsedResult(null)
+    setResolutionResult(null)
 
     try {
       const result = await parseWithOpenAI({
@@ -62,6 +95,19 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
 
       if (result.success && result.expenseResult) {
         setParsedResult(result.expenseResult)
+
+        // Perform client-side participant name resolution
+        if (result.expenseResult.participants && result.expenseResult.participants.length > 0) {
+          const resolution = matchParticipantNames(
+            result.expenseResult.participants,
+            tripParticipants,
+            {
+              minConfidence: 0.6,
+              autoResolveThreshold: 0.85,
+            }
+          )
+          setResolutionResult(resolution)
+        }
       } else {
         setError(result.error || 'Failed to parse expense')
       }
@@ -76,25 +122,57 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
   const handleSubmit = async () => {
     if (!parsedResult) return
 
+    // Check if we have ambiguous matches that need disambiguation
+    if (resolutionResult && resolutionResult.hasAmbiguous) {
+      const ambiguousMatches = resolutionResult.matches.filter(m => m.isAmbiguous)
+      if (ambiguousMatches.length > 0) {
+        setShowDisambiguationDialog(true)
+        return
+      }
+    }
+
+    // Check if we have unmatched names that need manual selection
+    if (resolutionResult && resolutionResult.hasUnmatched) {
+      const unmatchedNames = resolutionResult.matches.filter(m => m.isUnmatched)
+      if (unmatchedNames.length > 0) {
+        setShowUnmatchedDialog(true)
+        return
+      }
+    }
+
     setSubmitting(true)
     setError(null)
 
     try {
+      // If we have resolved participant IDs from disambiguation, use them
+      let participantsToSubmit: string[] | null = parsedResult.participants ?? null
+
+      if (resolutionResult && Object.keys(resolvedParticipantIds).length > 0) {
+        // Replace parsed names with resolved user IDs
+        participantsToSubmit =
+          parsedResult.participants?.map(name => {
+            return resolvedParticipantIds[name] || name
+          }) ?? null
+      }
+
       await onSubmit({
         amount: parsedResult.amount,
         currency: parsedResult.currency,
         description: parsedResult.description,
-        category: parsedResult.category,
-        payer: parsedResult.payer,
+        category: parsedResult.category ?? null,
+        payer: parsedResult.payer ?? null,
         splitType: parsedResult.splitType,
-        splitCount: parsedResult.splitCount,
-        participants: parsedResult.participants,
-        customSplits: parsedResult.customSplits,
+        splitCount: parsedResult.splitCount ?? null,
+        participants: participantsToSubmit,
+        customSplits: parsedResult.customSplits ?? null,
+        percentageSplits: parsedResult.percentageSplits ?? null,
       })
 
       // Reset form on success
       setInput('')
       setParsedResult(null)
+      setResolutionResult(null)
+      setResolvedParticipantIds({})
     } catch (err) {
       console.error('Expense submission error:', err)
       setError(err instanceof Error ? err.message : 'Failed to save expense')
@@ -103,16 +181,92 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
     }
   }
 
+  const handleDisambiguationConfirm = (resolvedIds: Record<string, string>) => {
+    setResolvedParticipantIds(resolvedIds)
+    setShowDisambiguationDialog(false)
+
+    // Update resolution result to mark matches as resolved
+    if (resolutionResult) {
+      const updatedMatches = resolutionResult.matches.map(match => {
+        if (resolvedIds[match.input]) {
+          // Find the selected match
+          const selectedMatch = match.matches.find(m => m.userId === resolvedIds[match.input])
+          return {
+            ...match,
+            bestMatch: selectedMatch,
+            isAmbiguous: false,
+          }
+        }
+        return match
+      })
+
+      setResolutionResult({
+        ...resolutionResult,
+        matches: updatedMatches,
+        hasAmbiguous: false,
+        isFullyResolved: !updatedMatches.some(m => m.isAmbiguous || m.isUnmatched),
+      })
+    }
+
+    // Auto-submit after disambiguation
+    setTimeout(() => {
+      handleSubmit()
+    }, 100)
+  }
+
+  const handleDisambiguationCancel = () => {
+    setShowDisambiguationDialog(false)
+  }
+
+  const handleUnmatchedConfirm = (resolvedIds: Record<string, string>) => {
+    setResolvedParticipantIds(prev => ({ ...prev, ...resolvedIds }))
+    setShowUnmatchedDialog(false)
+
+    // Update resolution result to mark matches as resolved
+    if (resolutionResult) {
+      const updatedMatches = resolutionResult.matches.map(match => {
+        if (resolvedIds[match.input]) {
+          // Find the selected participant
+          const selectedParticipant = tripParticipants.find(
+            p => p.user_id === resolvedIds[match.input]
+          )
+          if (selectedParticipant) {
+            return {
+              ...match,
+              bestMatch: {
+                userId: selectedParticipant.user_id,
+                fullName: selectedParticipant.full_name,
+                confidence: 1.0, // Manual selection = 100% confidence
+                matchType: 'exact' as const,
+              },
+              isUnmatched: false,
+            }
+          }
+        }
+        return match
+      })
+
+      setResolutionResult({
+        ...resolutionResult,
+        matches: updatedMatches,
+        hasUnmatched: false,
+        isFullyResolved: !updatedMatches.some(m => m.isAmbiguous || m.isUnmatched),
+      })
+    }
+
+    // Auto-submit after manual selection
+    setTimeout(() => {
+      handleSubmit()
+    }, 100)
+  }
+
+  const handleUnmatchedCancel = () => {
+    setShowUnmatchedDialog(false)
+  }
+
   const handleReset = () => {
     setParsedResult(null)
     setError(null)
-  }
-
-  const formatAmount = (amount: number, currency: string) => {
-    if (['JPY', 'KRW'].includes(currency)) {
-      return amount.toLocaleString()
-    }
-    return (amount / 100).toFixed(2)
   }
 
   return (
@@ -181,8 +335,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Amount</p>
                     <p className="font-mono text-lg">
-                      {parsedResult.currency}{' '}
-                      {formatAmount(parsedResult.amount, parsedResult.currency)}
+                      {formatCurrencyFromMinorUnits(parsedResult.amount, parsedResult.currency)}
                     </p>
                   </div>
                   <div>
@@ -226,12 +379,49 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Participants</p>
                     <div className="flex flex-wrap gap-1">
-                      {parsedResult.participants.map((participant: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {participant}
-                        </Badge>
-                      ))}
+                      {resolutionResult
+                        ? // Show resolved names with match indicators
+                          resolutionResult.matches.map((match, idx) => {
+                            const isResolved = match.bestMatch && match.bestMatch.confidence >= 0.85
+                            const isAmbiguous = match.isAmbiguous
+                            const isUnmatched = match.isUnmatched
+
+                            return (
+                              <Badge
+                                key={idx}
+                                variant={isResolved ? 'default' : isAmbiguous ? 'warning' : 'error'}
+                                className="text-xs flex items-center gap-1"
+                              >
+                                {match.bestMatch?.fullName || match.input}
+                                {isResolved && <CheckCircle2 className="h-3 w-3" />}
+                                {isAmbiguous && <AlertCircle className="h-3 w-3" />}
+                                {isUnmatched && <AlertCircle className="h-3 w-3" />}
+                              </Badge>
+                            )
+                          })
+                        : // Fallback: show original parsed names
+                          parsedResult.participants.map((participant, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {participant}
+                            </Badge>
+                          ))}
                     </div>
+                    {resolutionResult && !resolutionResult.isFullyResolved && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {resolutionResult.hasAmbiguous && (
+                          <p className="flex items-center gap-1 text-yellow-600">
+                            <AlertCircle className="h-3 w-3" />
+                            Some names need disambiguation
+                          </p>
+                        )}
+                        {resolutionResult.hasUnmatched && (
+                          <p className="flex items-center gap-1 text-red-600">
+                            <AlertCircle className="h-3 w-3" />
+                            Some names could not be matched
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -239,7 +429,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Custom Splits</p>
                     <div className="space-y-1">
-                      {parsedResult.customSplits.map((split: any, idx: number) => (
+                      {parsedResult.customSplits.map((split, idx) => (
                         <div
                           key={idx}
                           className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded"
@@ -248,8 +438,7 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
                             {split.name}
                           </Badge>
                           <span className="font-mono">
-                            {parsedResult.currency}{' '}
-                            {formatAmount(split.amount, parsedResult.currency)}
+                            {formatCurrencyFromMinorUnits(split.amount, parsedResult.currency)}
                           </span>
                         </div>
                       ))}
@@ -297,6 +486,27 @@ export function ExpenseInput({ tripId: _tripId, onSubmit }: ExpenseInputProps) {
           <li>¥2500 lunch split 3 ways</li>
         </ul>
       </div>
+
+      {/* Disambiguation Dialog */}
+      {resolutionResult && (
+        <ParticipantDisambiguationDialog
+          open={showDisambiguationDialog}
+          onCancel={handleDisambiguationCancel}
+          onConfirm={handleDisambiguationConfirm}
+          ambiguousMatches={resolutionResult.matches.filter(m => m.isAmbiguous)}
+        />
+      )}
+
+      {/* Unmatched Names Dialog */}
+      {resolutionResult && (
+        <UnmatchedParticipantDialog
+          open={showUnmatchedDialog}
+          onCancel={handleUnmatchedCancel}
+          onConfirm={handleUnmatchedConfirm}
+          unmatchedNames={resolutionResult.matches.filter(m => m.isUnmatched)}
+          tripParticipants={tripParticipants}
+        />
+      )}
     </div>
   )
 }

@@ -1,43 +1,49 @@
-import { describe, it, expect, beforeEach, vi } from '@jest/globals'
+import { describe, it, beforeEach, jest } from '@jest/globals'
+import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import SignupPage from '../../app/(auth)/signup/page'
 import { useAuth } from '../../lib/auth/auth-context'
 
+type AuthResult = { error: Error | null }
+const createAuthMock = <Args extends unknown[] = []>() =>
+  jest.fn<(...args: Args) => Promise<AuthResult>>()
+
 // Mock Next.js navigation
-vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(),
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
 }))
 
 // Mock auth context
-vi.mock('../../lib/auth/auth-context', () => ({
-  useAuth: vi.fn(),
+jest.mock('../../lib/auth/auth-context', () => ({
+  useAuth: jest.fn(),
 }))
 
 describe('SignupPage', () => {
-  const mockPush = vi.fn()
-  const mockSignUp = vi.fn()
-  const mockSignInWithGoogle = vi.fn()
+  const mockPush = jest.fn()
+  const mockSignUp = createAuthMock<[string, string, string]>()
+  const mockSignInWithGoogle = createAuthMock()
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    vi.useFakeTimers()
-    vi.mocked(useRouter).mockReturnValue({
+    jest.clearAllMocks()
+    jest.useFakeTimers()
+    jest.mocked(useRouter).mockReturnValue({
       push: mockPush,
-    } as any)
-    vi.mocked(useAuth).mockReturnValue({
+    } as unknown as AppRouterInstance)
+    jest.mocked(useAuth).mockReturnValue({
       signUp: mockSignUp,
       signInWithGoogle: mockSignInWithGoogle,
       user: null,
       session: null,
       loading: false,
-      signIn: vi.fn(),
-      signOut: vi.fn(),
+      signIn: createAuthMock<[string, string]>(),
+      signOut: createAuthMock(),
     })
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   it('should render signup form', () => {
@@ -73,7 +79,7 @@ describe('SignupPage', () => {
     })
 
     // Fast-forward timer for redirect
-    vi.advanceTimersByTime(2000)
+    jest.advanceTimersByTime(2000)
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/trips')

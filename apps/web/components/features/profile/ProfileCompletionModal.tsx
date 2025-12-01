@@ -41,15 +41,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
 import {
   completeProfile,
   completeProfileSchema,
   type CompleteProfileInput,
-  validateAvatarFile,
-} from '@tripthreads/shared'
+} from '@tripthreads/core'
+import { validateAvatarFile } from '@/lib/utils/avatar'
 
 interface ProfileCompletionModalProps {
   open: boolean

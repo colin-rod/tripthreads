@@ -45,13 +45,21 @@ A collaborative trip planning platform that helps groups plan, manage, and reliv
 4. **Start development server**
 
    ```bash
-   # Start both web and mobile
+   # Start both web and mobile workspaces (Turbo runs each package's dev script)
    npm run dev
 
-   # Or start individually
-   npm run dev:web     # Web only (http://localhost:3000)
-   npm run dev:mobile  # Mobile only (Expo)
+   # Start a single app using Turbo's filter flag
+   npm run dev -- --filter=web     # Web only (http://localhost:3000)
+   npm run dev -- --filter=mobile  # Mobile only (Expo)
+
+   # Or run the package-level scripts directly
+   cd apps/web && npm run dev
+   cd apps/mobile && npm run start
    ```
+
+   > ℹ️ Turbo's `--filter` flag scopes the task to a specific workspace, so only the matching package's
+   > scripts run. If you prefer, you can always change into a package directory and run its local `dev`
+   > or `start` script directly.
 
 5. **Run tests**
    ```bash
@@ -70,8 +78,8 @@ A collaborative trip planning platform that helps groups plan, manage, and reliv
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
+SUPABASE_SERVICE_ROLE_KEY=<YOUR_SUPABASE_SERVICE_ROLE_KEY>
 ```
 
 **Additional variables for complete MVP:**

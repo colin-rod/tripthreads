@@ -42,8 +42,8 @@ This guide covers deploying TripThreads to staging and production environments.
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
+SUPABASE_SERVICE_ROLE_KEY=<YOUR_SUPABASE_SERVICE_ROLE_KEY>
 ```
 
 #### Phase 2+ (Expense Tracking)
@@ -79,6 +79,16 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=xxx
 VAPID_PRIVATE_KEY=xxx
 ```
 
+#### Linear Feedback Ingestion (Supabase Edge Function)
+
+Configure these in Supabase project settings for the `submit-feedback` edge function:
+
+```bash
+LINEAR_API_KEY=<YOUR_LINEAR_API_KEY>
+LINEAR_FEEDBACK_TEAM_ID=<LINEAR_TEAM_ID>
+LINEAR_FEEDBACK_LABEL_ID=<LINEAR_LABEL_ID>
+```
+
 ### Mobile (Expo + EAS)
 
 #### app.json Configuration
@@ -88,7 +98,7 @@ VAPID_PRIVATE_KEY=xxx
   "expo": {
     "extra": {
       "supabaseUrl": "https://xxx.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "supabaseAnonKey": "<YOUR_SUPABASE_ANON_KEY>",
       "stripePublishableKey": "pk_test_xxx"
     }
   }
@@ -101,7 +111,7 @@ Use EAS Secrets for production builds:
 
 ```bash
 # Set secrets using EAS CLI
-eas secret:create --scope project --name SUPABASE_ANON_KEY --value eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+eas secret:create --scope project --name SUPABASE_ANON_KEY --value <YOUR_SUPABASE_ANON_KEY>
 eas secret:create --scope project --name STRIPE_PUBLISHABLE_KEY --value pk_live_xxx
 
 # Reference in app.json

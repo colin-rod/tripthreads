@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1024" viewBox="0 0 1440 1024">
+  <defs>
+    <style>
+      .bg { fill: #F7F7F8; }
+      .panel { fill: #FFFFFF; stroke: #D7D7DB; }
+      .subtle { fill: #FAFAFB; stroke: #E6E6EA; }
+      .primary { fill: #2563EB; }
+      .muted { fill: #6B7280; }
+      .text { font-family: Inter, Arial, sans-serif; font-size: 14px; fill: #111827; }
+      .text-sm { font-family: Inter, Arial, sans-serif; font-size: 12px; fill: #374151; }
+      .text-muted { font-family: Inter, Arial, sans-serif; font-size: 12px; fill: #6B7280; }
+      .title { font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 600; fill: #111827; }
+      .h1 { font-family: Inter, Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; }
+      .chip { fill: #EEF2FF; stroke: #E0E7FF; }
+      .shadow { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.06)) drop-shadow(0 4px 6px rgba(0,0,0,0.10)); }
+      .btn { fill: #2563EB; }
+      .btn-text { font-family: Inter, Arial, sans-serif; font-size: 14px; fill: #FFFFFF; font-weight: 600; }
+      .badge-dot { fill: #EF4444; }
+      .iconline { fill: none; stroke: #6B7280; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1440" height="1024" />
+
+  <g>
+    <rect x="0" y="0" width="1440" height="64" class="panel" />
+    <text x="32" y="40" class="h1">TripThread</text>
+    <rect x="820" y="16" width="360" height="32" rx="8" class="subtle" />
+    <text x="840" y="36" class="text-muted">Search…</text>
+    <circle cx="1392" cy="32" r="16" class="subtle" />
+    <circle cx="1392" cy="32" r="6" class="muted" />
+    <text x="150" y="40" class="title">Expenses</text>
+  </g>
+<g class="shadow"><rect x="0" y="64" width="224" height="960" class="panel"/></g><rect x="16" y="96" width="192" height="36" rx="8" class="bg" /><text x="32" y="120" class="text">Home</text><rect x="16" y="144" width="192" height="36" rx="8" class="bg" /><text x="32" y="168" class="text">Chat</text><rect x="16" y="192" width="192" height="36" rx="8" class="bg" /><text x="32" y="216" class="text">Plan</text><rect x="16" y="240" width="192" height="36" rx="8" class="chip" /><text x="32" y="264" class="text title">Expenses</text><rect x="16" y="288" width="192" height="36" rx="8" class="bg" /><text x="32" y="312" class="text">Files</text><rect x="16" y="336" width="192" height="36" rx="8" class="bg" /><text x="32" y="360" class="text">Settings</text><g class="shadow"><rect x="248" y="96" width="1160" height="120" rx="16" class="panel"/></g><text x="272" y="132" class="text-muted">Total Spent</text><text x="272" y="164" class="title">€1,240</text><text x="492" y="132" class="text-muted">Your Share</text><text x="492" y="164" class="title">€310</text><text x="712" y="132" class="text-muted">Balance</text><text x="712" y="164" class="title">€-12</text><text x="932" y="132" class="text-muted">Trip Cash Fund</text><text x="932" y="164" class="title">€450</text>
+  <g class="shadow"><rect x="1200" y="132" width="160" height="40" rx="10" class="btn" />
+  <text x="1241.5" y="157.0" class="btn-text">Add Expense</text></g>
+<g class="shadow"><rect x="248" y="232" width="1160" height="360" rx="16" class="panel"/></g><text x="264" y="260" class="text">Item</text><text x="484" y="260" class="text">Paid by</text><text x="624" y="260" class="text">Involved</text><text x="844" y="260" class="text">Amount</text><text x="964" y="260" class="text">Split</text><text x="1124" y="260" class="text">Owed / person</text><text x="1304" y="260" class="text">Actions</text><rect x="256" y="264" width="1136" height="48" rx="8" class="subtle"/><text x="264" y="288" class="text-sm">Museum tickets</text><text x="484" y="288" class="text-sm">Alice</text><text x="624" y="288" class="text-sm">Alice, Bob</text><text x="844" y="288" class="text-sm">€80</text><text x="964" y="288" class="text-sm">Even</text><text x="1124" y="288" class="text-sm">€20</text><text x="1304" y="288" class="text-sm">✏️ 🗑️</text><rect x="256" y="320" width="1136" height="48" rx="8" class="subtle"/><text x="264" y="344" class="text-sm">Dinner TimeOut</text><text x="484" y="344" class="text-sm">Bob</text><text x="624" y="344" class="text-sm">All 4</text><text x="844" y="344" class="text-sm">€160</text><text x="964" y="344" class="text-sm">Custom</text><text x="1124" y="344" class="text-sm">€25–€55</text><text x="1304" y="344" class="text-sm">✏️ 🗑️</text><rect x="256" y="376" width="1136" height="48" rx="8" class="subtle"/><text x="264" y="400" class="text-sm">Metro cards</text><text x="484" y="400" class="text-sm">You</text><text x="624" y="400" class="text-sm">You, Dana</text><text x="844" y="400" class="text-sm">€48</text><text x="964" y="400" class="text-sm">Even</text><text x="1124" y="400" class="text-sm">€24</text><text x="1304" y="400" class="text-sm">✏️ 🗑️</text><rect x="256" y="432" width="1136" height="48" rx="8" class="subtle"/><text x="264" y="456" class="text-sm">Airbnb</text><text x="484" y="456" class="text-sm">Dana</text><text x="624" y="456" class="text-sm">All 4</text><text x="844" y="456" class="text-sm">€720</text><text x="964" y="456" class="text-sm">Even</text><text x="1124" y="456" class="text-sm">€180</text><text x="1304" y="456" class="text-sm">✏️ 🗑️</text><text x="248" y="620" class="title">Settle up</text><rect x="248" y="644" width="1160" height="36" rx="10" class="panel"/><text x="264" y="668" class="text-sm">Alice owes Bob €24</text><rect x="248" y="688" width="1160" height="36" rx="10" class="panel"/><text x="264" y="712" class="text-sm">Charlie owes Dana €8</text><rect x="248" y="732" width="1160" height="36" rx="10" class="panel"/><text x="264" y="756" class="text-sm">You owe Dana €12</text><text x="248" y="764" class="title">Analytics</text><g class="shadow"><rect x="248" y="788" width="336" height="160" rx="16" class="panel"/></g><text x="264" y="816" class="text">Budget vs Spent</text><rect x="264" y="828" width="304" height="84" rx="12" class="subtle"/><text x="272" y="876" class="text-sm">Budget: €1,500 · Spent: €1,240</text><g class="shadow"><rect x="608" y="788" width="336" height="160" rx="16" class="panel"/></g><text x="624" y="816" class="text">Spend per day</text><rect x="624" y="828" width="304" height="84" rx="12" class="subtle"/><text x="632" y="876" class="text-sm">Avg €206/day</text><g class="shadow"><rect x="968" y="788" width="336" height="160" rx="16" class="panel"/></g><text x="984" y="816" class="text">Top categories</text><rect x="984" y="828" width="304" height="84" rx="12" class="subtle"/><text x="992" y="876" class="text-sm">Lodging, Food, Transport</text><text x="24" y="1008" class="text-muted">Updated 2025-11-06 · TripThread</text></svg>

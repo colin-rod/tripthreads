@@ -26,7 +26,12 @@ export function InviteButton({ tripId, isOwner }: InviteButtonProps) {
 
   return (
     <>
-      <Button onClick={() => setDialogOpen(true)} variant="default" size="sm">
+      <Button
+        onClick={() => setDialogOpen(true)}
+        variant="default"
+        size="sm"
+        data-tour="invite-button"
+      >
         <UserPlus className="h-4 w-4 mr-2" />
         Invite
       </Button>
