@@ -2,8 +2,11 @@
 
 ## Current Status
 
-- **Baseline:** `20251201000000_baseline_schema.sql` (Phase 1-2 complete)
-- **Archived:** `archive/2025-phase1-phase2/` (31 original migrations)
+- **Active Migrations:** All new migrations created after Dec 1, 2025
+- **Archived:** `archive/` (All Phase 1-2 migrations including baseline schema)
+- **Production Schema:** Built from original migrations (pre-baseline)
+
+**Note:** The baseline schema (`20251201000000_baseline_schema.sql`) has been archived because production was built with the original migrations. New migrations apply incrementally to the existing production schema.
 
 ## Migration Workflow
 
@@ -65,15 +68,22 @@ git commit -m "feat(db): add trip templates"
 **6. Apply to production:**
 
 ```bash
-# Option 1: CLI (direct, use with caution!)
+# Option 1: CLI (recommended for standard migrations)
+supabase link --project-ref tbwbaydyyjokrsjtgerh  # If not already linked
 supabase db push --linked
 
-# Option 2: Dashboard (safer, allows manual review)
+# Option 2: Dashboard (recommended for urgent fixes or single commands)
+# - Open: https://supabase.com/dashboard/project/tbwbaydyyjokrsjtgerh/sql
 # - Copy SQL from migration file
-# - Paste in Supabase Dashboard → SQL Editor
+# - Paste in SQL Editor
 # - Review carefully
 # - Execute
 ```
+
+**When to use each option:**
+
+- **CLI (`db push`):** Standard workflow for migrations that build on existing schema
+- **Dashboard (SQL Editor):** Quick fixes, single SQL statements, or when CLI fails due to migration history conflicts
 
 ### Pre-Push Checklist
 
