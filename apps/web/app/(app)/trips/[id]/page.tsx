@@ -22,7 +22,6 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
-import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
 import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
@@ -136,9 +135,6 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
         {/* Main Content Area */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Invitations List (owners only) */}
-          <PendingInvitesList tripId={trip.id} isOwner={isOwner} />
-
           {/* Tabs for Timeline, Expenses, etc. */}
           <Tabs defaultValue="timeline" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
