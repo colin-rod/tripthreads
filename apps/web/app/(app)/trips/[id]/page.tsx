@@ -16,13 +16,21 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner, getTripItineraryItems } from '@tripthreads/core'
+import {
+  getTripById,
+  isTripOwner,
+  getTripItineraryItems,
+  getUserExpensesForTrip,
+  getSettlementSummary,
+} from '@tripthreads/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
+import { ExpenseListView } from '@/components/features/expenses'
+import { SettlementSummary } from '@/components/features/expenses/settlements'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
 import { ItineraryPreview } from '@/components/features/itinerary/ItineraryPreview'
 import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
@@ -48,11 +56,17 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
   let trip!: TripWithRelations
   let isOwner = false
   let itineraryItems: Awaited<ReturnType<typeof getTripItineraryItems>> = []
+  let expenses: Awaited<ReturnType<typeof getUserExpensesForTrip>> = []
+  let settlementSummary: Awaited<ReturnType<typeof getSettlementSummary>> | null = null
 
   try {
     trip = await getTripById(supabase, id)
     isOwner = await isTripOwner(supabase, id)
-    itineraryItems = await getTripItineraryItems(supabase, id)
+    ;[itineraryItems, expenses, settlementSummary] = await Promise.all([
+      getTripItineraryItems(supabase, id),
+      getUserExpensesForTrip(supabase, id),
+      getSettlementSummary(supabase, id),
+    ])
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
@@ -188,25 +202,50 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
               {/* AI Expense Input (Participants only, hidden from viewers) */}
               {canEdit && <ExpenseInputWrapper tripId={trip.id} />}
 
+              {/* Settlement Summary */}
+              {settlementSummary &&
+                (settlementSummary.pending_settlements.length > 0 ||
+                  settlementSummary.settled_settlements.length > 0) && (
+                  <SettlementSummary
+                    summary={settlementSummary}
+                    currentUserId={user?.id || ''}
+                    tripId={trip.id}
+                  />
+                )}
+
               {/* Expenses List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No expenses yet</p>
-                    <p className="text-sm mt-1">
-                      {canEdit
-                        ? 'Add expenses using natural language above'
-                        : userParticipant?.role === 'viewer'
-                          ? 'Viewers cannot see expenses'
-                          : 'Start tracking expenses for this trip'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              {expenses && expenses.length > 0 ? (
+                <ExpenseListView
+                  expenses={expenses}
+                  tripId={trip.id}
+                  tripParticipants={
+                    tripParticipants.map(p => ({
+                      id: p.user?.id || '',
+                      name: p.user?.full_name || 'Unknown',
+                    })) || []
+                  }
+                  currentUserId={user?.id || ''}
+                />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-12 text-muted-foreground">
+                      <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No expenses yet</p>
+                      <p className="text-sm mt-1">
+                        {canEdit
+                          ? 'Add expenses using natural language above'
+                          : userParticipant?.role === 'viewer'
+                            ? 'Viewers cannot see expenses'
+                            : 'Start tracking expenses for this trip'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Feed Tab */}
