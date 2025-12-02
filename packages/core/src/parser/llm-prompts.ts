@@ -67,7 +67,7 @@ Return JSON with this exact schema:
   "description": "string",
   "category": "food" | "transport" | "accommodation" | "activity" | "other" | null,
   "payer": "string or null",
-  "splitType": "equal" | "custom" | "percentage" | "none",
+  "splitType": "equal" | "custom" | "percentage",
   "splitCount": number or null (for equal splits),
   "participants": ["array", "of", "names"] or null (for equal splits),
   "customSplits": [{"name": "string", "amount": number}] or null (for custom splits in minor units),
@@ -79,7 +79,9 @@ Important rules:
 - For EUR/USD/GBP: Convert to minor units (€60 = 6000 cents)
 - For JPY/KRW: NO conversion, use actual amount (¥2500 = 2500)
 - Description should NOT include participant names, amounts, or split keywords
-- splitType is "equal" for equal splits, "custom" for specific amounts per person, "percentage" for share/percentage-based splits, "none" if no split
+- splitType is "equal" for equal splits, "custom" for specific amounts per person, "percentage" for share/percentage-based splits
+- For debt/IOU statements ("X owes Y"): use customSplits with the debtor owing the stated amount
+- If only one person mentioned in a debt statement, assume they owe the full amount
 - For equal splits: use splitCount and participants fields
 - For custom splits: use customSplits array with {name, amount} objects
 - participants should only include actual person names, NOT description words like "Dinner", "Lunch", "Hotel"
@@ -110,6 +112,12 @@ Output: {"amount": 10000, "currency": "EUR", "description": "hotel room", "categ
 
 Input: "Lunch $90 split: Alice 30, Bob 35, Carol 25"
 Output: {"amount": 9000, "currency": "USD", "description": "Lunch", "category": "food", "payer": null, "splitType": "custom", "splitCount": null, "participants": null, "customSplits": [{"name": "Alice", "amount": 3000}, {"name": "Bob", "amount": 3500}, {"name": "Carol", "amount": 2500}], "confidence": 0.9, "originalText": "Lunch $90 split: Alice 30, Bob 35, Carol 25"}
+
+Input: "colin owes 50 USD"
+Output: {"amount": 5000, "currency": "USD", "description": "colin owes 50 USD", "category": null, "payer": null, "splitType": "custom", "splitCount": null, "participants": null, "customSplits": [{"name": "colin", "amount": 5000}], "confidence": 0.85, "originalText": "colin owes 50 USD"}
+
+Input: "Bob owes me £30"
+Output: {"amount": 3000, "currency": "GBP", "description": "Bob owes me £30", "category": null, "payer": null, "splitType": "custom", "splitCount": null, "participants": null, "customSplits": [{"name": "Bob", "amount": 3000}], "confidence": 0.85, "originalText": "Bob owes me £30"}
 
 Now extract from: "${input}"`
 }
