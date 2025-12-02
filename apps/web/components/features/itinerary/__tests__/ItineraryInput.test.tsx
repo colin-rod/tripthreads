@@ -768,4 +768,314 @@ describe('ItineraryInput Component', () => {
       })
     })
   })
+
+  describe('Edit Mode', () => {
+    it('enters edit mode when Edit button is clicked', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Click Edit button
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Verify edit mode is active - Cancel button should be visible
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument()
+
+      // Verify description field is editable
+      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      expect(descriptionInput).toBeInTheDocument()
+      expect(descriptionInput.tagName).toBe('INPUT')
+    })
+
+    it('exits edit mode when Cancel button is clicked', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+
+      // Click Cancel
+      await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+      // Verify edit mode is exited - Edit button should be visible again
+      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
+    })
+
+    it('allows editing description in edit mode', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Edit description
+      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Flight to London Monday 10am')
+
+      expect(descriptionInput).toHaveValue('Flight to London Monday 10am')
+    })
+
+    it('submits edited values when Confirm & Save is clicked in edit mode', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Edit description
+      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Flight to London Monday 10am')
+
+      // Submit
+      await user.click(screen.getByRole('button', { name: /confirm & save/i }))
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            description: 'Flight to London Monday 10am',
+          })
+        )
+      })
+    })
+
+    it('validates edited fields before submission', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Clear description (invalid)
+      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      await user.clear(descriptionInput)
+
+      // Try to submit
+      await user.click(screen.getByRole('button', { name: /confirm & save/i }))
+
+      // Should show validation error
+      await waitFor(() => {
+        expect(screen.getByText(/description is required/i)).toBeInTheDocument()
+      })
+
+      // Should not call onSubmit
+      expect(mockOnSubmit).not.toHaveBeenCalled()
+    })
+
+    it('toggles all-day mode in edit mode', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Find and toggle all-day switch
+      const allDaySwitch = screen.getByRole('switch', { name: /all day/i })
+      expect(allDaySwitch).toBeInTheDocument()
+
+      await user.click(allDaySwitch)
+
+      // Time input should be hidden when all-day is enabled
+      const timeInputs = screen.queryAllByDisplayValue(/\d{2}:\d{2}/)
+      expect(timeInputs.length).toBe(0)
+    })
+
+    it('toggles date range mode in edit mode', async () => {
+      const user = userEvent.setup()
+
+      mockParseWithOpenAI.mockResolvedValue({
+        success: true,
+        dateResult: {
+          date: new Date('2024-12-15T09:00:00Z'),
+          hasTime: true,
+          isRange: false,
+          confidence: 0.95,
+          detectedFormat: 'absolute',
+          originalText: 'Flight to Paris Monday 9am',
+        },
+        model: 'gpt-4o-mini',
+        tokensUsed: 180,
+        latencyMs: 450,
+        rawOutput: '{}',
+      })
+
+      render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
+
+      const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
+      await user.type(input, 'Flight to Paris Monday 9am')
+      await user.click(screen.getByRole('button', { name: /add/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/preview/i)).toBeInTheDocument()
+      })
+
+      // Enter edit mode
+      await user.click(screen.getByRole('button', { name: /edit/i }))
+
+      // Find and toggle date range switch
+      const dateRangeSwitch = screen.getByRole('switch', { name: /date range/i })
+      expect(dateRangeSwitch).toBeInTheDocument()
+
+      await user.click(dateRangeSwitch)
+
+      // End date inputs should appear when range is enabled
+      await waitFor(() => {
+        const dateInputs = screen.getAllByDisplayValue(/2024-12-15/)
+        expect(dateInputs.length).toBeGreaterThan(1) // Should have start and end date inputs
+      })
+    })
+  })
 })
