@@ -16,7 +16,7 @@ import { format } from 'date-fns'
 import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@tripthreads/core'
+import { getTripById, isTripOwner, getTripItineraryItems } from '@tripthreads/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -24,6 +24,7 @@ import { TripActions } from '@/components/features/trips/TripActions'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
+import { ItineraryPreview } from '@/components/features/itinerary/ItineraryPreview'
 import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
 import PhotoUpload from '@/components/features/feed/PhotoUpload'
 import PhotoFeed from '@/components/features/feed/PhotoFeed'
@@ -46,10 +47,12 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
 
   let trip!: TripWithRelations
   let isOwner = false
+  let itineraryItems: Awaited<ReturnType<typeof getTripItineraryItems>> = []
 
   try {
     trip = await getTripById(supabase, id)
     isOwner = await isTripOwner(supabase, id)
+    itineraryItems = await getTripItineraryItems(supabase, id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
@@ -163,15 +166,19 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
                   <CardTitle className="text-lg">Itinerary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No itinerary items yet</p>
-                    <p className="text-sm mt-1">
-                      {canEdit
-                        ? 'Add activities, flights, and accommodations using natural language above'
-                        : 'Only participants can add itinerary items'}
-                    </p>
-                  </div>
+                  {itineraryItems.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No itinerary items yet</p>
+                      <p className="text-sm mt-1">
+                        {canEdit
+                          ? 'Add activities, flights, and accommodations using natural language above'
+                          : 'Only participants can add itinerary items'}
+                      </p>
+                    </div>
+                  ) : (
+                    <ItineraryPreview items={itineraryItems} tripId={trip.id} maxItems={5} />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
