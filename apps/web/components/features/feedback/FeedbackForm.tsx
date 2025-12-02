@@ -5,7 +5,19 @@ import { useSearchParams } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { FileImage, Loader2, Send, X } from 'lucide-react'
+import {
+  Bug,
+  Code,
+  FileImage,
+  Globe,
+  Lightbulb,
+  Loader2,
+  MessageSquare,
+  MousePointerClick,
+  Send,
+  TestTube,
+  X,
+} from 'lucide-react'
 import { submitFeedbackToLinear } from '@tripthreads/core/utils/feedback'
 import type { FeedbackEnvironment, FeedbackCategory } from '@tripthreads/core/types/feedback'
 import { supabase } from '@/lib/supabase/client'
@@ -14,13 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
 
 const feedbackSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -31,6 +37,54 @@ const feedbackSchema = z.object({
 })
 
 export type FeedbackFormValues = z.infer<typeof feedbackSchema>
+
+const categoryOptions = [
+  {
+    value: 'bug-report' as const,
+    label: 'Bug Report',
+    icon: Bug,
+    description: 'Report software defects or errors',
+  },
+  {
+    value: 'feature-request' as const,
+    label: 'Feature Request',
+    icon: Lightbulb,
+    description: 'Suggest new features or improvements',
+  },
+  {
+    value: 'general' as const,
+    label: 'General Feedback',
+    icon: MessageSquare,
+    description: 'Share general thoughts or questions',
+  },
+  {
+    value: 'ux-issue' as const,
+    label: 'UX Issue',
+    icon: MousePointerClick,
+    description: 'Report usability or design problems',
+  },
+] satisfies ChipOption<FeedbackCategory>[]
+
+const environmentOptions = [
+  {
+    value: 'production' as const,
+    label: 'Production',
+    icon: Globe,
+    description: 'Live production environment',
+  },
+  {
+    value: 'staging' as const,
+    label: 'Staging',
+    icon: TestTube,
+    description: 'Staging or testing environment',
+  },
+  {
+    value: 'development' as const,
+    label: 'Development',
+    icon: Code,
+    description: 'Local development environment',
+  },
+] satisfies ChipOption<FeedbackEnvironment>[]
 
 interface FeedbackFormProps {
   defaultEmail?: string
@@ -187,51 +241,36 @@ export function FeedbackForm({ defaultEmail, defaultTripId }: FeedbackFormProps)
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
+              <Label>Category</Label>
+              <ChipSelector
+                options={categoryOptions}
+                value={form.watch('category')}
                 onValueChange={value =>
-                  form.setValue('category', value as FeedbackCategory, {
+                  form.setValue('category', value, {
                     shouldValidate: true,
                   })
                 }
-                defaultValue={form.getValues('category')}
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bug-report">Bug Report</SelectItem>
-                  <SelectItem value="feature-request">Feature Request</SelectItem>
-                  <SelectItem value="general">General Feedback</SelectItem>
-                  <SelectItem value="ux-issue">UX Issue</SelectItem>
-                </SelectContent>
-              </Select>
+                aria-label="Select feedback category"
+              />
               {form.formState.errors.category && (
                 <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="environment">Environment</Label>
-              <Select
+              <Label>Environment</Label>
+              <ChipSelector
+                options={environmentOptions}
+                value={form.watch('environment')}
                 onValueChange={value =>
-                  form.setValue('environment', value as FeedbackEnvironment, {
+                  form.setValue('environment', value, {
                     shouldValidate: true,
                   })
                 }
-                defaultValue={form.getValues('environment')}
-              >
-                <SelectTrigger id="environment">
-                  <SelectValue placeholder="Select environment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="staging">Staging</SelectItem>
-                  <SelectItem value="development">Development</SelectItem>
-                </SelectContent>
-              </Select>
+                aria-label="Select environment"
+              />
               {form.formState.errors.environment && (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.environment.message}

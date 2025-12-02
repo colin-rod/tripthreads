@@ -5,7 +5,16 @@ import { usePathname } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { FileImage, Loader2, Send, X } from 'lucide-react'
+import {
+  Bug,
+  FileImage,
+  Lightbulb,
+  Loader2,
+  MessageSquare,
+  MousePointerClick,
+  Send,
+  X,
+} from 'lucide-react'
 import { submitFeedbackToLinear, type FeedbackCategory } from '@tripthreads/core'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -20,13 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
 
 const feedbackSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -35,6 +38,33 @@ const feedbackSchema = z.object({
 })
 
 type FeedbackFormValues = z.infer<typeof feedbackSchema>
+
+const categoryOptions = [
+  {
+    value: 'bug-report' as const,
+    label: 'Bug Report',
+    icon: Bug,
+    description: 'Report software defects or errors',
+  },
+  {
+    value: 'feature-request' as const,
+    label: 'Feature Request',
+    icon: Lightbulb,
+    description: 'Suggest new features or improvements',
+  },
+  {
+    value: 'general' as const,
+    label: 'General Feedback',
+    icon: MessageSquare,
+    description: 'Share general thoughts or questions',
+  },
+  {
+    value: 'ux-issue' as const,
+    label: 'UX Issue',
+    icon: MousePointerClick,
+    description: 'Report usability or design problems',
+  },
+] satisfies ChipOption<FeedbackCategory>[]
 
 interface FeedbackModalProps {
   open: boolean
@@ -207,25 +237,17 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select
+            <Label>Category</Label>
+            <ChipSelector
+              options={categoryOptions}
+              value={form.watch('category')}
               onValueChange={value =>
-                form.setValue('category', value as FeedbackCategory, {
+                form.setValue('category', value, {
                   shouldValidate: true,
                 })
               }
-              defaultValue={form.getValues('category')}
-            >
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bug-report">Bug Report</SelectItem>
-                <SelectItem value="feature-request">Feature Request</SelectItem>
-                <SelectItem value="general">General Feedback</SelectItem>
-                <SelectItem value="ux-issue">UX Issue</SelectItem>
-              </SelectContent>
-            </Select>
+              aria-label="Select feedback category"
+            />
             {form.formState.errors.category && (
               <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
             )}
