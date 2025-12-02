@@ -1117,6 +1117,8 @@ export type Database = {
           trip_name: string
         }[]
       }
+      get_service_role_key: { Args: never; Returns: string }
+      get_supabase_url: { Args: never; Returns: string }
       get_user_trip_join_date: {
         Args: { p_trip_id: string; p_user_id: string }
         Returns: string
