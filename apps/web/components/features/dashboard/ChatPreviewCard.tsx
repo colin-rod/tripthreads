@@ -1,0 +1,59 @@
+import Link from 'next/link'
+import { MessageSquare } from 'lucide-react'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DashboardCard } from './DashboardCard'
+
+interface ChatPreviewCardProps {
+  tripId: string
+  recentMessages?: Array<{
+    id: string
+    content: string
+    sender_name: string
+    created_at: string
+  }>
+  unreadCount?: number
+}
+
+export function ChatPreviewCard({
+  tripId,
+  recentMessages = [],
+  unreadCount = 0,
+}: ChatPreviewCardProps) {
+  return (
+    <DashboardCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <MessageSquare className="h-5 w-5" />
+          Chat
+          {unreadCount > 0 && (
+            <Badge variant="default" className="ml-2">
+              {unreadCount}
+            </Badge>
+          )}
+        </CardTitle>
+        <Link href={`/trips/${tripId}#chat`} className="text-sm text-primary hover:underline">
+          View All →
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {recentMessages.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No messages yet</p>
+            <p className="text-xs mt-1">Start a conversation</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentMessages.slice(0, 3).map(message => (
+              <div key={message.id} className="border-l-2 border-primary/20 pl-3">
+                <p className="text-sm font-medium">{message.sender_name}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{message.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </DashboardCard>
+  )
+}

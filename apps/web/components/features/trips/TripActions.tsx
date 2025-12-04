@@ -27,7 +27,7 @@ interface Trip {
   description: string | null
   start_date: string
   end_date: string
-  cover_image_url: string | null
+  cover_image_url?: string | null
 }
 
 interface TripActionsProps {
