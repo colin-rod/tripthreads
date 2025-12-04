@@ -2,9 +2,10 @@
  * Authenticated App Layout
  *
  * Layout for authenticated pages.
- * Includes profile completion check and first-run onboarding.
+ * Includes global navigation bar, profile completion check, and first-run onboarding.
  */
 
+import { AppNavBar } from '@/components/layouts/AppNavBar'
 import { ProfileCompletionProvider } from '@/components/features/profile/ProfileCompletionProvider'
 import { Onboarding } from '@/components/features/onboarding'
 
@@ -15,9 +16,10 @@ export default function AppLayout({
 }>) {
   return (
     <>
+      <AppNavBar />
       <ProfileCompletionProvider />
       <Onboarding autoStart={true} />
-      {children}
+      <div className="pt-16">{children}</div>
     </>
   )
 }

@@ -66,7 +66,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-4rem)]">
       <TripNavigation tripId={id} tripName={trip.name} userTrips={trips} />
 
       {/* Main Content */}
