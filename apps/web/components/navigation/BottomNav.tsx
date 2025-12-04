@@ -6,10 +6,9 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import type { TripSection } from '@/hooks/useHashNavigation'
+import { useHashNavigation } from '@/hooks/useHashNavigation'
 
 interface BottomNavProps {
-  currentSection: TripSection
   tripId: string
   unreadChatCount?: number
   className?: string
@@ -48,12 +47,9 @@ function BottomTab({ href, active, icon: Icon, label, badge }: BottomTabProps) {
   )
 }
 
-export function BottomNav({
-  currentSection,
-  tripId,
-  unreadChatCount = 0,
-  className,
-}: BottomNavProps) {
+export function BottomNav({ tripId, unreadChatCount = 0, className }: BottomNavProps) {
+  const { section: currentSection } = useHashNavigation()
+
   return (
     <nav
       className={cn(

@@ -5,10 +5,9 @@ import { Home, MessageSquare, DollarSign, Calendar, Camera } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { ParticipantsDropdown } from './ParticipantsDropdown'
-import type { TripSection } from '@/hooks/useHashNavigation'
+import { useHashNavigation } from '@/hooks/useHashNavigation'
 
 interface HorizontalNavProps {
-  currentSection: TripSection
   tripId: string
   participants: Array<{
     id: string
@@ -55,12 +54,13 @@ function NavLink({ href, active, icon: Icon, label, badge }: NavLinkProps) {
 }
 
 export function HorizontalNav({
-  currentSection,
   tripId,
   participants,
   unreadChatCount = 0,
   className,
 }: HorizontalNavProps) {
+  const { section: currentSection } = useHashNavigation()
+
   return (
     <div className={cn('border-b bg-background', className)}>
       <div className="flex items-center justify-between px-6 h-14">

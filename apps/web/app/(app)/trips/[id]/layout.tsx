@@ -72,12 +72,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       {/* Desktop Horizontal Navigation */}
       <div className="hidden md:block border-b">
-        <HorizontalNav
-          currentSection="home"
-          tripId={id}
-          participants={participants}
-          unreadChatCount={unreadCount}
-        />
+        <HorizontalNav tripId={id} participants={participants} unreadChatCount={unreadCount} />
       </div>
 
       {/* Main Content */}
@@ -85,7 +80,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden">
-        <BottomNav currentSection="home" tripId={id} unreadChatCount={unreadCount} />
+        <BottomNav tripId={id} unreadChatCount={unreadCount} />
       </div>
     </div>
   )
