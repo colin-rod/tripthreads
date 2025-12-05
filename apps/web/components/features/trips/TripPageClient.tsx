@@ -120,9 +120,17 @@ export function TripPageClient({
     <div className="container mx-auto py-6 px-4 max-w-7xl">
       {/* Trip Header */}
       <TripHeader
-        trip={trip}
+        trip={{
+          ...trip,
+          trip_participants: trip.trip_participants.map(p => ({
+            ...p,
+            role: p.role as 'owner' | 'participant' | 'viewer',
+          })),
+        }}
         isOwner={isOwner}
         userRole={participants.find(p => p.user.id === currentUserId)?.role}
+        showBackButton={section !== 'home'}
+        onNavigateToDashboard={() => navigateTo('home')}
       />
 
       {/* Main Content */}

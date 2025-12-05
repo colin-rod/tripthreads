@@ -18,7 +18,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getTripById } from '@tripthreads/core'
-import { HorizontalNav } from '@/components/navigation/HorizontalNav'
 import { BottomNav } from '@/components/navigation/BottomNav'
 
 interface TripLayoutProps {
@@ -59,22 +58,11 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     notFound()
   }
 
-  // Format participants for navigation components
-  const participants = trip.trip_participants.map(p => ({
-    ...p,
-    role: p.role as 'owner' | 'participant' | 'viewer',
-  }))
-
   // TODO: Fetch unread message count for badge
   const unreadCount = 0
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
-      {/* Desktop Horizontal Navigation */}
-      <div className="hidden md:block border-b">
-        <HorizontalNav tripId={id} participants={participants} unreadChatCount={unreadCount} />
-      </div>
-
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">{children}</main>
 
