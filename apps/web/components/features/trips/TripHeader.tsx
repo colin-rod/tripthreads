@@ -8,10 +8,9 @@
 
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { Calendar, Users, ArrowLeft, ChevronDown, UserPlus } from 'lucide-react'
+import { Calendar, Users, ArrowLeft, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -178,16 +177,6 @@ export function TripHeader({
                         </DropdownMenuItem>
                       ))}
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/trips/${trip.id}#settings`}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        <span>Invite People</span>
-                      </Link>
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

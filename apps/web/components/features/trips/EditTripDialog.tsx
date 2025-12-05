@@ -172,7 +172,7 @@ export function EditTripDialog({ trip, open, onOpenChange, onSuccess }: EditTrip
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 z-[60]" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
@@ -213,7 +213,7 @@ export function EditTripDialog({ trip, open, onOpenChange, onSuccess }: EditTrip
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 z-[60]" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
