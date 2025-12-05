@@ -83,7 +83,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
   // Format itinerary items for dashboard
   const formattedItineraryItems = itineraryItems.map(item => ({
     id: item.id,
-    type: item.type as 'flight' | 'stay' | 'activity',
+    type: item.type || 'general',
     title: item.title,
     start_time: item.start_time,
     location: item.location,

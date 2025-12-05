@@ -2,15 +2,27 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Calendar, ChevronDown, ChevronUp, Plane, Hotel, MapPin } from 'lucide-react'
+import {
+  Binoculars,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Hotel,
+  MapPin,
+  Plane,
+  Sparkles,
+  Utensils,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ExpandableCard } from './ExpandableCard'
+import type { ItineraryItemType } from '@tripthreads/core/types/itinerary'
 
 interface ItineraryItem {
   id: string
-  type: 'flight' | 'stay' | 'activity'
+  type: ItineraryItemType
   title: string
   start_time: string
   location: string | null
@@ -21,10 +33,22 @@ interface PlanPreviewCardProps {
   itineraryItems: ItineraryItem[]
 }
 
-const ICON_MAP = {
-  flight: Plane,
-  stay: Hotel,
-  activity: MapPin,
+const ICON_MAP: Record<ItineraryItemType, LucideIcon> = {
+  transport: Plane,
+  accommodation: Hotel,
+  dining: Utensils,
+  activity: Sparkles,
+  sightseeing: Binoculars,
+  general: MapPin,
+}
+
+const TYPE_LABELS: Record<ItineraryItemType, string> = {
+  transport: 'Transport',
+  accommodation: 'Stay',
+  dining: 'Dining',
+  activity: 'Activity',
+  sightseeing: 'Sightseeing',
+  general: 'General',
 }
 
 export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps) {
@@ -73,7 +97,8 @@ export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps
         ) : (
           <div className="space-y-2">
             {displayItems.map(item => {
-              const Icon = ICON_MAP[item.type]
+              const Icon = ICON_MAP[item.type] || MapPin
+              const typeLabel = TYPE_LABELS[item.type] || 'Plan item'
               return (
                 <div
                   key={item.id}
@@ -84,6 +109,7 @@ export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps
                     <p className="text-sm font-medium truncate">{item.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                       <span>{format(new Date(item.start_time), 'EEE, MMM d • h:mm a')}</span>
+                      <span>• {typeLabel}</span>
                       {item.location && <span>• {item.location}</span>}
                     </div>
                   </div>

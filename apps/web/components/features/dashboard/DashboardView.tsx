@@ -9,6 +9,7 @@ import {
   FeedPreviewCard,
 } from '@/components/features/dashboard'
 import type { TripSection } from '@/hooks/useHashNavigation'
+import type { ItineraryItemType } from '@tripthreads/core/types/itinerary'
 import type { SettlementSummary } from '@tripthreads/core/types/expense'
 
 interface DashboardViewProps {
@@ -23,7 +24,7 @@ interface DashboardViewProps {
   currentUserId: string
   itineraryItems: Array<{
     id: string
-    type: 'flight' | 'stay' | 'activity'
+    type: ItineraryItemType
     title: string
     start_time: string
     location: string | null

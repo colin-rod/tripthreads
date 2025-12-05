@@ -18,6 +18,7 @@ import {
   SettingsSection,
 } from '@/components/features/trips/sections'
 import type { SettlementSummary, ExpenseWithDetails } from '@tripthreads/core/types/expense'
+import type { ItineraryItemType } from '@tripthreads/core/types/itinerary'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 
@@ -60,7 +61,7 @@ interface TripPageClientProps {
   }>
   itineraryItems: Array<{
     id: string
-    type: 'flight' | 'stay' | 'activity'
+    type: ItineraryItemType
     title: string
     start_time: string
     location: string | null
