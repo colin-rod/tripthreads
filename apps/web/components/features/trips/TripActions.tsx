@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Settings, Pencil, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -48,8 +48,8 @@ export function TripActions({ trip }: TripActionsProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Trip actions</span>
+            <Settings className="h-5 w-5" />
+            <span className="sr-only">Trip settings</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

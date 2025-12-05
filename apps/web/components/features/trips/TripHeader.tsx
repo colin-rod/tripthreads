@@ -11,7 +11,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { Calendar, Users, Settings, ArrowLeft, ChevronDown, UserPlus } from 'lucide-react'
+import { Calendar, Users, ArrowLeft, ChevronDown, UserPlus } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -180,7 +180,10 @@ export function TripHeader({
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/trips/${trip.id}#settings`} className="flex items-center gap-2">
+                      <Link
+                        href={`/trips/${trip.id}#settings`}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
                         <UserPlus className="w-4 h-4" />
                         <span>Invite People</span>
                       </Link>
@@ -193,12 +196,6 @@ export function TripHeader({
             <div className="flex items-center gap-2">
               <InviteButton tripId={trip.id} isOwner={isOwner} />
               {isOwner && <TripActions trip={trip} />}
-              <Link href={`/trips/${trip.id}#settings`}>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
-                  <span className="sr-only">Settings</span>
-                </Button>
-              </Link>
             </div>
           </div>
         </CardHeader>
