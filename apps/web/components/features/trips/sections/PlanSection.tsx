@@ -5,6 +5,8 @@
  * Displays itinerary management within the main trip page.
  */
 
+'use client'
+
 import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
 import { ItineraryViewContainer } from '@/components/features/itinerary/ItineraryViewContainer'
 

@@ -5,6 +5,8 @@
  * This matches the Feed tab from the original page.tsx
  */
 
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PhotoUpload from '@/components/features/feed/PhotoUpload'
 import PhotoFeed from '@/components/features/feed/PhotoFeed'
