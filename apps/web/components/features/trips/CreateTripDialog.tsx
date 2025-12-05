@@ -14,7 +14,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { Loader2 } from 'lucide-react'
+import { CalendarIcon, Loader2 } from 'lucide-react'
+import { format } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -36,8 +37,10 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { DatePicker } from '@/components/ui/date-picker'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@tripthreads/core'
 
 import { createTrip } from '@/app/actions/trips'
 import type { CreateTripInput } from '@tripthreads/core'
@@ -141,23 +144,45 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onChange={date => {
-                          if (date) {
-                            // Set to noon UTC to avoid timezone issues
-                            const adjustedDate = new Date(date)
-                            adjustedDate.setHours(12, 0, 0, 0)
-                            field.onChange(adjustedDate.toISOString())
-                          } else {
-                            field.onChange('')
-                          }
-                        }}
-                        disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        placeholder="Pick a date"
-                      />
-                    </FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                            disabled={isSubmitting}
+                          >
+                            {field.value ? (
+                              format(new Date(field.value), 'MMM dd, yyyy')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={date => {
+                            if (date) {
+                              // Set to noon UTC to avoid timezone issues
+                              const adjustedDate = new Date(date)
+                              adjustedDate.setHours(12, 0, 0, 0)
+                              field.onChange(adjustedDate.toISOString())
+                            } else {
+                              field.onChange('')
+                            }
+                          }}
+                          disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -170,29 +195,51 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onChange={date => {
-                          if (date) {
-                            // Set to noon UTC to avoid timezone issues
-                            const adjustedDate = new Date(date)
-                            adjustedDate.setHours(12, 0, 0, 0)
-                            field.onChange(adjustedDate.toISOString())
-                          } else {
-                            field.onChange('')
-                          }
-                        }}
-                        disabled={date => {
-                          const startDate = form.getValues('start_date')
-                          if (startDate) {
-                            return date < new Date(startDate)
-                          }
-                          return date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }}
-                        placeholder="Pick a date"
-                      />
-                    </FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                            disabled={isSubmitting}
+                          >
+                            {field.value ? (
+                              format(new Date(field.value), 'MMM dd, yyyy')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={date => {
+                            if (date) {
+                              // Set to noon UTC to avoid timezone issues
+                              const adjustedDate = new Date(date)
+                              adjustedDate.setHours(12, 0, 0, 0)
+                              field.onChange(adjustedDate.toISOString())
+                            } else {
+                              field.onChange('')
+                            }
+                          }}
+                          disabled={date => {
+                            const startDate = form.getValues('start_date')
+                            if (startDate) {
+                              return date < new Date(startDate)
+                            }
+                            return date < new Date(new Date().setHours(0, 0, 0, 0))
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
