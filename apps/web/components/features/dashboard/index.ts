@@ -1,5 +1,6 @@
 export { DashboardCard } from './DashboardCard'
 export { ExpandableCard } from './ExpandableCard'
+export { DashboardView } from './DashboardView'
 export { AtAGlanceCard } from './AtAGlanceCard'
 export { QuickActionsCard } from './QuickActionsCard'
 export { ChatPreviewCard } from './ChatPreviewCard'
