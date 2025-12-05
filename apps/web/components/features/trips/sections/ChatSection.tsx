@@ -10,7 +10,7 @@
 import { ChatThread } from '@/components/features/chat/ChatThread'
 import { Card, CardContent } from '@/components/ui/card'
 import { useEffect, useState } from 'react'
-import { getChatMessages } from '@/app/actions/chat'
+import { getChatMessages, type ChatMessageData } from '@/app/actions/chat'
 
 interface ChatSectionProps {
   tripId: string
@@ -18,15 +18,8 @@ interface ChatSectionProps {
   tripCurrency?: string
 }
 
-interface ChatMessage {
-  id: string
-  content: string
-  sender_id: string
-  created_at: string
-}
-
 export function ChatSection({ tripId, currentUserId, tripCurrency = 'USD' }: ChatSectionProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
