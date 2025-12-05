@@ -41,11 +41,11 @@ describe('ItineraryInput Component', () => {
   })
 
   describe('Component Rendering', () => {
-    it('renders input field and parse button', () => {
+    it('renders input field and add button', () => {
       render(<ItineraryInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
 
       expect(screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /parse/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument()
     })
 
     it('shows loading state during parse', async () => {
@@ -81,7 +81,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       expect(screen.getByText(/parsing\.\.\./i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /parsing\.\.\./i })).toBeDisabled()
@@ -107,7 +107,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Invalid input')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/failed to parse itinerary item/i)).toBeInTheDocument()
@@ -137,7 +137,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -170,7 +170,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Museum visit Dec 15, 2024')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -204,7 +204,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Museum visit tomorrow')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/relative/i)).toBeInTheDocument()
@@ -235,7 +235,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Hotel Paris Dec 15-20')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/date range/i)).toBeInTheDocument()
@@ -265,7 +265,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/has specific time/i)).toBeInTheDocument()
@@ -295,7 +295,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/has specific time/i)).toBeInTheDocument()
@@ -325,7 +325,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Meeting sometime next week')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/confidence: 72%/i)).toBeInTheDocument()
@@ -355,7 +355,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Hotel check-in Dec 15 3pm')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/confidence: 96%/i)).toBeInTheDocument()
@@ -387,7 +387,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Meeting today')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/relative/i)).toBeInTheDocument()
@@ -419,7 +419,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -459,7 +459,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Hotel check-in 3pm Dec 15')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -499,7 +499,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Museum visit 2pm Friday')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -539,7 +539,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Dinner reservation 7pm')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -583,7 +583,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -623,7 +623,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Museum visit in Paris 2pm Friday')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -666,7 +666,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -705,7 +705,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris Monday 9am')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -737,7 +737,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/request timeout/i)).toBeInTheDocument()
@@ -761,7 +761,7 @@ describe('ItineraryInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Flight to Paris Monday 9am/i)
       await user.type(input, 'Flight to Paris')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/rate limit exceeded/i)).toBeInTheDocument()
@@ -799,8 +799,8 @@ describe('ItineraryInput Component', () => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
       })
 
-      // Click Edit button
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      // Click Reset button
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Verify edit mode is active - Cancel button should be visible
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
@@ -842,14 +842,14 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
 
       // Click Cancel
       await user.click(screen.getByRole('button', { name: /cancel/i }))
 
       // Verify edit mode is exited - Edit button should be visible again
-      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
     })
 
@@ -883,7 +883,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Edit description
       const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
@@ -923,7 +923,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Edit description
       const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
@@ -972,7 +972,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Clear description (invalid)
       const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
@@ -1020,7 +1020,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Find and toggle all-day switch
       const allDaySwitch = screen.getByRole('switch', { name: /all day/i })
@@ -1063,7 +1063,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /edit/i }))
+      await user.click(screen.getByRole('button', { name: /reset/i }))
 
       // Find and toggle date range switch
       const dateRangeSwitch = screen.getByRole('switch', { name: /date range/i })
