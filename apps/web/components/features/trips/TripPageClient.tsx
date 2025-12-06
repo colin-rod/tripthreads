@@ -131,6 +131,7 @@ export function TripPageClient({
         userRole={participants.find(p => p.user.id === currentUserId)?.role}
         showBackButton={section !== 'home'}
         onNavigateToDashboard={() => navigateTo('home')}
+        onNavigate={navigateTo}
       />
 
       {/* Main Content */}

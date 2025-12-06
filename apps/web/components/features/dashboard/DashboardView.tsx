@@ -1,8 +1,6 @@
 'use client'
 
 import {
-  AtAGlanceCard,
-  QuickActionsCard,
   ChatPreviewCard,
   ExpensePreviewCard,
   PlanPreviewCard,
@@ -62,15 +60,10 @@ export function DashboardView({
   recentMessages,
   unreadMessageCount,
   mediaFiles,
-  onNavigate,
 }: DashboardViewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Row 1: Key Info */}
-      <AtAGlanceCard trip={trip} />
-      <QuickActionsCard tripId={trip.id} onNavigate={onNavigate} />
-
-      {/* Row 2: Main Features */}
+      {/* Main Features */}
       <ChatPreviewCard
         tripId={trip.id}
         recentMessages={recentMessages}
@@ -84,7 +77,7 @@ export function DashboardView({
         baseCurrency={trip.base_currency}
       />
 
-      {/* Row 3: Expandable Content */}
+      {/* Expandable Content */}
       <PlanPreviewCard tripId={trip.id} itineraryItems={itineraryItems} />
       <FeedPreviewCard tripId={trip.id} mediaFiles={mediaFiles} />
     </div>

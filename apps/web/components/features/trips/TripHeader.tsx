@@ -10,7 +10,15 @@
 
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { Calendar, Users, ArrowLeft, ChevronDown } from 'lucide-react'
+import {
+  Calendar,
+  Users,
+  ArrowLeft,
+  ChevronDown,
+  MessageSquare,
+  DollarSign,
+  Camera,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { InviteButton } from '@/components/features/trips/InviteButton'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { getRoleLabel } from '@tripthreads/core'
+import type { TripSection } from '@/hooks/useHashNavigation'
 
 type TripRole = 'owner' | 'participant' | 'viewer'
 
@@ -53,6 +62,7 @@ interface TripHeaderProps {
   userRole?: TripRole
   showBackButton?: boolean
   onNavigateToDashboard?: () => void
+  onNavigate?: (section: TripSection) => void
 }
 
 export function TripHeader({
@@ -61,6 +71,7 @@ export function TripHeader({
   userRole,
   showBackButton = false,
   onNavigateToDashboard,
+  onNavigate,
 }: TripHeaderProps) {
   const router = useRouter()
   const startDate = new Date(trip.start_date)
@@ -182,7 +193,50 @@ export function TripHeader({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Quick Actions - only show if onNavigate is provided */}
+              {onNavigate && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onNavigate('chat')}
+                    className="gap-1.5"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Chat
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onNavigate('expenses')}
+                    className="gap-1.5"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                    Add Expense
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onNavigate('plan')}
+                    className="gap-1.5"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Add Activity
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onNavigate('feed')}
+                    className="gap-1.5"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Upload Photo
+                  </Button>
+                </>
+              )}
+
+              {/* Existing buttons */}
               <InviteButton tripId={trip.id} isOwner={isOwner} />
               {isOwner && <TripActions trip={trip} />}
             </div>
