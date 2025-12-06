@@ -48,7 +48,8 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(xargs dirname:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []

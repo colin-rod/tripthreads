@@ -17,7 +17,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Loader2, DollarSign, Upload } from 'lucide-react'
-import { format } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -44,10 +43,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useToast } from '@/hooks/use-toast'
-import { cn } from '@tripthreads/core'
 
 import { createExpenseSchema, CURRENCY_CODES, type CreateExpenseFormData } from '@tripthreads/core'
 import { createExpense, type CreateExpenseInput } from '@/app/actions/expenses'
@@ -490,35 +487,25 @@ export function ExpenseFormDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                          disabled={isSubmitting}
-                        >
-                          {field.value ? (
-                            format(new Date(field.value), 'PPP')
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={date => field.onChange(date?.toISOString())}
-                        disabled={date => date > new Date() || date < new Date('1900-01-01')}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <DatePicker
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onChange={date => {
+                        if (date) {
+                          // Set to noon UTC to avoid timezone issues
+                          const adjustedDate = new Date(date)
+                          adjustedDate.setHours(12, 0, 0, 0)
+                          field.onChange(adjustedDate.toISOString())
+                        } else {
+                          field.onChange(new Date().toISOString())
+                        }
+                      }}
+                      disabled={date => date > new Date() || date < new Date('1900-01-01')}
+                      placeholder="Pick a date"
+                      maxDate={new Date()}
+                      minDate={new Date('1900-01-01')}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
