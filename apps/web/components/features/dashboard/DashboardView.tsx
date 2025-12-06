@@ -62,24 +62,29 @@ export function DashboardView({
   mediaFiles,
 }: DashboardViewProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Main Features */}
-      <ChatPreviewCard
-        tripId={trip.id}
-        recentMessages={recentMessages}
-        unreadCount={unreadMessageCount}
-      />
-      <ExpensePreviewCard
-        tripId={trip.id}
-        currentUserId={currentUserId}
-        settlementSummary={settlementSummary}
-        recentExpenses={recentExpenses}
-        baseCurrency={trip.base_currency}
-      />
-
-      {/* Expandable Content */}
-      <PlanPreviewCard tripId={trip.id} itineraryItems={itineraryItems} />
-      <FeedPreviewCard tripId={trip.id} mediaFiles={mediaFiles} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(100vh-20rem)] max-h-[700px]">
+      <div className="h-full">
+        <ChatPreviewCard
+          tripId={trip.id}
+          recentMessages={recentMessages}
+          unreadCount={unreadMessageCount}
+        />
+      </div>
+      <div className="h-full">
+        <ExpensePreviewCard
+          tripId={trip.id}
+          currentUserId={currentUserId}
+          settlementSummary={settlementSummary}
+          recentExpenses={recentExpenses}
+          baseCurrency={trip.base_currency}
+        />
+      </div>
+      <div className="h-full">
+        <PlanPreviewCard tripId={trip.id} itineraryItems={itineraryItems} />
+      </div>
+      <div className="h-full">
+        <FeedPreviewCard tripId={trip.id} mediaFiles={mediaFiles} />
+      </div>
     </div>
   )
 }

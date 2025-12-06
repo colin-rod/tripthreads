@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { DollarSign } from 'lucide-react'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { DashboardCard } from './DashboardCard'
 import type { SettlementSummary } from '@tripthreads/core/types/expense'
 
@@ -40,17 +43,19 @@ export function ExpensePreviewCard({
   const netBalance = balanceReceivable - balanceOwed
 
   return (
-    <DashboardCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <DashboardCard className="h-full flex flex-col">
+      <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
         <CardTitle className="text-lg flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
           Expenses
         </CardTitle>
-        <Link href={`/trips/${tripId}#expenses`} className="text-sm text-primary hover:underline">
-          View All →
+        <Link href={`/trips/${tripId}#expenses`}>
+          <Button variant="ghost" size="sm">
+            View All
+          </Button>
         </Link>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-1 overflow-y-auto space-y-4">
         {/* Settlement Summary */}
         {settlementSummary && (balanceOwed > 0 || balanceReceivable > 0) && (
           <div className="rounded-lg border p-3 space-y-2">
