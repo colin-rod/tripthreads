@@ -48,11 +48,9 @@ export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps
           <Calendar className="h-5 w-5" />
           Plan
         </CardTitle>
-        <Link href={`/trips/${tripId}#plan`}>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
-        </Link>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/trips/${tripId}#plan`}>View All</Link>
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
         {itineraryItems.length === 0 ? (

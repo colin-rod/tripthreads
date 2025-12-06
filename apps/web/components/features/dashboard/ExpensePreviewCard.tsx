@@ -49,11 +49,9 @@ export function ExpensePreviewCard({
           <DollarSign className="h-5 w-5" />
           Expenses
         </CardTitle>
-        <Link href={`/trips/${tripId}#expenses`}>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
-        </Link>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/trips/${tripId}#expenses`}>View All</Link>
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto space-y-4">
         {/* Settlement Summary */}

@@ -35,11 +35,9 @@ export function ChatPreviewCard({
             </Badge>
           )}
         </CardTitle>
-        <Link href={`/trips/${tripId}#chat`}>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
-        </Link>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/trips/${tripId}#chat`}>View All</Link>
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
         {recentMessages.length === 0 ? (
