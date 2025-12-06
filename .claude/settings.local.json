@@ -50,7 +50,8 @@
       "Bash(xargs dirname:*)",
       "Bash(tree:*)",
       "Bash(git revert:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []

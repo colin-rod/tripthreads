@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { DollarSign } from 'lucide-react'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +8,6 @@ import { DashboardCard } from './DashboardCard'
 import type { SettlementSummary } from '@tripthreads/core/types/expense'
 
 interface ExpensePreviewCardProps {
-  tripId: string
   currentUserId: string
   settlementSummary?: SettlementSummary
   recentExpenses?: Array<{
@@ -20,14 +18,15 @@ interface ExpensePreviewCardProps {
     created_at: string
   }>
   baseCurrency: string
+  onViewAll: () => void
 }
 
 export function ExpensePreviewCard({
-  tripId,
   currentUserId,
   settlementSummary,
   recentExpenses = [],
   baseCurrency,
+  onViewAll,
 }: ExpensePreviewCardProps) {
   // Calculate user's balances from settlements
   const balanceOwed =
@@ -49,8 +48,8 @@ export function ExpensePreviewCard({
           <DollarSign className="h-5 w-5" />
           Expenses
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/trips/${tripId}#expenses`}>View All</Link>
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          View All
         </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto space-y-4">

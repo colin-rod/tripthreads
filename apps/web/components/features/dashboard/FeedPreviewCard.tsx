@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { Camera } from 'lucide-react'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,11 +13,11 @@ interface MediaFile {
 }
 
 interface FeedPreviewCardProps {
-  tripId: string
   mediaFiles: MediaFile[]
+  onViewAll: () => void
 }
 
-export function FeedPreviewCard({ tripId, mediaFiles }: FeedPreviewCardProps) {
+export function FeedPreviewCard({ mediaFiles, onViewAll }: FeedPreviewCardProps) {
   return (
     <DashboardCard className="h-full flex flex-col">
       <CardHeader className="shrink-0 flex flex-row items-center justify-between">
@@ -26,8 +25,8 @@ export function FeedPreviewCard({ tripId, mediaFiles }: FeedPreviewCardProps) {
           <Camera className="h-5 w-5" />
           Feed
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/trips/${tripId}#feed`}>View All</Link>
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          View All
         </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">

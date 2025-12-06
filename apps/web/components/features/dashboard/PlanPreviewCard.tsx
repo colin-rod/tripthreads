@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { Binoculars, Calendar, Hotel, MapPin, Plane, Sparkles, Utensils } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { format } from 'date-fns'
@@ -18,8 +17,8 @@ interface ItineraryItem {
 }
 
 interface PlanPreviewCardProps {
-  tripId: string
   itineraryItems: ItineraryItem[]
+  onViewAll: () => void
 }
 
 const ICON_MAP: Record<ItineraryItemType, LucideIcon> = {
@@ -40,7 +39,7 @@ const TYPE_LABELS: Record<ItineraryItemType, string> = {
   general: 'General',
 }
 
-export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps) {
+export function PlanPreviewCard({ itineraryItems, onViewAll }: PlanPreviewCardProps) {
   return (
     <DashboardCard className="h-full flex flex-col">
       <CardHeader className="shrink-0 flex flex-row items-center justify-between">
@@ -48,8 +47,8 @@ export function PlanPreviewCard({ tripId, itineraryItems }: PlanPreviewCardProps
           <Calendar className="h-5 w-5" />
           Plan
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/trips/${tripId}#plan`}>View All</Link>
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          View All
         </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { MessageSquare } from 'lucide-react'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { DashboardCard } from './DashboardCard'
 
 interface ChatPreviewCardProps {
-  tripId: string
   recentMessages?: Array<{
     id: string
     content: string
@@ -16,12 +14,13 @@ interface ChatPreviewCardProps {
     created_at: string
   }>
   unreadCount?: number
+  onViewAll: () => void
 }
 
 export function ChatPreviewCard({
-  tripId,
   recentMessages = [],
   unreadCount = 0,
+  onViewAll,
 }: ChatPreviewCardProps) {
   return (
     <DashboardCard className="h-full flex flex-col">
@@ -35,8 +34,8 @@ export function ChatPreviewCard({
             </Badge>
           )}
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/trips/${tripId}#chat`}>View All</Link>
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          View All
         </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
