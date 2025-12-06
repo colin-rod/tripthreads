@@ -22,6 +22,7 @@ import {
 import { TripPageClient } from '@/components/features/trips/TripPageClient'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
+import { getChatMessages } from '@/app/actions/chat'
 
 interface TripDetailPageProps {
   params: Promise<{
@@ -98,15 +99,18 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
     created_at: expense.created_at,
   }))
 
-  // TODO: Fetch recent chat messages for dashboard
-  const recentMessages: Array<{
-    id: string
-    content: string
-    sender_name: string
-    created_at: string
-  }> = []
+  // Fetch recent chat messages for dashboard preview (last 3 messages)
+  const chatMessagesResult = await getChatMessages(id, 3)
+  const recentMessages = chatMessagesResult.success
+    ? (chatMessagesResult.data || []).map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_name: msg.user?.full_name || 'Unknown',
+        created_at: msg.created_at,
+      }))
+    : []
 
-  // TODO: Fetch unread message count
+  // TODO: Fetch unread message count (future enhancement)
   const unreadMessageCount = 0
 
   // TODO: Fetch media files for dashboard
