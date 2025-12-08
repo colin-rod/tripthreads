@@ -20,30 +20,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
-
-// Test user credentials (from seed.sql)
-const TEST_USERS = {
-  alice: {
-    id: '22222222-2222-2222-2222-222222222222',
-    email: 'temp@test.com',
-    password: 'test123456', // Set in seed
-  },
-  benji: {
-    id: '44444444-4444-4444-4444-444444444444',
-    email: 'benji@temp.com',
-    password: 'test123456',
-  },
-  baylee: {
-    id: '66666666-6666-6666-6666-666666666666',
-    email: 'baylee@temp.com',
-    password: 'test123456',
-  },
-  maya: {
-    id: '55555555-5555-5555-5555-555555555555',
-    email: 'maya@test.com',
-    password: 'test123456',
-  },
-}
+import { TEST_USERS } from '../__fixtures__/test-users'
 
 const PARIS_TRIP_ID = '10000000-0000-0000-0000-000000000001'
 const TOKYO_TRIP_ID = '20000000-0000-0000-0000-000000000002'
@@ -544,14 +521,17 @@ describeOrSkip('RLS Policy Security Tests', () => {
       // This requires owner privileges to execute
     })
 
-    it('TC7.2: Trip deletion cascades to related data', async () => {
-      // This test verifies FK constraints exist
-      // Actual deletion test would require creating a test trip
-      // For now, we verify the constraint exists in schema
-
-      // Query would check information_schema for CASCADE constraints
-      // Skipping actual deletion to avoid affecting test data
-      expect(true).toBe(true) // Placeholder
+    it.skip('TC7.2: Trip deletion cascades to related data', async () => {
+      // TODO: Implement test to verify FK constraints cascade properly
+      // This test requires creating a test trip with related data,
+      // then deleting the trip and verifying all related records are removed.
+      //
+      // Related tables to check:
+      // - trip_participants
+      // - trip_invites
+      // - expenses
+      // - itinerary_items
+      // - settlements
     })
   })
 

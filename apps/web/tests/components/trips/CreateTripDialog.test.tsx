@@ -194,12 +194,9 @@ describe('CreateTripDialog', () => {
     await waitFor(() => expect(createTripMock).toHaveBeenCalledTimes(1))
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(submitButton) as any).toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(cancelButton) as any).toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(nameInput) as any).toBeDisabled()
+      expect(submitButton).toBeDisabled()
+      expect(cancelButton).toBeDisabled()
+      expect(nameInput).toBeDisabled()
     })
 
     await act(async () => {
@@ -230,14 +227,10 @@ describe('CreateTripDialog', () => {
     await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith(`/trips/${tripResult.id}`))
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(submitButton) as any).not.toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(cancelButton) as any).not.toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(nameInput) as any).not.toBeDisabled()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(expect(nameInput) as any).toHaveValue('')
+      expect(submitButton).not.toBeDisabled()
+      expect(cancelButton).not.toBeDisabled()
+      expect(nameInput).not.toBeDisabled()
+      expect(nameInput).toHaveValue('')
     })
   })
 

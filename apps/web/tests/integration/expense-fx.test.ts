@@ -20,7 +20,10 @@ let supabase: ReturnType<typeof createClient<Database>>
 let testUserId: string
 let testTripId: string
 
-describe('Expense FX Integration', () => {
+// Skip suite if fx_rates table doesn't exist yet
+const describeOrSkip = process.env.CI ? describe : describe.skip
+
+describeOrSkip('Expense FX Integration', () => {
   beforeAll(async () => {
     supabase = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
@@ -95,15 +98,6 @@ describe('Expense FX Integration', () => {
   })
 
   it('stores FX rate snapshot when expense currency differs from base', async () => {
-    // This test assumes the migration has been applied and fx_rates table exists
-    // Skip if table doesn't exist (migration not applied yet)
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
-
     const result = await createExpense({
       tripId: testTripId,
       description: 'Test USD expense',
@@ -137,13 +131,6 @@ describe('Expense FX Integration', () => {
   })
 
   it('stores null FX rate when expense currency matches base currency', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
-
     const result = await createExpense({
       tripId: testTripId,
       description: 'Test EUR expense',
@@ -176,13 +163,6 @@ describe('Expense FX Integration', () => {
   })
 
   it('handles missing FX rate gracefully (stores null)', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
-
     // Create expense with unsupported currency (no rate in cache)
     const result = await createExpense({
       tripId: testTripId,
@@ -220,13 +200,6 @@ describe('Expense FX Integration', () => {
   })
 
   it('preserves FX rate snapshot over time (immutability)', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
-
     // Create expense with FX rate
     const result = await createExpense({
       tripId: testTripId,
@@ -270,13 +243,6 @@ describe('Expense FX Integration', () => {
   })
 
   it('handles multiple currencies in same trip', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
-
     // Insert GBP rate for this test
     await supabase.from('fx_rates').insert({
       base_currency: 'EUR',

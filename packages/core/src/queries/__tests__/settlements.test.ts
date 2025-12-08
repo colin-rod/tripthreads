@@ -1,8 +1,19 @@
 /**
- * Unit tests for settlement query operations
+ * Integration tests for settlement query operations
  *
- * Tests settlement calculation, FX conversion, RLS enforcement, and date-scoped visibility.
+ * NOTE: These are INTEGRATION tests that run against a real Supabase database.
+ * They test query LOGIC and data flow, not RLS enforcement.
+ *
+ * RLS policies are tested separately in:
+ * - apps/web/tests/integration/rls-security.test.ts (with real JWT auth)
+ * - supabase/tests/rls_security_tests.sql (direct SQL tests)
+ *
+ * These tests use the service role key to bypass RLS and focus on testing
+ * the query functions themselves (settlement calculation, FX conversion, balances).
+ *
  * Following TDD methodology - these tests are written BEFORE implementation.
+ *
+ * TODO: Add comprehensive tests for partial joiner settlement calculations (deferred per user request)
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals'
@@ -10,7 +21,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { getSettlementSummary, markSettlementAsPaid } from '../settlements'
 import { createExpense } from '../expenses'
 
-// Test database setup
+// Test database setup - uses service role key to bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -21,7 +32,8 @@ const TEST_TRIP_ID = '00000000-0000-0000-0000-000000000001'
 const ALICE_ID = '00000000-0000-0000-0000-000000000001' // Owner
 const BENJI_ID = '00000000-0000-0000-0000-000000000002' // Participant
 const BAYLEE_ID = '00000000-0000-0000-0000-000000000003' // Viewer
-// const MAYA_ID = '00000000-0000-0000-0000-000000000004' // Partial joiner (joined 2025-10-14) - TODO: Add tests for partial joiners
+// const MAYA_ID = '00000000-0000-0000-0000-000000000004' // Partial joiner (joined 2025-10-14)
+// TODO: Add comprehensive partial joiner tests - deferred per user request
 
 beforeAll(() => {
   adminClient = createClient(supabaseUrl, supabaseServiceKey)
@@ -40,16 +52,13 @@ afterAll(async () => {
 })
 
 /**
- * Helper to create authenticated client for a specific user
+ * Helper to create a client for testing query logic
+ * Uses service role key to bypass RLS and focus on query functionality
  */
-function getAuthenticatedClient(userId: string): SupabaseClient {
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    global: {
-      headers: {
-        'X-User-Id': userId,
-      },
-    },
-  })
+function getAuthenticatedClient(_userId: string): SupabaseClient {
+  // Uses service role key to test query logic without RLS interference
+  // RLS is tested separately in integration/rls-security.test.ts
+  return adminClient
 }
 
 describe('getSettlementSummary', () => {

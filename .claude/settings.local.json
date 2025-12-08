@@ -51,7 +51,16 @@
       "Bash(tree:*)",
       "Bash(git revert:*)",
       "Bash(npm ls:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(for file in )",
+      "Bash(\"/Users/colinrodrigues/tripthreads/apps/web/__tests__/components/features/trips/TripsPageWrapper.test.tsx\" )",
+      "Bash(\"/Users/colinrodrigues/tripthreads/apps/web/__tests__/components/layouts/AppNavBar.test.tsx\" )",
+      "Bash(\"/Users/colinrodrigues/tripthreads/apps/web/__tests__/components/TripActions.test.tsx\")",
+      "Bash(do)",
+      "Bash(if ! grep -q \"@testing-library/jest-dom\" \"$file\")",
+      "Bash(then)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
