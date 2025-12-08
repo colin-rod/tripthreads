@@ -3,19 +3,21 @@
 /**
  * TripActions Component
  *
- * Action buttons for trip owners (Edit, Delete).
+ * Action buttons for trip owners (Edit, Delete, Settings).
  * Manages dialog states for edit and delete operations.
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Settings, Pencil, Trash2 } from 'lucide-react'
+import type { TripSection } from '@/hooks/useHashNavigation'
 
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { EditTripDialog } from './EditTripDialog'
@@ -32,9 +34,10 @@ interface Trip {
 
 interface TripActionsProps {
   trip: Trip
+  onNavigate?: (section: TripSection) => void
 }
 
-export function TripActions({ trip }: TripActionsProps) {
+export function TripActions({ trip, onNavigate }: TripActionsProps) {
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -53,6 +56,15 @@ export function TripActions({ trip }: TripActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {onNavigate && (
+            <>
+              <DropdownMenuItem onClick={() => onNavigate('settings')}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit Trip

@@ -238,7 +238,7 @@ export function TripHeader({
 
               {/* Existing buttons */}
               <InviteButton tripId={trip.id} isOwner={isOwner} />
-              {isOwner && <TripActions trip={trip} />}
+              {isOwner && <TripActions trip={trip} onNavigate={onNavigate} />}
             </div>
           </div>
         </CardHeader>

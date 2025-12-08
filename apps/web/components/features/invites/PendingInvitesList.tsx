@@ -42,9 +42,10 @@ import { getTripInvites, revokeInvite, getInviteUrl, type TripInvite } from '@tr
 interface PendingInvitesListProps {
   tripId: string
   isOwner: boolean
+  wrapped?: boolean
 }
 
-export function PendingInvitesList({ tripId, isOwner }: PendingInvitesListProps) {
+export function PendingInvitesList({ tripId, isOwner, wrapped = true }: PendingInvitesListProps) {
   const { toast } = useToast()
   const [invites, setInvites] = useState<TripInvite[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -133,150 +134,156 @@ export function PendingInvitesList({ tripId, isOwner }: PendingInvitesListProps)
   const acceptedInvites = invites.filter(inv => inv.status === 'accepted')
   const revokedInvites = invites.filter(inv => inv.status === 'revoked')
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Invitations</CardTitle>
-        <CardDescription>Manage trip invitations and view invitation history</CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <RefreshCw className="h-6 w-6 mx-auto mb-2 animate-spin" />
-            <p>Loading invitations...</p>
-          </div>
-        ) : invites.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No invitations yet</p>
-            <p className="text-sm mt-1">Create an invite to share this trip with others</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Pending Invites */}
-            {pendingInvites.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium mb-3">Pending ({pendingInvites.length})</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Recipient</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Uses</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingInvites.map(invite => (
-                      <TableRow key={invite.id}>
-                        <TableCell>
-                          {invite.invite_type === 'link' ? (
-                            <div className="flex items-center gap-2">
-                              <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">Link</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">Email</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {invite.email || (
-                            <span className="text-muted-foreground italic">Anyone with link</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={invite.role === 'participant' ? 'default' : 'secondary'}>
-                            {invite.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {format(new Date(invite.created_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {invite.invite_type === 'link' ? (
-                            <span>{invite.use_count} uses</span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleCopyLink(invite)}>
-                                {copiedId === invite.id ? (
-                                  <>
-                                    <Check className="mr-2 h-4 w-4 text-green-600" />
-                                    Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Copy Link
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                              {invite.invite_type === 'email' && (
-                                <DropdownMenuItem onClick={() => handleResend(invite)}>
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  Resend Email
-                                </DropdownMenuItem>
+  const content = (
+    <>
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <RefreshCw className="h-6 w-6 mx-auto mb-2 animate-spin" />
+          <p>Loading invitations...</p>
+        </div>
+      ) : invites.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p>No invitations yet</p>
+          <p className="text-sm mt-1">Create an invite to share this trip with others</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Pending Invites */}
+          {pendingInvites.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-3">Pending ({pendingInvites.length})</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Recipient</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Uses</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingInvites.map(invite => (
+                    <TableRow key={invite.id}>
+                      <TableCell>
+                        {invite.invite_type === 'link' ? (
+                          <div className="flex items-center gap-2">
+                            <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">Link</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">Email</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {invite.email || (
+                          <span className="text-muted-foreground italic">Anyone with link</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={invite.role === 'participant' ? 'default' : 'secondary'}>
+                          {invite.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(invite.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {invite.invite_type === 'link' ? (
+                          <span>{invite.use_count} uses</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleCopyLink(invite)}>
+                              {copiedId === invite.id ? (
+                                <>
+                                  <Check className="mr-2 h-4 w-4 text-green-600" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Copy Link
+                                </>
                               )}
-                              <DropdownMenuItem
-                                onClick={() => handleRevoke(invite)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Revoke
+                            </DropdownMenuItem>
+                            {invite.invite_type === 'email' && (
+                              <DropdownMenuItem onClick={() => handleResend(invite)}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Resend Email
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleRevoke(invite)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Revoke
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-            {/* Accepted Invites */}
-            {acceptedInvites.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium mb-3 text-green-600">
-                  Accepted ({acceptedInvites.length})
-                </h3>
-                <div className="text-sm text-muted-foreground">
-                  {acceptedInvites.length} invitation{acceptedInvites.length > 1 ? 's' : ''}{' '}
-                  accepted
-                </div>
+          {/* Accepted Invites */}
+          {acceptedInvites.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-3 text-green-600">
+                Accepted ({acceptedInvites.length})
+              </h3>
+              <div className="text-sm text-muted-foreground">
+                {acceptedInvites.length} invitation{acceptedInvites.length > 1 ? 's' : ''} accepted
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Revoked Invites */}
-            {revokedInvites.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                  Revoked ({revokedInvites.length})
-                </h3>
-                <div className="text-sm text-muted-foreground">
-                  {revokedInvites.length} invitation{revokedInvites.length > 1 ? 's' : ''} revoked
-                </div>
+          {/* Revoked Invites */}
+          {revokedInvites.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-3 text-muted-foreground">
+                Revoked ({revokedInvites.length})
+              </h3>
+              <div className="text-sm text-muted-foreground">
+                {revokedInvites.length} invitation{revokedInvites.length > 1 ? 's' : ''} revoked
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          )}
+        </div>
+      )}
+    </>
   )
+
+  if (wrapped) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Invitations</CardTitle>
+          <CardDescription>Manage trip invitations and view invitation history</CardDescription>
+        </CardHeader>
+        <CardContent>{content}</CardContent>
+      </Card>
+    )
+  }
+
+  return content
 }

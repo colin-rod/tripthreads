@@ -3,20 +3,27 @@
  *
  * Extracted from /app/(app)/trips/[id]/settings/page.tsx
  * Displays trip settings and management within the main trip page.
+ * Uses accordion layout for better UX and consistency with global settings.
  */
 
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { Users, Mail, Bell } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { InviteButton } from '@/components/features/trips/InviteButton'
-import { TripActions } from '@/components/features/trips/TripActions'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
-
-type TripRole = 'owner' | 'participant' | 'viewer'
 
 interface SettingsSectionProps {
   trip: {
@@ -43,6 +50,23 @@ interface SettingsSectionProps {
   globalNotificationPreferences: GlobalNotificationPreferences
 }
 
+function getRoleBadgeVariant(role: string): 'default' | 'secondary' | 'outline' {
+  switch (role) {
+    case 'owner':
+      return 'default'
+    case 'participant':
+      return 'secondary'
+    case 'viewer':
+      return 'outline'
+    default:
+      return 'outline'
+  }
+}
+
+function getRoleLabel(role: string): string {
+  return role.charAt(0).toUpperCase() + role.slice(1)
+}
+
 export function SettingsSection({
   trip,
   isOwner,
@@ -50,78 +74,151 @@ export function SettingsSection({
   tripNotificationPreferences,
   globalNotificationPreferences,
 }: SettingsSectionProps) {
-  const tripParticipants = (trip.trip_participants ?? []).map(p => ({
-    ...p,
-    role: p.role as TripRole,
-  }))
+  const tripParticipants = trip.trip_participants || []
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Settings</h2>
         <p className="text-muted-foreground mt-1">Manage your trip settings</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Trip Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trip Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-lg">{trip.name}</p>
-            </div>
-            {trip.description && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Description</p>
-                <p>{trip.description}</p>
+      {/* Accordion Container */}
+      <Accordion
+        type="multiple"
+        defaultValue={['participants', 'invitations', 'notifications']}
+        className="space-y-4"
+      >
+        {/* Participants Section */}
+        <AccordionItem value="participants" className="border rounded-lg px-6">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/20">
+                <Users className="h-5 w-5 text-orange-600 dark:text-orange-500" />
               </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Dates</p>
-              <p>
-                {new Date(trip.start_date).toLocaleDateString()} -{' '}
-                {new Date(trip.end_date).toLocaleDateString()}
+              <div className="text-left">
+                <h3 className="font-medium">Participants</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Manage trip participants and invite new members
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+
+          <AccordionContent className="pt-6 pb-4">
+            {/* Header with Invite Button */}
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium text-muted-foreground">Trip Members</h4>
+              <InviteButton tripId={trip.id} isOwner={isOwner} />
+            </div>
+
+            {/* Participant List */}
+            <div className="space-y-3">
+              {tripParticipants.map(participant => {
+                const isPartialJoiner = participant.join_start_date && participant.join_end_date
+
+                return (
+                  <div key={participant.id} className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={participant.user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {participant.user.full_name
+                          ?.split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium truncate">
+                          {participant.user.full_name || 'Unknown'}
+                        </p>
+                        <Badge variant={getRoleBadgeVariant(participant.role)} className="text-xs">
+                          {getRoleLabel(participant.role)}
+                        </Badge>
+                        {isPartialJoiner && (
+                          <Badge variant="outline" className="text-xs">
+                            Partial
+                          </Badge>
+                        )}
+                      </div>
+                      {isPartialJoiner && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(participant.join_start_date!), 'MMM d')} -{' '}
+                          {format(new Date(participant.join_end_date!), 'MMM d')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Invitations Section (Owner Only) */}
+        {isOwner && (
+          <AccordionItem value="invitations" className="border rounded-lg px-6">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                  <Mail className="h-5 w-5 text-green-600 dark:text-green-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium">Invitations</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Manage trip invitations and view invitation history
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+
+            <AccordionContent className="pt-6 pb-4">
+              <PendingInvitesList tripId={trip.id} isOwner={isOwner} wrapped={false} />
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Notification Preferences Section */}
+        <AccordionItem value="notifications" className="border rounded-lg px-6">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+                <Bell className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-medium">Notification Preferences</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Control which notifications you receive for this trip
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+
+          <AccordionContent className="pt-6 pb-4">
+            {/* Link to global settings */}
+            <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+              <p className="text-muted-foreground">
+                These preferences override your{' '}
+                <Link href="/settings" className="text-primary hover:underline">
+                  global notification settings
+                </Link>
+                .
               </p>
             </div>
-            {isOwner && (
-              <div className="flex gap-2 pt-4">
-                <TripActions trip={trip} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Participants */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Participants</CardTitle>
-            <InviteButton tripId={trip.id} isOwner={isOwner} />
-          </CardHeader>
-          <CardContent>
-            <ParticipantsList participants={tripParticipants} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pending Invitations (owners only) */}
-      {isOwner && <PendingInvitesList tripId={trip.id} isOwner={isOwner} />}
-
-      {/* Notification Preferences */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TripNotificationPreferencesSection
-            tripId={trip.id}
-            tripPreferences={tripNotificationPreferences}
-            globalPreferences={globalNotificationPreferences}
-          />
-        </CardContent>
-      </Card>
+            <TripNotificationPreferencesSection
+              tripId={trip.id}
+              tripPreferences={tripNotificationPreferences}
+              globalPreferences={globalNotificationPreferences}
+              showHeader={false}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   )
 }
