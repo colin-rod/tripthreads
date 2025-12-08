@@ -3,27 +3,6 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import type { Trip } from '@/lib/utils/trip-utils'
 import { TripsPageWrapper } from '@/components/features/trips/TripsPageWrapper'
 
-jest.mock('@/components/layouts/TopNavBar', () => ({
-  __esModule: true,
-  TopNavBar: ({
-    searchQuery,
-    onSearchChange,
-  }: {
-    searchQuery: string
-    onSearchChange: (value: string) => void
-  }) => (
-    <div>
-      <label htmlFor="search">Search</label>
-      <input
-        id="search"
-        data-testid="search-input"
-        value={searchQuery}
-        onChange={event => onSearchChange(event.target.value)}
-      />
-    </div>
-  ),
-}))
-
 jest.mock('@/components/features/trips/CreateTripButton', () => ({
   __esModule: true,
   CreateTripButton: () => <button type="button">Create Trip</button>,

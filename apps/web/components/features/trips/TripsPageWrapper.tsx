@@ -33,6 +33,7 @@ export function TripsPageWrapper({ trips }: TripsPageWrapperProps) {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full pl-10 bg-muted/50 border-border focus:bg-background"
+          data-testid="search-input"
         />
       </div>
 

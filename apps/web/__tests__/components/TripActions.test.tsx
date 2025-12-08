@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { TripActions } from '@/components/features/trips/TripActions'
 
 // Mock next/navigation
@@ -37,74 +38,75 @@ describe('TripActions', () => {
   })
 
   it('shows Edit Trip and Delete Trip menu items', async () => {
+    const user = userEvent.setup()
     render(<TripActions trip={mockTrip} />)
 
     // Open dropdown
     const button = screen.getByRole('button', { name: /trip settings/i })
-    fireEvent.click(button)
+    await user.click(button)
 
-    await waitFor(() => {
-      expect(screen.getByText('Edit Trip')).toBeInTheDocument()
-      expect(screen.getByText('Delete Trip')).toBeInTheDocument()
-    })
+    // Wait for menu items to appear
+    expect(await screen.findByText('Edit Trip')).toBeInTheDocument()
+    expect(await screen.findByText('Delete Trip')).toBeInTheDocument()
   })
 
   it('renders Settings menu item when onNavigate is provided', async () => {
+    const user = userEvent.setup()
     const onNavigate = jest.fn()
     render(<TripActions trip={mockTrip} onNavigate={onNavigate} />)
 
     // Open dropdown
     const button = screen.getByRole('button', { name: /trip settings/i })
-    fireEvent.click(button)
+    await user.click(button)
 
-    await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
-    })
+    // Wait for Settings menu item to appear
+    expect(await screen.findByText('Settings')).toBeInTheDocument()
   })
 
   it('does not render Settings menu item when onNavigate is undefined', async () => {
+    const user = userEvent.setup()
     render(<TripActions trip={mockTrip} />)
 
     // Open dropdown
     const button = screen.getByRole('button', { name: /trip settings/i })
-    fireEvent.click(button)
+    await user.click(button)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Settings')).not.toBeInTheDocument()
-    })
+    // Wait for Edit Trip to appear, then verify Settings is not present
+    await screen.findByText('Edit Trip')
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument()
   })
 
   it('calls onNavigate with "settings" when Settings is clicked', async () => {
+    const user = userEvent.setup()
     const onNavigate = jest.fn()
     render(<TripActions trip={mockTrip} onNavigate={onNavigate} />)
 
     // Open dropdown
     const button = screen.getByRole('button', { name: /trip settings/i })
-    fireEvent.click(button)
+    await user.click(button)
 
-    // Click Settings
-    await waitFor(() => {
-      const settingsItem = screen.getByText('Settings')
-      fireEvent.click(settingsItem)
-    })
+    // Wait for and click Settings
+    const settingsItem = await screen.findByText('Settings')
+    await user.click(settingsItem)
 
     expect(onNavigate).toHaveBeenCalledWith('settings')
   })
 
   it('Settings appears before Edit Trip when present', async () => {
+    const user = userEvent.setup()
     const onNavigate = jest.fn()
     render(<TripActions trip={mockTrip} onNavigate={onNavigate} />)
 
     // Open dropdown
     const button = screen.getByRole('button', { name: /trip settings/i })
-    fireEvent.click(button)
+    await user.click(button)
 
-    await waitFor(() => {
-      const menuItems = screen.getAllByRole('menuitem')
-      const settingsIndex = menuItems.findIndex(item => item.textContent?.includes('Settings'))
-      const editIndex = menuItems.findIndex(item => item.textContent?.includes('Edit Trip'))
+    // Wait for menu items to appear
+    await screen.findByText('Settings')
+    const menuItems = screen.getAllByRole('menuitem')
+    const settingsIndex = menuItems.findIndex(item => item.textContent?.includes('Settings'))
+    const editIndex = menuItems.findIndex(item => item.textContent?.includes('Edit Trip'))
 
-      expect(settingsIndex).toBeLessThan(editIndex)
-    })
+    expect(settingsIndex).toBeLessThan(editIndex)
   })
 })
