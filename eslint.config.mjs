@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier'
 
@@ -13,6 +14,8 @@ export default [
       '**/coverage/**',
       '**/build/**',
       '**/*.cjs',
+      'apps/mobile/.detoxrc.js',
+      'apps/mobile/e2e/jest.config.js',
     ],
   },
 
@@ -43,6 +46,23 @@ export default [
   // Allow require() in CommonJS config files
   {
     files: ['**/jest.config.js', '**/jest.setup.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
+  // Node globals for tooling and test helpers
+  {
+    files: [
+      '**/__mocks__/**/*.js',
+      '**/jest.env.js',
+      '**/jest.setup.js',
+      '**/babel.config.js',
+      '**/*.config.js',
+    ],
+    languageOptions: {
+      globals: globals.node,
+    },
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
     },
