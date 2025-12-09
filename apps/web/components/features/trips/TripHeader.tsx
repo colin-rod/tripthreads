@@ -31,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { InviteButton } from '@/components/features/trips/InviteButton'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { getRoleLabel } from '@tripthreads/core'
 import type { TripSection } from '@/hooks/useHashNavigation'
@@ -254,8 +253,7 @@ export function TripHeader({
               )}
 
               {/* Existing buttons */}
-              <InviteButton tripId={trip.id} isOwner={isOwner} />
-              {isOwner && <TripActions trip={trip} onNavigate={onNavigate} />}
+              {isOwner && <TripActions trip={trip} tripId={trip.id} onNavigate={onNavigate} />}
             </div>
           </div>
         </CardHeader>

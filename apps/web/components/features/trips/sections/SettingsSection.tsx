@@ -10,7 +10,8 @@
 
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Users, Mail, Bell } from 'lucide-react'
+import { Users, Mail, Bell, UserPlus } from 'lucide-react'
+import { useState } from 'react'
 import {
   Accordion,
   AccordionContent,
@@ -19,7 +20,8 @@ import {
 } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { InviteButton } from '@/components/features/trips/InviteButton'
+import { Button } from '@/components/ui/button'
+import { InviteDialog } from '@/components/features/trips/InviteDialog'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
@@ -75,6 +77,7 @@ export function SettingsSection({
   globalNotificationPreferences,
 }: SettingsSectionProps) {
   const tripParticipants = trip.trip_participants || []
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   return (
     <div className="space-y-6">
@@ -110,7 +113,12 @@ export function SettingsSection({
             {/* Header with Invite Button */}
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-medium text-muted-foreground">Trip Members</h4>
-              <InviteButton tripId={trip.id} isOwner={isOwner} />
+              {isOwner && (
+                <Button onClick={() => setInviteOpen(true)} variant="default" size="sm">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite
+                </Button>
+              )}
             </div>
 
             {/* Participant List */}
@@ -219,6 +227,9 @@ export function SettingsSection({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {/* Invite Dialog */}
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} tripId={trip.id} />
     </div>
   )
 }

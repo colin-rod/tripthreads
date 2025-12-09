@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, Pencil, Trash2 } from 'lucide-react'
+import { Settings, Pencil, Trash2, UserPlus } from 'lucide-react'
 import type { TripSection } from '@/hooks/useHashNavigation'
 
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { EditTripDialog } from './EditTripDialog'
 import { DeleteTripDialog } from './DeleteTripDialog'
+import { InviteDialog } from './InviteDialog'
 
 interface Trip {
   id: string
@@ -34,11 +35,13 @@ interface Trip {
 
 interface TripActionsProps {
   trip: Trip
+  tripId: string
   onNavigate?: (section: TripSection) => void
 }
 
-export function TripActions({ trip, onNavigate }: TripActionsProps) {
+export function TripActions({ trip, tripId, onNavigate }: TripActionsProps) {
   const router = useRouter()
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -56,15 +59,20 @@ export function TripActions({ trip, onNavigate }: TripActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setInviteOpen(true)} data-tour="invite-menu-item">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite
+          </DropdownMenuItem>
           {onNavigate && (
             <>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onNavigate('settings')}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
             </>
           )}
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit Trip
@@ -78,6 +86,8 @@ export function TripActions({ trip, onNavigate }: TripActionsProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} tripId={tripId} />
 
       <EditTripDialog
         trip={trip}
