@@ -35,6 +35,7 @@ import { InviteButton } from '@/components/features/trips/InviteButton'
 import { TripActions } from '@/components/features/trips/TripActions'
 import { getRoleLabel } from '@tripthreads/core'
 import type { TripSection } from '@/hooks/useHashNavigation'
+import { cn } from '@/lib/utils'
 
 type TripRole = 'owner' | 'participant' | 'viewer'
 
@@ -63,6 +64,7 @@ interface TripHeaderProps {
   showBackButton?: boolean
   onNavigateToDashboard?: () => void
   onNavigate?: (section: TripSection) => void
+  activeSection?: TripSection
 }
 
 export function TripHeader({
@@ -72,6 +74,7 @@ export function TripHeader({
   showBackButton = false,
   onNavigateToDashboard,
   onNavigate,
+  activeSection,
 }: TripHeaderProps) {
   const router = useRouter()
   const startDate = new Date(trip.start_date)
@@ -85,6 +88,8 @@ export function TripHeader({
       router.push(`/trips/${trip.id}`)
     }
   }
+
+  const isActive = (section: TripSection) => activeSection === section
 
   return (
     <>
@@ -198,37 +203,49 @@ export function TripHeader({
               {onNavigate && (
                 <>
                   <Button
-                    variant="outline"
+                    variant={isActive('chat') ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onNavigate('chat')}
-                    className="gap-1.5"
+                    className={cn(
+                      'gap-1.5 transition-all',
+                      isActive('chat') && 'ring-2 ring-primary/20'
+                    )}
                   >
                     <MessageSquare className="h-4 w-4" />
                     Chat
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isActive('expenses') ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onNavigate('expenses')}
-                    className="gap-1.5"
+                    className={cn(
+                      'gap-1.5 transition-all',
+                      isActive('expenses') && 'ring-2 ring-primary/20'
+                    )}
                   >
                     <DollarSign className="h-4 w-4" />
                     Add Expense
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isActive('plan') ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onNavigate('plan')}
-                    className="gap-1.5"
+                    className={cn(
+                      'gap-1.5 transition-all',
+                      isActive('plan') && 'ring-2 ring-primary/20'
+                    )}
                   >
                     <Calendar className="h-4 w-4" />
                     Add Activity
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={isActive('feed') ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onNavigate('feed')}
-                    className="gap-1.5"
+                    className={cn(
+                      'gap-1.5 transition-all',
+                      isActive('feed') && 'ring-2 ring-primary/20'
+                    )}
                   >
                     <Camera className="h-4 w-4" />
                     Upload Photo

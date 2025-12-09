@@ -132,6 +132,7 @@ export function TripPageClient({
         showBackButton={section !== 'home'}
         onNavigateToDashboard={() => navigateTo('home')}
         onNavigate={navigateTo}
+        activeSection={section}
       />
 
       {/* Main Content */}
