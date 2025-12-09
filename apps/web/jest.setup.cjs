@@ -37,3 +37,13 @@ if (envConfig?.combinedEnv) {
 // Mock URL.createObjectURL and URL.revokeObjectURL for file uploads
 global.URL.createObjectURL = jest.fn(() => 'mock-object-url')
 global.URL.revokeObjectURL = jest.fn()
+
+// Mock ResizeObserver for Radix UI components
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}

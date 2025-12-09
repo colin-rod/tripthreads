@@ -196,4 +196,29 @@ describe('ChipSelector', () => {
 
     expect(screen.getByRole('radio', { name: 'Option 1' })).toBeInTheDocument()
   })
+
+  it('should disable all chips when disabled prop is true', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ChipSelector
+        options={mockOptions}
+        value="option-1"
+        onValueChange={mockOnValueChange}
+        aria-label="Test selector"
+        disabled={true}
+      />
+    )
+
+    const firstButton = screen.getByRole('radio', { name: /First option description/i })
+    const secondButton = screen.getByRole('radio', { name: /Second option description/i })
+
+    // Both buttons should be disabled
+    expect(firstButton).toBeDisabled()
+    expect(secondButton).toBeDisabled()
+
+    // Clicking should not trigger onChange
+    await user.click(secondButton)
+    expect(mockOnValueChange).not.toHaveBeenCalled()
+  })
 })

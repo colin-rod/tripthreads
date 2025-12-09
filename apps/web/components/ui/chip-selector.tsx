@@ -16,6 +16,7 @@ interface ChipSelectorProps<T extends string> {
   onValueChange: (value: T) => void
   'aria-label': string
   className?: string
+  disabled?: boolean
 }
 
 export function ChipSelector<T extends string>({
@@ -24,6 +25,7 @@ export function ChipSelector<T extends string>({
   onValueChange,
   'aria-label': ariaLabel,
   className,
+  disabled = false,
 }: ChipSelectorProps<T>) {
   return (
     <div
@@ -49,6 +51,7 @@ export function ChipSelector<T extends string>({
             size="sm"
             onClick={() => onValueChange(option.value)}
             className="gap-2"
+            disabled={disabled}
           >
             <Icon className="h-4 w-4" />
             <span>{option.label}</span>

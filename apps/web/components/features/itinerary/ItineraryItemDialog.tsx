@@ -29,17 +29,28 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
 import { Link as LinkIcon, X, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import * as LucideIcons from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { createItineraryItem, updateItineraryItem } from '@/app/actions/itinerary'
 import { useToast } from '@/hooks/use-toast'
+
+// Build chip options from ITINERARY_ITEM_TYPE_CONFIG
+const itineraryTypeOptions: ChipOption<ItineraryItemType>[] = Object.entries(
+  ITINERARY_ITEM_TYPE_CONFIG
+).map(([key, config]) => {
+  // Resolve icon dynamically (pattern from CalendarEventCard.tsx)
+  const iconName = config.icon as keyof typeof LucideIcons
+  const IconComponent = (LucideIcons[iconName] as LucideIcon) || LucideIcons.Calendar
+
+  return {
+    value: key as ItineraryItemType,
+    label: config.label,
+    icon: IconComponent,
+    description: config.description,
+  }
+})
 
 interface ItineraryItemDialogProps {
   open: boolean
@@ -239,24 +250,13 @@ export function ItineraryItemDialog({
           {/* Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select
+            <ChipSelector
+              options={itineraryTypeOptions}
               value={watch('type')}
               onValueChange={value => setValue('type', value)}
+              aria-label="Select itinerary item type"
               disabled={isViewMode}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(ITINERARY_ITEM_TYPE_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <span className={cn('font-medium', config.color)}>{config.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {/* Title */}

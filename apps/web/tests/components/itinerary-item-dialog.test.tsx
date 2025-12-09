@@ -18,7 +18,7 @@ jest.mock('@/app/actions/itinerary', () => ({
 }))
 
 // Mock toast
-jest.mock('@/components/ui/use-toast', () => ({
+jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: jest.fn(),
   }),
@@ -373,7 +373,37 @@ describe('ItineraryItemDialog', () => {
   })
 
   describe('Type Selection', () => {
-    it('should allow selecting different item types', async () => {
+    it('should display type selector as chips with all item types', () => {
+      render(
+        <ItineraryItemDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          mode="create"
+          tripId="trip-123"
+          tripParticipants={mockParticipants}
+          onSuccess={mockOnSuccess}
+        />
+      )
+
+      // Should have radiogroup for type selection
+      expect(
+        screen.getByRole('radiogroup', { name: /select itinerary item type/i })
+      ).toBeInTheDocument()
+
+      // Verify all 6 types by description
+      expect(
+        screen.getByRole('radio', { name: /flights, trains.*transportation/i })
+      ).toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: /hotels.*lodging/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('radio', { name: /restaurants.*food experiences/i })
+      ).toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: /tours.*experiences/i })).toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: /museums.*attractions/i })).toBeInTheDocument()
+      expect(screen.getByRole('radio', { name: /meetings.*other items/i })).toBeInTheDocument()
+    })
+
+    it('should allow selecting different item types via chips', async () => {
       const user = userEvent.setup()
 
       render(
@@ -387,17 +417,53 @@ describe('ItineraryItemDialog', () => {
         />
       )
 
-      // Open type selector
-      const typeButton = screen.getByRole('combobox')
-      await user.click(typeButton)
+      // Default is 'activity'
+      const activityChip = screen.getByRole('radio', { name: /tours.*experiences/i })
+      expect(activityChip).toHaveAttribute('aria-checked', 'true')
 
-      // All types should be available
-      expect(screen.getByText('Transport')).toBeInTheDocument()
-      expect(screen.getByText('Accommodation')).toBeInTheDocument()
-      expect(screen.getByText('Dining')).toBeInTheDocument()
-      expect(screen.getByText('Activity')).toBeInTheDocument()
-      expect(screen.getByText('Sightseeing')).toBeInTheDocument()
-      expect(screen.getByText('General')).toBeInTheDocument()
+      // Click transport chip
+      const transportChip = screen.getByRole('radio', { name: /flights, trains.*transportation/i })
+      await user.click(transportChip)
+
+      // Transport should now be selected
+      expect(transportChip).toHaveAttribute('aria-checked', 'true')
+      expect(activityChip).toHaveAttribute('aria-checked', 'false')
+    })
+
+    it('should disable type chips in view mode', () => {
+      render(
+        <ItineraryItemDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          mode="view"
+          item={mockItem}
+          tripId="trip-123"
+          tripParticipants={mockParticipants}
+          onSuccess={mockOnSuccess}
+        />
+      )
+
+      // All type chips should be disabled
+      const transportChip = screen.getByRole('radio', { name: /flights, trains.*transportation/i })
+      expect(transportChip).toBeDisabled()
+    })
+
+    it('should render icons for each type chip', () => {
+      render(
+        <ItineraryItemDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          mode="create"
+          tripId="trip-123"
+          tripParticipants={mockParticipants}
+          onSuccess={mockOnSuccess}
+        />
+      )
+
+      // Type chips should have 6 SVG icons (one per type)
+      const radiogroup = screen.getByRole('radiogroup', { name: /select itinerary item type/i })
+      const svgs = radiogroup.querySelectorAll('svg')
+      expect(svgs.length).toBe(6)
     })
   })
 
