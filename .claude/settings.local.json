@@ -60,7 +60,13 @@
       "Bash(if ! grep -q \"@testing-library/jest-dom\" \"$file\")",
       "Bash(then)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ls:*)",
+      "Bash(tee:*)",
+      "Bash(npm run test:setup-users:*)",
+      "Bash(tsx scripts/add-trips-insert-policy.ts:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": [],
     "ask": []

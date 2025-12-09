@@ -35,6 +35,7 @@ export async function getAuthenticatedClient(
     throw new Error('Missing Supabase environment variables')
   }
 
+  // Create a client and keep it after sign-in so auth context (and refresh) stays attached
   const supabase = createClient<Database>(supabaseUrl, supabaseKey)
   const { email, password } = TEST_USERS[user]
 
@@ -47,13 +48,12 @@ export async function getAuthenticatedClient(
     throw new Error(`Failed to authenticate as ${user}: ${error.message}`)
   }
 
-  return createClient<Database>(supabaseUrl, supabaseKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-      },
-    },
-  })
+  // Ensure we have an active session on this client before returning it
+  if (!data.session) {
+    throw new Error(`No session returned for ${user}`)
+  }
+
+  return supabase
 }
 
 /**
@@ -64,6 +64,21 @@ export async function createTestTrip(
   ownerId: string,
   overrides?: Partial<Database['public']['Tables']['trips']['Insert']>
 ) {
+  // Get current auth user for debugging
+  const {
+    data: { user },
+  } = await client.auth.getUser()
+
+  if (!user) {
+    throw new Error('No authenticated user found')
+  }
+
+  if (user.id !== ownerId) {
+    throw new Error(
+      `User ID mismatch: authenticated as ${user.id} but trying to create trip for ${ownerId}`
+    )
+  }
+
   const trip = {
     name: `Test Trip ${Date.now()}`,
     description: 'Test trip for invite system',
@@ -76,7 +91,9 @@ export async function createTestTrip(
   const { data, error } = await client.from('trips').insert(trip).select().single()
 
   if (error) {
-    throw new Error(`Failed to create test trip: ${error.message}`)
+    throw new Error(
+      `Failed to create test trip: ${error.message}\nAuth user: ${user.id}\nOwner ID: ${ownerId}`
+    )
   }
 
   return data

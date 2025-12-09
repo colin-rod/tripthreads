@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
+import { TEST_USERS } from '../__fixtures__/test-users'
 
 // Check if Supabase environment variables are available
 const hasSupabaseEnv =
@@ -32,25 +33,6 @@ if (!hasSupabaseEnv) {
 let SUPABASE_URL: string
 let SUPABASE_ANON_KEY: string
 
-// Test users (these should exist in your test database)
-const TEST_USERS = {
-  owner: {
-    email: 'owner@test.com',
-    password: 'testpassword123',
-    id: '',
-  },
-  participant: {
-    email: 'participant@test.com',
-    password: 'testpassword123',
-    id: '',
-  },
-  viewer: {
-    email: 'viewer@test.com',
-    password: 'testpassword123',
-    id: '',
-  },
-}
-
 let testTripId: string
 let testItemId: string
 
@@ -64,33 +46,40 @@ describeIntegration('Itinerary CRUD Integration Tests', () => {
     SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
     SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-    // Create authenticated clients for each user
+    // Create authenticated clients for each user (alice = owner, benji = participant, baylee = viewer)
     ownerClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
     participantClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
     viewerClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    // Sign in as owner
-    const { data: ownerAuth } = await ownerClient.auth.signInWithPassword({
-      email: TEST_USERS.owner.email,
-      password: TEST_USERS.owner.password,
+    // Sign in as alice (owner)
+    const { data: ownerAuth, error: ownerError } = await ownerClient.auth.signInWithPassword({
+      email: TEST_USERS.alice.email,
+      password: TEST_USERS.alice.password,
     })
-    TEST_USERS.owner.id = ownerAuth.user!.id
+    if (ownerError || !ownerAuth.user) {
+      throw new Error(`Failed to authenticate alice: ${ownerError?.message}`)
+    }
 
-    // Sign in as participant
-    const { data: participantAuth } = await participantClient.auth.signInWithPassword({
-      email: TEST_USERS.participant.email,
-      password: TEST_USERS.participant.password,
+    // Sign in as benji (participant)
+    const { data: participantAuth, error: participantError } =
+      await participantClient.auth.signInWithPassword({
+        email: TEST_USERS.benji.email,
+        password: TEST_USERS.benji.password,
+      })
+    if (participantError || !participantAuth.user) {
+      throw new Error(`Failed to authenticate benji: ${participantError?.message}`)
+    }
+
+    // Sign in as baylee (viewer)
+    const { data: viewerAuth, error: viewerError } = await viewerClient.auth.signInWithPassword({
+      email: TEST_USERS.baylee.email,
+      password: TEST_USERS.baylee.password,
     })
-    TEST_USERS.participant.id = participantAuth.user!.id
+    if (viewerError || !viewerAuth.user) {
+      throw new Error(`Failed to authenticate baylee: ${viewerError?.message}`)
+    }
 
-    // Sign in as viewer
-    const { data: viewerAuth } = await viewerClient.auth.signInWithPassword({
-      email: TEST_USERS.viewer.email,
-      password: TEST_USERS.viewer.password,
-    })
-    TEST_USERS.viewer.id = viewerAuth.user!.id
-
-    // Create a test trip
+    // Create a test trip (alice as owner)
     const { data: trip, error } = await ownerClient
       .from('trips')
       .insert({
@@ -98,7 +87,7 @@ describeIntegration('Itinerary CRUD Integration Tests', () => {
         description: 'Testing itinerary CRUD operations',
         start_date: '2025-06-15T00:00:00Z',
         end_date: '2025-06-22T00:00:00Z',
-        owner_id: TEST_USERS.owner.id,
+        owner_id: TEST_USERS.alice.id,
       })
       .select()
       .single()
@@ -106,20 +95,20 @@ describeIntegration('Itinerary CRUD Integration Tests', () => {
     if (error) throw error
     testTripId = trip.id
 
-    // Add participant
+    // Add benji as participant
     await ownerClient.from('trip_participants').insert({
       trip_id: testTripId,
-      user_id: TEST_USERS.participant.id,
+      user_id: TEST_USERS.benji.id,
       role: 'participant',
-      invited_by: TEST_USERS.owner.id,
+      invited_by: TEST_USERS.alice.id,
     })
 
-    // Add viewer
+    // Add baylee as viewer
     await ownerClient.from('trip_participants').insert({
       trip_id: testTripId,
-      user_id: TEST_USERS.viewer.id,
+      user_id: TEST_USERS.baylee.id,
       role: 'viewer',
-      invited_by: TEST_USERS.owner.id,
+      invited_by: TEST_USERS.alice.id,
     })
   })
 
