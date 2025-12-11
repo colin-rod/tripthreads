@@ -14,6 +14,12 @@ import type {
   ItineraryItemWithParticipants,
   ItineraryItemLink,
   ItineraryItemType,
+  ItineraryItemMetadata,
+  TransportMetadata,
+  AccommodationMetadata,
+  DiningMetadata,
+  ActivityMetadata,
+  SightseeingMetadata,
 } from '@tripthreads/core'
 import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import {
@@ -30,11 +36,16 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
-import { Link as LinkIcon, X, Plus } from 'lucide-react'
+import { Link as LinkIcon, X, Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { createItineraryItem, updateItineraryItem } from '@/app/actions/itinerary'
 import { useToast } from '@/hooks/use-toast'
+import { TransportMetadataFields } from './metadata/TransportMetadataFields'
+import { AccommodationMetadataFields } from './metadata/AccommodationMetadataFields'
+import { DiningMetadataFields } from './metadata/DiningMetadataFields'
+import { ActivityMetadataFields } from './metadata/ActivityMetadataFields'
+import { SightseeingMetadataFields } from './metadata/SightseeingMetadataFields'
 
 // Build chip options from ITINERARY_ITEM_TYPE_CONFIG
 const itineraryTypeOptions: ChipOption<ItineraryItemType>[] = Object.entries(
@@ -86,6 +97,8 @@ export function ItineraryItemDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [links, setLinks] = useState<ItineraryItemLink[]>([])
   const [newLink, setNewLink] = useState({ title: '', url: '' })
+  const [metadata, setMetadata] = useState<ItineraryItemMetadata | undefined>(undefined)
+  const [showMetadata, setShowMetadata] = useState(false)
 
   const {
     register,
@@ -107,12 +120,18 @@ export function ItineraryItemDialog({
     },
   })
 
-  // Load links from item
+  // Load links and metadata from item
   useEffect(() => {
     if (item?.links && Array.isArray(item.links)) {
       setLinks(item.links as ItineraryItemLink[])
     } else {
       setLinks([])
+    }
+
+    if (item?.metadata) {
+      setMetadata(item.metadata)
+    } else {
+      setMetadata(undefined)
     }
   }, [item])
 
@@ -141,8 +160,18 @@ export function ItineraryItemDialog({
         isAllDay: false,
       })
       setLinks([])
+      setMetadata(undefined)
     }
   }, [open, item, mode, reset])
+
+  // Watch for type changes and clear metadata when type changes
+  const currentType = watch('type')
+  useEffect(() => {
+    if (open && mode === 'create') {
+      // Clear metadata when type changes in create mode
+      setMetadata(undefined)
+    }
+  }, [currentType, open, mode])
 
   const isAllDay = watch('isAllDay')
   const isViewMode = mode === 'view'
@@ -173,6 +202,7 @@ export function ItineraryItemDialog({
           endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
           isAllDay: data.isAllDay,
           links: links.length > 0 ? links : undefined,
+          metadata: metadata || undefined,
         })
 
         if (result.success) {
@@ -201,6 +231,7 @@ export function ItineraryItemDialog({
           endTime: data.endTime ? new Date(data.endTime).toISOString() : null,
           isAllDay: data.isAllDay,
           links: links.length > 0 ? links : [],
+          metadata: metadata || undefined,
         })
 
         if (result.success) {
@@ -401,6 +432,76 @@ export function ItineraryItemDialog({
               )}
             </div>
           </div>
+
+          {/* Type-Specific Metadata Section */}
+          {!isViewMode && currentType && currentType !== 'general' && (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setShowMetadata(!showMetadata)}
+              >
+                <span>
+                  {currentType === 'transport' && 'Transport Details'}
+                  {currentType === 'accommodation' && 'Accommodation Details'}
+                  {currentType === 'dining' && 'Dining Details'}
+                  {currentType === 'activity' && 'Activity Details'}
+                  {currentType === 'sightseeing' && 'Sightseeing Details'}
+                </span>
+                {showMetadata ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+
+              {showMetadata && (
+                <div className="p-4 border rounded-lg bg-muted/30">
+                  {currentType === 'transport' && (
+                    <TransportMetadataFields
+                      metadata={(metadata as Partial<TransportMetadata>) || {}}
+                      onChange={updatedMetadata =>
+                        setMetadata(updatedMetadata as ItineraryItemMetadata)
+                      }
+                    />
+                  )}
+                  {currentType === 'accommodation' && (
+                    <AccommodationMetadataFields
+                      metadata={(metadata as Partial<AccommodationMetadata>) || {}}
+                      onChange={updatedMetadata =>
+                        setMetadata(updatedMetadata as ItineraryItemMetadata)
+                      }
+                    />
+                  )}
+                  {currentType === 'dining' && (
+                    <DiningMetadataFields
+                      metadata={(metadata as Partial<DiningMetadata>) || {}}
+                      onChange={updatedMetadata =>
+                        setMetadata(updatedMetadata as ItineraryItemMetadata)
+                      }
+                    />
+                  )}
+                  {currentType === 'activity' && (
+                    <ActivityMetadataFields
+                      metadata={(metadata as Partial<ActivityMetadata>) || {}}
+                      onChange={updatedMetadata =>
+                        setMetadata(updatedMetadata as ItineraryItemMetadata)
+                      }
+                    />
+                  )}
+                  {currentType === 'sightseeing' && (
+                    <SightseeingMetadataFields
+                      metadata={(metadata as Partial<SightseeingMetadata>) || {}}
+                      onChange={updatedMetadata =>
+                        setMetadata(updatedMetadata as ItineraryItemMetadata)
+                      }
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           <DialogFooter>
