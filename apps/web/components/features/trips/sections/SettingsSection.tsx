@@ -10,7 +10,7 @@
 
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Users, Mail, Bell, UserPlus } from 'lucide-react'
+import { Users, Mail, Bell, UserPlus, MoreVertical, UserMinus, UserCog } from 'lucide-react'
 import { useState } from 'react'
 import {
   Accordion,
@@ -21,9 +21,17 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { InviteDialog } from '@/components/features/trips/InviteDialog'
 import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
 import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
+import { RemoveParticipantDialog } from '@/components/features/trips/RemoveParticipantDialog'
+import { ChangeRoleDialog } from '@/components/features/trips/ChangeRoleDialog'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 
@@ -72,12 +80,40 @@ function getRoleLabel(role: string): string {
 export function SettingsSection({
   trip,
   isOwner,
-  currentUserId: _currentUserId,
+  currentUserId,
   tripNotificationPreferences,
   globalNotificationPreferences,
 }: SettingsSectionProps) {
   const tripParticipants = trip.trip_participants || []
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+  const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false)
+  const [selectedParticipant, setSelectedParticipant] = useState<{
+    id: string
+    userId: string
+    name: string
+    role: string
+  } | null>(null)
+
+  const handleRemoveClick = (participant: (typeof tripParticipants)[0]) => {
+    setSelectedParticipant({
+      id: participant.id,
+      userId: participant.user.id,
+      name: participant.user.full_name || 'Unknown',
+      role: participant.role,
+    })
+    setRemoveDialogOpen(true)
+  }
+
+  const handleChangeRoleClick = (participant: (typeof tripParticipants)[0]) => {
+    setSelectedParticipant({
+      id: participant.id,
+      userId: participant.user.id,
+      name: participant.user.full_name || 'Unknown',
+      role: participant.role,
+    })
+    setChangeRoleDialogOpen(true)
+  }
 
   return (
     <div className="space-y-6">
@@ -125,6 +161,8 @@ export function SettingsSection({
             <div className="space-y-3">
               {tripParticipants.map(participant => {
                 const isPartialJoiner = participant.join_start_date && participant.join_end_date
+                const isCurrentUser = participant.user.id === currentUserId
+                const showActions = isOwner && !isCurrentUser
 
                 return (
                   <div key={participant.id} className="flex items-center gap-3">
@@ -160,6 +198,31 @@ export function SettingsSection({
                         </p>
                       )}
                     </div>
+
+                    {/* Actions Dropdown (Owner only, not for self) */}
+                    {showActions && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleChangeRoleClick(participant)}>
+                            <UserCog className="mr-2 h-4 w-4" />
+                            Change Role
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleRemoveClick(participant)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <UserMinus className="mr-2 h-4 w-4" />
+                            Remove from Trip
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 )
               })}
@@ -230,6 +293,29 @@ export function SettingsSection({
 
       {/* Invite Dialog */}
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} tripId={trip.id} />
+
+      {/* Remove Participant Dialog */}
+      {selectedParticipant && (
+        <RemoveParticipantDialog
+          open={removeDialogOpen}
+          onOpenChange={setRemoveDialogOpen}
+          tripId={trip.id}
+          participantId={selectedParticipant.userId}
+          participantName={selectedParticipant.name}
+        />
+      )}
+
+      {/* Change Role Dialog */}
+      {selectedParticipant && (
+        <ChangeRoleDialog
+          open={changeRoleDialogOpen}
+          onOpenChange={setChangeRoleDialogOpen}
+          tripId={trip.id}
+          participantId={selectedParticipant.userId}
+          participantName={selectedParticipant.name}
+          currentRole={selectedParticipant.role as 'owner' | 'participant' | 'viewer'}
+        />
+      )}
     </div>
   )
 }
