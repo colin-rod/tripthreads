@@ -72,6 +72,12 @@ export function DashboardView({
         />
       </div>
       <div className="h-full">
+        <PlanPreviewCard itineraryItems={itineraryItems} onViewAll={() => onNavigate('plan')} />
+      </div>
+      <div className="h-full">
+        <FeedPreviewCard mediaFiles={mediaFiles} onViewAll={() => onNavigate('feed')} />
+      </div>
+      <div className="h-full">
         <ExpensePreviewCard
           currentUserId={currentUserId}
           settlementSummary={settlementSummary}
@@ -79,12 +85,6 @@ export function DashboardView({
           baseCurrency={trip.base_currency}
           onViewAll={() => onNavigate('expenses')}
         />
-      </div>
-      <div className="h-full">
-        <PlanPreviewCard itineraryItems={itineraryItems} onViewAll={() => onNavigate('plan')} />
-      </div>
-      <div className="h-full">
-        <FeedPreviewCard mediaFiles={mediaFiles} onViewAll={() => onNavigate('feed')} />
       </div>
     </div>
   )
