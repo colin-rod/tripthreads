@@ -20,8 +20,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock, X } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock, X, Info } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { format } from 'date-fns'
 
 interface ItineraryInputProps {
@@ -237,8 +238,26 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Add Itinerary Item</CardTitle>
-          <CardDescription>
-            Describe your activity in plain language (e.g., "Flight to Paris Monday 9am")
+          <CardDescription className="flex items-center gap-2">
+            <span>Describe your activity in plain language</span>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="font-medium text-xs">Examples:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs">
+                      <li>Flight to Paris Monday 9am</li>
+                      <li>Hotel check-in Dec 15 3pm</li>
+                      <li>Museum visit tomorrow afternoon</li>
+                      <li>Dinner reservation next Friday 7pm</li>
+                    </ul>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -468,17 +487,6 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
           )}
         </CardContent>
       </Card>
-
-      {/* Help Text */}
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p className="font-medium">Examples:</p>
-        <ul className="list-disc list-inside space-y-0.5 ml-2">
-          <li>Flight to Paris Monday 9am</li>
-          <li>Hotel check-in Dec 15 3pm</li>
-          <li>Museum visit tomorrow afternoon</li>
-          <li>Dinner reservation next Friday 7pm</li>
-        </ul>
-      </div>
     </div>
   )
 }
