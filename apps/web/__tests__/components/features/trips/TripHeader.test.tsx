@@ -64,10 +64,15 @@ describe('TripHeader', () => {
       expect(screen.getByText('A fun trip to the beach')).toBeInTheDocument()
     })
 
-    it('renders participant count', () => {
+    it('renders participant avatars instead of text count', () => {
       render(<TripHeader trip={mockTrip} isOwner={true} onNavigate={mockOnNavigate} />)
 
-      expect(screen.getByText(/2 people/i)).toBeInTheDocument()
+      // Should NOT show the text count anymore
+      expect(screen.queryByText(/2 people/i)).not.toBeInTheDocument()
+
+      // Should show avatars (by checking for fallback initials)
+      expect(screen.getByText('JD')).toBeInTheDocument() // John Doe
+      expect(screen.getByText('JS')).toBeInTheDocument() // Jane Smith
     })
 
     it('shows Owner badge for owner', () => {
@@ -361,6 +366,156 @@ describe('TripHeader', () => {
       await user.click(backButton)
 
       expect(mockOnNavigateToDashboard).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('Participant avatars', () => {
+    it('shows overflow badge when more than 3 participants', () => {
+      const tripWithManyParticipants = {
+        ...mockTrip,
+        trip_participants: [
+          {
+            id: 'p1',
+            role: 'owner' as const,
+            user: { id: 'u1', full_name: 'Alice Anderson', avatar_url: null },
+          },
+          {
+            id: 'p2',
+            role: 'participant' as const,
+            user: { id: 'u2', full_name: 'Bob Brown', avatar_url: null },
+          },
+          {
+            id: 'p3',
+            role: 'participant' as const,
+            user: { id: 'u3', full_name: 'Carol Chen', avatar_url: null },
+          },
+          {
+            id: 'p4',
+            role: 'participant' as const,
+            user: { id: 'u4', full_name: 'David Davis', avatar_url: null },
+          },
+          {
+            id: 'p5',
+            role: 'participant' as const,
+            user: { id: 'u5', full_name: 'Eve Evans', avatar_url: null },
+          },
+        ],
+      }
+
+      render(
+        <TripHeader trip={tripWithManyParticipants} isOwner={true} onNavigate={mockOnNavigate} />
+      )
+
+      // Should show first 3 avatars
+      expect(screen.getByText('AA')).toBeInTheDocument()
+      expect(screen.getByText('BB')).toBeInTheDocument()
+      expect(screen.getByText('CC')).toBeInTheDocument()
+
+      // Should NOT show the 4th and 5th avatars
+      expect(screen.queryByText('DD')).not.toBeInTheDocument()
+      expect(screen.queryByText('EE')).not.toBeInTheDocument()
+
+      // Should show overflow badge
+      expect(screen.getByText('+2')).toBeInTheDocument()
+    })
+
+    it('does not show overflow badge with exactly 3 participants', () => {
+      const tripWith3Participants = {
+        ...mockTrip,
+        trip_participants: [
+          {
+            id: 'p1',
+            role: 'owner' as const,
+            user: { id: 'u1', full_name: 'Alice Anderson', avatar_url: null },
+          },
+          {
+            id: 'p2',
+            role: 'participant' as const,
+            user: { id: 'u2', full_name: 'Bob Brown', avatar_url: null },
+          },
+          {
+            id: 'p3',
+            role: 'participant' as const,
+            user: { id: 'u3', full_name: 'Carol Chen', avatar_url: null },
+          },
+        ],
+      }
+
+      render(<TripHeader trip={tripWith3Participants} isOwner={true} onNavigate={mockOnNavigate} />)
+
+      expect(screen.getByText('AA')).toBeInTheDocument()
+      expect(screen.getByText('BB')).toBeInTheDocument()
+      expect(screen.getByText('CC')).toBeInTheDocument()
+
+      // Should NOT show overflow badge
+      expect(screen.queryByText(/^\+\d+$/)).not.toBeInTheDocument()
+    })
+
+    it('shows single avatar for single participant', () => {
+      const tripWithOneParticipant = {
+        ...mockTrip,
+        trip_participants: [
+          {
+            id: 'p1',
+            role: 'owner' as const,
+            user: { id: 'u1', full_name: 'Alice Anderson', avatar_url: null },
+          },
+        ],
+      }
+
+      render(
+        <TripHeader trip={tripWithOneParticipant} isOwner={true} onNavigate={mockOnNavigate} />
+      )
+
+      expect(screen.getByText('AA')).toBeInTheDocument()
+      expect(screen.queryByText(/^\+\d+$/)).not.toBeInTheDocument()
+    })
+
+    it('handles initials correctly for various name formats', () => {
+      const tripWithVariousNames = {
+        ...mockTrip,
+        trip_participants: [
+          {
+            id: 'p1',
+            role: 'owner' as const,
+            user: { id: 'u1', full_name: 'John', avatar_url: null }, // Single name
+          },
+          {
+            id: 'p2',
+            role: 'participant' as const,
+            user: { id: 'u2', full_name: 'Mary Jane Watson', avatar_url: null }, // Three names
+          },
+          {
+            id: 'p3',
+            role: 'participant' as const,
+            user: { id: 'u3', full_name: '', avatar_url: null }, // Empty name
+          },
+        ],
+      }
+
+      render(<TripHeader trip={tripWithVariousNames} isOwner={true} onNavigate={mockOnNavigate} />)
+
+      expect(screen.getByText('J')).toBeInTheDocument() // Single name -> single initial
+      expect(screen.getByText('MJW')).toBeInTheDocument() // Three names -> three initials
+      expect(screen.getByText('?')).toBeInTheDocument() // Empty name -> ?
+    })
+
+    it('handles missing user data gracefully', () => {
+      const tripWithMissingUser = {
+        ...mockTrip,
+        trip_participants: [
+          {
+            id: 'p1',
+            role: 'owner' as const,
+            user: { id: 'u1', full_name: null, avatar_url: null },
+          },
+        ],
+      }
+
+      render(<TripHeader trip={tripWithMissingUser} isOwner={true} onNavigate={mockOnNavigate} />)
+
+      // Should show fallback initial
+      expect(screen.getByText('?')).toBeInTheDocument()
     })
   })
 })

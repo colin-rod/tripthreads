@@ -10,15 +10,7 @@
 
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import {
-  Calendar,
-  Users,
-  ArrowLeft,
-  ChevronDown,
-  MessageSquare,
-  DollarSign,
-  Camera,
-} from 'lucide-react'
+import { Calendar, ArrowLeft, ChevronDown, MessageSquare, DollarSign, Camera } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -139,10 +131,29 @@ export function TripHeader({
                       size="sm"
                       className="gap-1.5 h-auto p-0 hover:bg-transparent hover:text-primary"
                     >
-                      <Users className="h-4 w-4" />
-                      <span>
-                        {participantCount} {participantCount === 1 ? 'person' : 'people'}
-                      </span>
+                      {/* Show first 3 participant avatars */}
+                      <div className="flex items-center -space-x-2">
+                        {trip.trip_participants?.slice(0, 3).map(participant => (
+                          <Avatar
+                            key={participant.id}
+                            className="h-7 w-7 border-2 border-background"
+                          >
+                            <AvatarImage src={participant.user.avatar_url || undefined} />
+                            <AvatarFallback className="text-[10px]">
+                              {participant.user.full_name
+                                ?.split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase() || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {participantCount > 3 && (
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium">
+                            +{participantCount - 3}
+                          </div>
+                        )}
+                      </div>
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
