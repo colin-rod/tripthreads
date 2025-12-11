@@ -64,7 +64,8 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(xargs:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
