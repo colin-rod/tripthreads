@@ -20,7 +20,10 @@ const mockTimedItem: ItineraryItemWithParticipants = {
   title: 'Flight to Paris',
   description: 'Morning flight from JFK to CDG',
   notes: 'Remember to check in online 24 hours before',
-  links: ['https://airline.com/checkin', 'https://flightaware.com/track123'],
+  links: [
+    { title: 'Check-in', url: 'https://airline.com/checkin' },
+    { title: 'Flight Tracker', url: 'https://flightaware.com/track123' },
+  ],
   start_time: '2025-06-15T08:00:00Z',
   end_time: '2025-06-15T11:00:00Z',
   is_all_day: false,

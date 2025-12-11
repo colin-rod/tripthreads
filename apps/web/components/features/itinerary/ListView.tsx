@@ -203,13 +203,13 @@ function ItineraryListItem({
                         {item.links.map((link, idx) => (
                           <a
                             key={idx}
-                            href={link}
+                            href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-primary hover:underline block truncate"
                             onClick={e => e.stopPropagation()}
                           >
-                            {link}
+                            {link.title || link.url}
                           </a>
                         ))}
                       </div>
