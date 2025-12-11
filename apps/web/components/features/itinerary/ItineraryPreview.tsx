@@ -20,6 +20,8 @@ import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { DurationBadge } from './DurationBadge'
+import { ItineraryItemTooltip } from './ItineraryItemTooltip'
 
 interface ItineraryPreviewProps {
   items: ItineraryItemWithParticipants[]
@@ -109,39 +111,49 @@ function ItineraryPreviewItem({ item }: ItineraryPreviewItemProps) {
   const timeString = item.is_all_day ? 'All day' : format(startTime, 'h:mm a')
 
   return (
-    <div className={cn('rounded-lg border bg-card p-3 transition-all', 'hover:shadow-sm')}>
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div className={cn('mt-0.5 flex-shrink-0', config.color)}>
-          <IconComponent className="h-4 w-4" />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="font-medium text-sm truncate">{item.title}</span>
-            <span className="text-xs text-muted-foreground flex-shrink-0">{timeString}</span>
+    <ItineraryItemTooltip item={item}>
+      <div className={cn('rounded-lg border bg-card p-3 transition-all', 'hover:shadow-sm')}>
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className={cn('mt-0.5 flex-shrink-0', config.color)}>
+            <IconComponent className="h-4 w-4" />
           </div>
 
-          {item.location && (
-            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-              <LucideIcons.MapPin className="h-3 w-3" />
-              <span className="truncate">{item.location}</span>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium text-sm truncate">{item.title}</span>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-xs text-muted-foreground">{timeString}</span>
+                <DurationBadge
+                  startTime={item.start_time}
+                  endTime={item.end_time}
+                  isAllDay={item.is_all_day}
+                  size="sm"
+                />
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Type badge */}
-        <div
-          className={cn(
-            'px-2 py-0.5 rounded text-xs font-medium flex-shrink-0',
-            config.bgColor,
-            config.color
-          )}
-        >
-          {config.label}
+            {item.location && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                <LucideIcons.MapPin className="h-3 w-3" />
+                <span className="truncate">{item.location}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Type badge */}
+          <div
+            className={cn(
+              'px-2 py-0.5 rounded text-xs font-medium flex-shrink-0',
+              config.bgColor,
+              config.color
+            )}
+          >
+            {config.label}
+          </div>
         </div>
       </div>
-    </div>
+    </ItineraryItemTooltip>
   )
 }

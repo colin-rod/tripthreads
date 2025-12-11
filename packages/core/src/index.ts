@@ -22,6 +22,7 @@ export * from './utils/expense-splits'
 export * from './utils/settlements'
 export * from './utils/name-matcher'
 export * from './utils/feedback'
+export * from './utils/itinerary'
 
 // Parser
 export * from './parser'
