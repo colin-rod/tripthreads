@@ -231,7 +231,7 @@ serve(async req => {
 
                   <div class="member-box">
                     👋 <strong>${newMember.full_name || newMember.email}</strong><br>
-                    <strong>Role:</strong> ${participant.role === 'owner' ? 'Owner' : participant.role === 'participant' ? 'Participant' : 'Viewer'}
+                    <strong>Role:</strong> ${participant.role === 'owner' ? 'Organizer' : participant.role === 'participant' ? 'Participant' : 'Viewer'}
                   </div>
 
                   <p style="text-align: center;">
