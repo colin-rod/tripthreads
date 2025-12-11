@@ -61,7 +61,10 @@
       "Bash(then)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(head:*)"
     ],
     "deny": [],
     "ask": []
