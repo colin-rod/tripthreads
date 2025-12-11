@@ -13,7 +13,7 @@
 
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Check, Copy, Link as LinkIcon, Mail, RefreshCw } from 'lucide-react'
+import { Check, Copy, Info, Link as LinkIcon, Mail, RefreshCw } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +26,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
 
 import { createClient } from '@/lib/supabase/client'
@@ -352,22 +353,39 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
               )}
             </Button>
 
-            {/* Info Note */}
-            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                How it works
-              </h4>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Invitations are created and stored in the database</li>
-                <li>Recipients must sign up or log in to accept</li>
-                <li>Each email invite can only be used once</li>
-                <li>You can resend invitations if needed</li>
-              </ul>
-              <p className="text-xs text-muted-foreground pt-2">
-                Note: Email sending requires Supabase email configuration. Invites are created but
-                automatic emails are not yet implemented.
+            {/* How it Works Tooltip */}
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                Need help understanding how email invites work?
               </p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="How email invites work"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-sm">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">How it works</h4>
+                      <ul className="text-xs space-y-1 list-disc list-inside">
+                        <li>Invitations are created and stored in the database</li>
+                        <li>Recipients must sign up or log in to accept</li>
+                        <li>Each email invite can only be used once</li>
+                        <li>You can resend invitations if needed</li>
+                      </ul>
+                      <p className="text-xs text-muted-foreground pt-2">
+                        Note: Email sending requires Supabase email configuration. Invites are
+                        created but automatic emails are not yet implemented.
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </TabsContent>
         </Tabs>
