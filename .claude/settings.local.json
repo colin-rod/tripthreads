@@ -67,7 +67,8 @@
       "Bash(head:*)",
       "Bash(pkill:*)",
       "Bash(wc:*)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "Bash(turbo run lint:*)"
     ],
     "deny": [],
     "ask": []

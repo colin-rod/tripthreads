@@ -245,7 +245,7 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                 <TooltipTrigger asChild>
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
+                <TooltipContent side="right" className="max-w-xs bg-white">
                   <div className="space-y-1">
                     <p className="font-medium text-xs">Examples:</p>
                     <ul className="list-disc list-inside space-y-0.5 text-xs">

@@ -3,14 +3,11 @@
 /**
  * TripsPageWrapper Component
  *
- * Client-side wrapper that manages search state for trips page.
+ * Client-side wrapper for trips page.
  * Note: Global AppNavBar is rendered in app/(app)/layout.tsx,
- * so no navbar is needed here. Search is now in the content area.
+ * so no navbar is needed here.
  */
 
-import { useState } from 'react'
-import { Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { TripsListClient } from './TripsListClient'
 import { CreateTripButton } from './CreateTripButton'
 import { type Trip } from '@/lib/utils/trip-utils'
@@ -20,23 +17,8 @@ interface TripsPageWrapperProps {
 }
 
 export function TripsPageWrapper({ trips }: TripsPageWrapperProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-
   return (
     <div className="container mx-auto py-8 px-4">
-      {/* Search Input - Moved from TopNavBar to content area */}
-      <div className="relative mb-6 max-w-xl">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search trips..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-10 bg-muted/50 border-border focus:bg-background"
-          data-testid="search-input"
-        />
-      </div>
-
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -47,7 +29,7 @@ export function TripsPageWrapper({ trips }: TripsPageWrapperProps) {
       </div>
 
       {/* Trips List */}
-      <TripsListClient trips={trips} searchQuery={searchQuery} />
+      <TripsListClient trips={trips} />
     </div>
   )
 }

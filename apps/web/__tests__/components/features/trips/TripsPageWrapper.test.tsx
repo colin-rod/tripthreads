@@ -1,14 +1,11 @@
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { TripsPageWrapper } from '@/components/features/trips/TripsPageWrapper'
 import { type Trip } from '@/lib/utils/trip-utils'
 
 // Mock child components
 jest.mock('@/components/features/trips/TripsListClient', () => ({
-  TripsListClient: ({ searchQuery }: { searchQuery: string }) => (
-    <div data-testid="trips-list-client">Trips List (search: {searchQuery})</div>
-  ),
+  TripsListClient: () => <div data-testid="trips-list-client">Trips List</div>,
 }))
 
 jest.mock('@/components/features/trips/CreateTripButton', () => ({
@@ -65,11 +62,11 @@ describe('TripsPageWrapper', () => {
     expect(screen.queryByTestId('top-nav-bar')).not.toBeInTheDocument()
   })
 
-  it('should render search input in content area', () => {
+  it('should NOT render search input', () => {
     render(<TripsPageWrapper trips={mockTrips} />)
 
-    const searchInput = screen.getByPlaceholderText(/search trips/i)
-    expect(searchInput).toBeInTheDocument()
+    const searchInput = screen.queryByPlaceholderText(/search trips/i)
+    expect(searchInput).not.toBeInTheDocument()
   })
 
   it('should render page header with title and description', () => {
@@ -85,20 +82,11 @@ describe('TripsPageWrapper', () => {
     expect(screen.getByTestId('create-trip-button')).toBeInTheDocument()
   })
 
-  it('should render TripsListClient with search query', async () => {
-    const user = userEvent.setup()
+  it('should render TripsListClient', () => {
     render(<TripsPageWrapper trips={mockTrips} />)
 
-    const searchInput = screen.getByPlaceholderText(/search trips/i)
-
-    // Initially empty search
-    expect(screen.getByText(/Trips List \(search: \)/i)).toBeInTheDocument()
-
-    // Type in search
-    await user.type(searchInput, 'Paris')
-
-    // Search query should update
-    expect(screen.getByText(/Trips List \(search: Paris\)/i)).toBeInTheDocument()
+    expect(screen.getByTestId('trips-list-client')).toBeInTheDocument()
+    expect(screen.getByText('Trips List')).toBeInTheDocument()
   })
 
   it('should NOT have pt-20 or pt-16 wrapper (spacing handled by layout)', () => {
@@ -118,12 +106,5 @@ describe('TripsPageWrapper', () => {
     const containerDiv = container.querySelector('.container')
     expect(containerDiv).toBeInTheDocument()
     expect(containerDiv).toHaveClass('mx-auto', 'py-8', 'px-4')
-  })
-
-  it('should render search input with correct styling', () => {
-    render(<TripsPageWrapper trips={mockTrips} />)
-
-    const searchInput = screen.getByPlaceholderText(/search trips/i)
-    expect(searchInput).toHaveAttribute('type', 'search')
   })
 })
