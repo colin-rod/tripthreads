@@ -65,7 +65,9 @@
       "Bash(ls:*)",
       "Bash(xargs:*)",
       "Bash(head:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(wc:*)",
+      "Bash(npx next build:*)"
     ],
     "deny": [],
     "ask": []

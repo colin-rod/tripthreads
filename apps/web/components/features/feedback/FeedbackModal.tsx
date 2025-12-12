@@ -213,7 +213,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Share feedback</DialogTitle>
           <DialogDescription>
@@ -222,7 +222,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex max-h-[calc(85vh-8rem)] flex-col space-y-4 overflow-y-auto pr-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -257,7 +260,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             <Label htmlFor="message">Feedback</Label>
             <Textarea
               id="message"
-              rows={5}
+              rows={3}
               placeholder="What happened? What did you expect?"
               {...form.register('message')}
             />
@@ -303,11 +306,11 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               )}
             </div>
             {screenshotDataUrl && (
-              <div className="overflow-hidden rounded-lg border border-dashed border-border bg-muted/30 p-3">
+              <div className="overflow-hidden rounded-lg border border-dashed border-border bg-muted/30 p-2">
                 <img
                   src={screenshotDataUrl}
                   alt="Screenshot preview"
-                  className="max-h-48 w-full rounded object-contain"
+                  className="max-h-32 w-full rounded object-contain"
                 />
               </div>
             )}
