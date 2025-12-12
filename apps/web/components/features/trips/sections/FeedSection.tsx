@@ -2,12 +2,21 @@
  * Feed Section Component
  *
  * Displays trip photos and media feed within the main trip page.
- * This matches the Feed tab from the original page.tsx
+ * Features a floating action button (FAB) for uploading photos.
  */
 
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Camera } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import PhotoUpload from '@/components/features/feed/PhotoUpload'
 import PhotoFeed from '@/components/features/feed/PhotoFeed'
 
@@ -18,34 +27,43 @@ interface FeedSectionProps {
 }
 
 export function FeedSection({ tripId, userId, canEdit }: FeedSectionProps) {
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+
   return (
-    <div className="space-y-8">
-      <div>
+    <>
+      {/* Page Header */}
+      <div className="mb-8">
         <h2 className="text-2xl font-bold">Feed</h2>
         <p className="text-muted-foreground mt-1">Share and view trip photos</p>
       </div>
 
-      {/* Photo Upload (Participants only) */}
-      {canEdit && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Upload Photos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PhotoUpload tripId={tripId} />
-          </CardContent>
-        </Card>
-      )}
+      {/* Gallery - Full width, no Card wrapper */}
+      <PhotoFeed tripId={tripId} userId={userId} />
 
-      {/* Photo Feed (Gallery + Lightbox) */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Trip Photos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PhotoFeed tripId={tripId} userId={userId} />
-        </CardContent>
-      </Card>
-    </div>
+      {/* Floating Action Button - Only show for editors */}
+      {canEdit && (
+        <>
+          <Button
+            size="lg"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow z-50"
+            onClick={() => setUploadDialogOpen(true)}
+            aria-label="Upload photos"
+          >
+            <Camera className="h-6 w-6" />
+          </Button>
+
+          {/* Upload Dialog */}
+          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Upload Photos</DialogTitle>
+                <DialogDescription>Add photos to your trip gallery</DialogDescription>
+              </DialogHeader>
+              <PhotoUpload tripId={tripId} onUploadComplete={() => setUploadDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+    </>
   )
 }
