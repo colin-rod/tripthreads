@@ -6,6 +6,7 @@ import {
   PlanPreviewCard,
   FeedPreviewCard,
 } from '@/components/features/dashboard'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import type { TripSection } from '@/hooks/useHashNavigation'
 import type { ItineraryItemType } from '@tripthreads/core/types/itinerary'
 import type { SettlementSummary } from '@tripthreads/core/types/expense'
@@ -14,9 +15,11 @@ interface DashboardViewProps {
   trip: {
     id: string
     name: string
+    description: string | null
     start_date: string
     end_date: string
     base_currency: string
+    cover_image_url?: string | null
     trip_participants: unknown[]
   }
   currentUserId: string
@@ -63,28 +66,56 @@ export function DashboardView({
   onNavigate,
 }: DashboardViewProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(100vh-20rem)] max-h-[700px]">
-      <div className="h-full">
-        <ChatPreviewCard
-          recentMessages={recentMessages}
-          unreadCount={unreadMessageCount}
-          onViewAll={() => onNavigate('chat')}
-        />
-      </div>
-      <div className="h-full">
-        <PlanPreviewCard itineraryItems={itineraryItems} onViewAll={() => onNavigate('plan')} />
-      </div>
-      <div className="h-full">
-        <FeedPreviewCard mediaFiles={mediaFiles} onViewAll={() => onNavigate('feed')} />
-      </div>
-      <div className="h-full">
-        <ExpensePreviewCard
-          currentUserId={currentUserId}
-          settlementSummary={settlementSummary}
-          recentExpenses={recentExpenses}
-          baseCurrency={trip.base_currency}
-          onViewAll={() => onNavigate('expenses')}
-        />
+    <div className="space-y-6">
+      {/* Cover Image Card - Only show if cover image exists */}
+      {trip.cover_image_url && (
+        <Card className="overflow-hidden">
+          <div className="relative aspect-video w-full">
+            <img
+              src={trip.cover_image_url}
+              alt={`${trip.name} cover`}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        </Card>
+      )}
+
+      {/* Trip Description Card - Only show if description exists */}
+      {trip.description && (
+        <Card>
+          <CardHeader>
+            <CardTitle>About This Trip</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground whitespace-pre-wrap">{trip.description}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Preview Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(100vh-20rem)] max-h-[700px]">
+        <div className="h-full">
+          <ChatPreviewCard
+            recentMessages={recentMessages}
+            unreadCount={unreadMessageCount}
+            onViewAll={() => onNavigate('chat')}
+          />
+        </div>
+        <div className="h-full">
+          <PlanPreviewCard itineraryItems={itineraryItems} onViewAll={() => onNavigate('plan')} />
+        </div>
+        <div className="h-full">
+          <FeedPreviewCard mediaFiles={mediaFiles} onViewAll={() => onNavigate('feed')} />
+        </div>
+        <div className="h-full">
+          <ExpensePreviewCard
+            currentUserId={currentUserId}
+            settlementSummary={settlementSummary}
+            recentExpenses={recentExpenses}
+            baseCurrency={trip.base_currency}
+            onViewAll={() => onNavigate('expenses')}
+          />
+        </div>
       </div>
     </div>
   )

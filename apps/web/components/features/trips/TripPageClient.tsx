@@ -5,10 +5,17 @@
  *
  * Client component that handles hash-based navigation and renders the appropriate section.
  * This separates client-side interactivity from server-side data fetching.
+ *
+ * Key responsibilities:
+ * - Manages hash-based navigation for trip sections
+ * - Sets trip context for AppNavBar on mount
+ * - Clears trip context on unmount
+ * - Renders section content based on active hash
  */
 
+import { useEffect } from 'react'
 import { useHashNavigation } from '@/hooks/useHashNavigation'
-import { TripHeader } from '@/components/features/trips/TripHeader'
+import { useTripContext } from '@/lib/contexts/trip-context'
 import { DashboardView } from '@/components/features/dashboard/DashboardView'
 import {
   ChatSection,
@@ -115,28 +122,61 @@ export function TripPageClient({
   globalNotificationPreferences,
 }: TripPageClientProps) {
   const { section, navigateTo } = useHashNavigation()
+  const { setTripContext, clearTripContext, updateActiveSection } = useTripContext()
+
+  // Set trip context on mount, clear on unmount
+  useEffect(() => {
+    const userParticipant = participants.find(p => p.user.id === currentUserId)
+
+    setTripContext({
+      trip: {
+        id: trip.id,
+        name: trip.name,
+        description: trip.description,
+        start_date: trip.start_date,
+        end_date: trip.end_date,
+        cover_image_url: trip.cover_image_url,
+        trip_participants: trip.trip_participants.map(p => ({
+          ...p,
+          role: p.role as 'owner' | 'participant' | 'viewer',
+        })),
+      },
+      isOwner,
+      userRole: userParticipant?.role || 'viewer',
+      activeSection: section,
+    })
+
+    // Cleanup: clear context on unmount
+    return () => {
+      clearTripContext()
+    }
+  }, [
+    trip.id,
+    trip.name,
+    trip.description,
+    trip.start_date,
+    trip.end_date,
+    trip.cover_image_url,
+    trip.trip_participants,
+    isOwner,
+    currentUserId,
+    participants,
+    section,
+    setTripContext,
+    clearTripContext,
+  ])
+
+  // Update active section when hash changes
+  useEffect(() => {
+    updateActiveSection(section)
+  }, [section, updateActiveSection])
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl">
-      {/* Trip Header */}
-      <TripHeader
-        trip={{
-          ...trip,
-          trip_participants: trip.trip_participants.map(p => ({
-            ...p,
-            role: p.role as 'owner' | 'participant' | 'viewer',
-          })),
-        }}
-        isOwner={isOwner}
-        userRole={participants.find(p => p.user.id === currentUserId)?.role}
-        showBackButton={section !== 'home'}
-        onNavigateToDashboard={() => navigateTo('home')}
-        onNavigate={navigateTo}
-        activeSection={section}
-      />
+      {/* Trip Header REMOVED - now in AppNavBar Row 2 */}
 
-      {/* Main Content */}
-      <div className="mt-6">
+      {/* Main Content - removed mt-6 margin */}
+      <div>
         {section === 'home' && (
           <DashboardView
             trip={trip}
