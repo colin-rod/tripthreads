@@ -318,7 +318,7 @@ export function ChatInput({
           size="sm"
           onClick={handleTripThreadClick}
           disabled={disabled || isSending}
-          className="shrink-0"
+          className="h-11 shrink-0"
         >
           <BotIcon className="mr-2 h-4 w-4" />
           @TripThread
