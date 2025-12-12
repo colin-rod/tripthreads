@@ -96,7 +96,7 @@ export function MentionAutocomplete({
   return (
     <div
       ref={containerRef}
-      className="absolute z-50 w-64 rounded-lg border bg-popover shadow-lg"
+      className="absolute z-50 w-64 rounded-lg border bg-white shadow-lg"
       style={{
         ...verticalPosition,
         left: `${position.left}px`,
