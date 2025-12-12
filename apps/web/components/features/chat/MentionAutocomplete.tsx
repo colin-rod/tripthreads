@@ -17,6 +17,7 @@ interface MentionAutocompleteProps {
   onSelect: (user: MentionableUser) => void
   onClose: () => void
   position: { top: number; left: number }
+  shouldFlipBelow?: boolean
 }
 
 export function MentionAutocomplete({
@@ -25,6 +26,7 @@ export function MentionAutocomplete({
   onSelect,
   onClose,
   position,
+  shouldFlipBelow = false,
 }: MentionAutocompleteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -86,12 +88,17 @@ export function MentionAutocomplete({
     return null
   }
 
+  // Calculate vertical position based on flip direction
+  const verticalPosition = shouldFlipBelow
+    ? { top: `${position.top + 44}px` } // Position below textarea (44px is min textarea height)
+    : { bottom: `calc(100% - ${position.top}px + 8px)` } // Position above textarea with 8px gap
+
   return (
     <div
       ref={containerRef}
-      className="fixed z-50 w-64 rounded-lg border bg-popover shadow-lg"
+      className="absolute z-50 w-64 rounded-lg border bg-popover shadow-lg"
       style={{
-        top: `${position.top}px`,
+        ...verticalPosition,
         left: `${position.left}px`,
       }}
     >
