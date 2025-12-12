@@ -6,7 +6,7 @@
 
 // Components
 export { Onboarding, useOnboarding } from './Onboarding'
-export { WelcomeScreen } from './WelcomeScreen'
+// Note: WelcomeScreen removed - unused legacy component
 export { RoleExplainer } from './RoleExplainer'
 export { FeatureHighlights } from './FeatureHighlights'
 export { PlatformOnboardingScreen } from './PlatformOnboardingScreen'

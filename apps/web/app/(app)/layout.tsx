@@ -7,7 +7,7 @@
 
 import { AppNavBar } from '@/components/layouts/AppNavBar'
 import { ProfileCompletionProvider } from '@/components/features/profile/ProfileCompletionProvider'
-import { Onboarding } from '@/components/features/onboarding'
+import { LazyOnboarding } from '@/components/features/onboarding/LazyOnboarding'
 
 export default function AppLayout({
   children,
@@ -18,7 +18,7 @@ export default function AppLayout({
     <>
       <AppNavBar />
       <ProfileCompletionProvider />
-      <Onboarding autoStart={true} />
+      <LazyOnboarding autoStart={true} />
       <div className="pt-16">{children}</div>
     </>
   )

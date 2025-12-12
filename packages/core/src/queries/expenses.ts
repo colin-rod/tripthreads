@@ -25,6 +25,7 @@ export async function getUserExpensesForTrip(
   supabase: SupabaseClient<Database>,
   tripId: string
 ): Promise<ExpenseWithDetails[]> {
+  // Single query with join to avoid N+1 problem
   const { data, error } = await supabase
     .from('expenses')
     .select(
@@ -34,6 +35,14 @@ export async function getUserExpensesForTrip(
         id,
         full_name,
         avatar_url
+      ),
+      expense_participants (
+        *,
+        user:profiles!user_id (
+          id,
+          full_name,
+          avatar_url
+        )
       )
     `
     )
@@ -45,18 +54,11 @@ export async function getUserExpensesForTrip(
     throw new Error(`Failed to fetch expenses: ${error.message}`)
   }
 
-  // Fetch participants for each expense
-  const expensesWithDetails = await Promise.all(
-    data.map(async expense => {
-      const participants = await getExpenseParticipants(supabase, expense.id)
-      return {
-        ...expense,
-        participants,
-      } as ExpenseWithDetails
-    })
-  )
-
-  return expensesWithDetails
+  // Map to ExpenseWithDetails format
+  return (data || []).map(expense => ({
+    ...expense,
+    participants: expense.expense_participants || [],
+  })) as ExpenseWithDetails[]
 }
 
 /**
