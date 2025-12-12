@@ -106,8 +106,8 @@ export function ChangeRoleDialog({
             value={selectedRole}
             onValueChange={value => setSelectedRole(value as typeof selectedRole)}
           >
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-accent/50 transition-colors">
                 <RadioGroupItem value="owner" id="role-owner" className="mt-1" />
                 <Label htmlFor="role-owner" className="flex-1 cursor-pointer">
                   <div className="font-medium">Owner</div>
@@ -115,7 +115,7 @@ export function ChangeRoleDialog({
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-accent/50 transition-colors">
                 <RadioGroupItem value="participant" id="role-participant" className="mt-1" />
                 <Label htmlFor="role-participant" className="flex-1 cursor-pointer">
                   <div className="font-medium">Participant</div>
@@ -125,7 +125,7 @@ export function ChangeRoleDialog({
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-accent/50 transition-colors">
                 <RadioGroupItem value="viewer" id="role-viewer" className="mt-1" />
                 <Label htmlFor="role-viewer" className="flex-1 cursor-pointer">
                   <div className="font-medium">Viewer</div>

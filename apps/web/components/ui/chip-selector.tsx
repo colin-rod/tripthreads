@@ -47,7 +47,7 @@ export function ChipSelector<T extends string>({
             role="radio"
             aria-checked={isSelected}
             aria-label={option.description || option.label}
-            variant={isSelected ? 'default' : 'ghost'}
+            variant={isSelected ? 'default' : 'outline'}
             size="sm"
             onClick={() => onValueChange(option.value)}
             className="gap-2"
