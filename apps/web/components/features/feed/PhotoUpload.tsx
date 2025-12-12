@@ -232,7 +232,7 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center transition-colors
+          border-2 border-dashed rounded-lg p-4 text-center transition-colors
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-border'}
         `}
       >
@@ -250,16 +250,16 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
         <Button
           type="button"
           variant="outline"
-          size="lg"
+          size="default"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLimitReached || isUploading}
           className="mx-auto"
         >
-          <Camera className="mr-2 h-5 w-5" />
+          <Camera className="mr-2 h-4 w-4" />
           Upload Photo
         </Button>
 
-        <p className="mt-2 text-sm text-muted-foreground">or drag and drop photos here</p>
+        <p className="mt-2 text-xs text-muted-foreground">or drag and drop photos here</p>
         <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, HEIC • Max 10MB</p>
       </div>
 

@@ -19,7 +19,7 @@ interface FeedSectionProps {
 
 export function FeedSection({ tripId, userId, canEdit }: FeedSectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold">Feed</h2>
         <p className="text-muted-foreground mt-1">Share and view trip photos</p>

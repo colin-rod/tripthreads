@@ -43,6 +43,14 @@ interface MediaFileWithUser {
 
 type GroupedMedia = Record<string, MediaFileWithUser[]>
 
+/**
+ * Truncates a caption to a maximum length and adds ellipsis if needed
+ */
+const truncateCaption = (caption: string | null, maxLength: number = 100): string => {
+  if (!caption) return ''
+  return caption.length > maxLength ? caption.substring(0, maxLength).trim() + '...' : caption
+}
+
 export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps) {
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedMedia>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -75,11 +83,11 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-12">
         {[1, 2].map(group => (
-          <div key={group} className="space-y-3">
+          <div key={group} className="space-y-6">
             <Skeleton className="h-6 w-32" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
               {[1, 2, 3, 4].map(item => (
                 <Skeleton key={item} className="aspect-square rounded-lg" />
               ))}
@@ -120,7 +128,7 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {sortedDates.map(date => {
         const photos = groupedPhotos[date]
         const dateObj = new Date(date)
@@ -137,39 +145,34 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
             </div>
 
             {/* Masonry Grid */}
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-8 space-y-8">
               {photos.map(photo => (
                 <div
                   key={photo.id}
-                  className="break-inside-avoid cursor-pointer group"
+                  className="break-inside-avoid cursor-pointer"
                   onClick={() => handlePhotoClick(photo)}
                 >
-                  <Card className="overflow-hidden border-2 border-primary/20 hover:border-primary transition-all duration-200 hover:shadow-md">
-                    {/* Photo */}
-                    <div className="relative aspect-auto">
+                  <Card className="overflow-hidden bg-white shadow-md hover:shadow-xl transition-shadow duration-300 border-0">
+                    {/* Photo with white padding (postcard frame) */}
+                    <div className="p-4 pb-0">
                       <img
                         src={photo.thumbnail_url || photo.url}
                         alt={photo.caption || 'Trip photo'}
-                        className="w-full h-auto object-cover"
+                        className="w-full h-auto object-cover rounded-sm"
                         loading="lazy"
                       />
-
-                      {/* Overlay on hover */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3">
-                        {photo.caption && (
-                          <p className="text-white text-sm line-clamp-2">{photo.caption}</p>
-                        )}
-                      </div>
                     </div>
 
-                    {/* Photo Info (optional - only show if no caption overlay) */}
-                    {!photo.caption && (
-                      <div className="p-2 bg-muted/50">
-                        <p className="text-xs text-muted-foreground truncate">
-                          by {photo.user.full_name}
+                    {/* Caption - Always visible below photo */}
+                    <div className="p-4 pt-2">
+                      {photo.caption ? (
+                        <p className="text-sm text-foreground line-clamp-3">
+                          {truncateCaption(photo.caption, 100)}
                         </p>
-                      </div>
-                    )}
+                      ) : (
+                        <p className="text-xs text-muted-foreground">by {photo.user.full_name}</p>
+                      )}
+                    </div>
                   </Card>
                 </div>
               ))}
