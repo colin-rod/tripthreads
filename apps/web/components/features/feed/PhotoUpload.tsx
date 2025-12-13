@@ -272,7 +272,7 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
               <Card key={index} className="p-3">
                 <div className="flex gap-3">
                   {/* Preview Image */}
-                  <div className="relative w-20 h-20 flex-shrink-0">
+                  <div className="relative w-32 h-32 flex-shrink-0">
                     <img
                       src={photo.preview}
                       alt={`${photo.file.name} preview`}
