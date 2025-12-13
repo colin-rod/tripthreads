@@ -6,8 +6,8 @@ jest.mock('@/components/features/profile/ProfileCompletionProvider', () => ({
   ProfileCompletionProvider: () => <div data-testid="profile-completion-provider" />,
 }))
 
-jest.mock('@/components/features/onboarding', () => ({
-  Onboarding: () => <div data-testid="onboarding" />,
+jest.mock('@/components/features/onboarding/LazyOnboarding', () => ({
+  LazyOnboarding: () => <div data-testid="onboarding" />,
 }))
 
 jest.mock('@/components/layouts/AppNavBar', () => ({
@@ -15,6 +15,12 @@ jest.mock('@/components/layouts/AppNavBar', () => ({
     <header data-testid="app-navbar" role="banner">
       AppNavBar
     </header>
+  ),
+}))
+
+jest.mock('@/lib/contexts/trip-context', () => ({
+  TripContextProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="trip-context-provider">{children}</div>
   ),
 }))
 
@@ -61,15 +67,15 @@ describe('Authenticated Layout Integration', () => {
     expect(screen.getByText('Test page content')).toBeInTheDocument()
   })
 
-  it('should wrap children with top padding class (pt-16)', () => {
+  it('should wrap children with top padding class (pt-24)', () => {
     const { container } = render(
       <AppLayout>
         <div data-testid="page-content">Test page content</div>
       </AppLayout>
     )
 
-    // Find the wrapper div that has pt-16 class
-    const wrapper = container.querySelector('.pt-16')
+    // Find the wrapper div that has pt-24 class (changed from pt-16 for two-row navbar)
+    const wrapper = container.querySelector('.pt-24')
     expect(wrapper).toBeInTheDocument()
 
     // Ensure children are inside the wrapper
@@ -88,8 +94,11 @@ describe('Authenticated Layout Integration', () => {
     const elements = container.querySelectorAll('[data-testid]')
     const testIds = Array.from(elements).map(el => el.getAttribute('data-testid'))
 
-    // Navbar should be first
-    expect(testIds[0]).toBe('app-navbar')
+    // TripContextProvider wraps everything
+    expect(testIds).toContain('trip-context-provider')
+
+    // Navbar should be first (inside provider)
+    expect(testIds[1]).toBe('app-navbar')
 
     // Providers should come next
     expect(testIds).toContain('profile-completion-provider')
