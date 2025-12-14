@@ -76,7 +76,9 @@
       "Bash(npx jest:*)",
       "Bash(CI=true npm test:*)",
       "Bash(npx turbo run type-check)",
-      "Bash(npx turbo run:*)"
+      "Bash(npx turbo run:*)",
+      "Bash(pgrep:*)",
+      "Bash(timeout 30 npx jest:*)"
     ],
     "deny": [],
     "ask": []
