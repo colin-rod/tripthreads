@@ -40,8 +40,8 @@ const mockTimedItem: ItineraryItemWithParticipants = {
   created_at: '2025-06-01T10:00:00Z',
   updated_at: '2025-06-01T10:00:00Z',
   participants: [
-    { id: 'p1', user_id: 'user-1', display_name: 'Alice' },
-    { id: 'p2', user_id: 'user-2', display_name: 'Bob' },
+    { id: 'p1', user_id: 'user-1', user: { id: 'user-1', full_name: 'Alice', avatar_url: null } },
+    { id: 'p2', user_id: 'user-2', user: { id: 'user-2', full_name: 'Bob', avatar_url: null } },
   ],
 }
 
@@ -140,7 +140,13 @@ describe('ItineraryListItem', () => {
     it('should display "1 participant" (singular) correctly', () => {
       const oneParticipantItem = {
         ...mockTimedItem,
-        participants: [{ id: 'p1', user_id: 'user-1', display_name: 'Alice' }],
+        participants: [
+          {
+            id: 'p1',
+            user_id: 'user-1',
+            user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
+          },
+        ],
       }
       render(<ListView items={[oneParticipantItem]} currentUserId="user-123" />)
 

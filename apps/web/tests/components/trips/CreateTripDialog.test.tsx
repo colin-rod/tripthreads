@@ -17,7 +17,9 @@ declare module '@jest/globals' {
   interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
 }
 
-const mockCreateTrip = jest.fn()
+// Type the mock with the actual return type from the action
+const mockCreateTrip: jest.MockedFunction<typeof import('@/app/actions/trips').createTrip> =
+  jest.fn()
 
 type DatePickerMockProps = {
   disabled?: (date: Date) => boolean
@@ -86,7 +88,7 @@ describe('CreateTripDialog', () => {
       }
     )
 
-    mockCreateTrip.mockReturnValueOnce(createTripPromise as unknown as Promise<unknown>)
+    mockCreateTrip.mockReturnValueOnce(createTripPromise as any)
 
     render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
 

@@ -73,7 +73,8 @@
       "Bash(node -e:*)",
       "Bash(timeout 45 npm test:*)",
       "Bash(npx jest tests/components/login.test.tsx --testTimeout=10000)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(CI=true npm test:*)"
     ],
     "deny": [],
     "ask": []

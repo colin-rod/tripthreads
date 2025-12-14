@@ -11,6 +11,8 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@tripthreads/core/validation/profile$': '<rootDir>/../../packages/core/src/validation/profile.ts',
+    '^@tripthreads/core/validation/trip$': '<rootDir>/../../packages/core/src/validation/trip.ts',
     '^@tripthreads/core/(.*)$': '<rootDir>/../../packages/core/src/$1',
     '^@tripthreads/core$': '<rootDir>/../../packages/core/src/index.ts',
   },
