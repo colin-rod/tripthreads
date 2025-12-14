@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { FeedbackForm } from './FeedbackForm'
 
 // Mock the submitFeedbackToLinear function
-jest.mock('@tripthreads/core/utils/feedback', () => ({
+jest.mock('@tripthreads/core', () => ({
+  ...jest.requireActual('@tripthreads/core'),
   submitFeedbackToLinear: jest.fn(),
 }))
 
@@ -60,8 +61,8 @@ describe('FeedbackForm - Category Selection', () => {
 
     render(<FeedbackForm defaultEmail="test@example.com" />)
 
-    // Fill in the message field
-    const messageField = screen.getByLabelText(/Feedback/i)
+    // Fill in the message field - use more specific selector to avoid ambiguity
+    const messageField = screen.getByRole('textbox', { name: /Feedback/i })
     await user.type(messageField, 'This is my feedback message')
 
     // Submit the form

@@ -18,8 +18,8 @@ import {
   TestTube,
   X,
 } from 'lucide-react'
-import { submitFeedbackToLinear } from '@tripthreads/core/utils/feedback'
-import type { FeedbackEnvironment, FeedbackCategory } from '@tripthreads/core/types/feedback'
+import { submitFeedbackToLinear } from '@tripthreads/core'
+import type { FeedbackEnvironment, FeedbackCategory } from '@tripthreads/core'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Input } from '@/components/ui/input'

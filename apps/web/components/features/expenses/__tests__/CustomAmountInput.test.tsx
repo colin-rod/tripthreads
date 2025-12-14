@@ -2,7 +2,7 @@
  * Unit tests for CustomAmountInput component
  */
 
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { CustomAmountInput } from '../CustomAmountInput'
 
 describe('CustomAmountInput', () => {
@@ -65,7 +65,7 @@ describe('CustomAmountInput', () => {
       />
     )
 
-    const aliceInput = screen.getByDisplayValue('50')
+    const aliceInput = within(screen.getByTestId('amount-input-1')).getByRole('spinbutton')
     fireEvent.change(aliceInput, { target: { value: '60' } })
 
     expect(mockOnChange).toHaveBeenCalledWith({
