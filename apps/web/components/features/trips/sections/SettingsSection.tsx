@@ -32,7 +32,7 @@ import { PendingInvitesList } from '@/components/features/invites/PendingInvites
 import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
 import { RemoveParticipantDialog } from '@/components/features/trips/RemoveParticipantDialog'
 import { ChangeRoleDialog } from '@/components/features/trips/ChangeRoleDialog'
-import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
+import type { TripNotificationPreferences } from '@tripthreads/core'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 
 interface SettingsSectionProps {

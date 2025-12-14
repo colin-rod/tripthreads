@@ -6,7 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ProfileSection } from '@/components/features/profile/ProfileSection'
 import { updateProfileName, deleteAvatar } from '@/app/actions/profile'
-import type { Database } from '@tripthreads/core/types/database'
+import type { Database } from '@tripthreads/core'
 
 // Mock server actions
 jest.mock('@/app/actions/profile', () => ({
@@ -46,6 +46,8 @@ const mockUser: User = {
   profile_completed_at: new Date().toISOString(),
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  deleted_at: null,
+  is_deleted: false,
 }
 
 const mockUserNoName: User = {

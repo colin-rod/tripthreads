@@ -359,9 +359,13 @@ describe('ExpenseDetailScreen', () => {
 
       expect(screen.getByText('Loading...')).toBeTruthy()
 
+      // Wait for content to appear instead of loading to disappear
       await waitFor(() => {
-        expect(screen.queryByText('Loading...')).toBeFalsy()
+        expect(screen.getByText('Dinner at Le Bistro')).toBeTruthy()
       })
+
+      // Then verify loading is gone
+      expect(screen.queryByText('Loading...')).toBeFalsy()
     })
 
     it('should show not found message when expense does not exist', async () => {

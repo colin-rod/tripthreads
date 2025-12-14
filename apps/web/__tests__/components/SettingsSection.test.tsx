@@ -6,8 +6,8 @@ import { render, screen } from '@testing-library/react'
 import { SettingsSection } from '@/components/features/trips/sections/SettingsSection'
 
 // Mock components
-jest.mock('@/components/features/trips/InviteButton', () => ({
-  InviteButton: () => <button>Invite</button>,
+jest.mock('@/components/features/trips/InviteDialog', () => ({
+  InviteDialog: () => <div>Invite Dialog</div>,
 }))
 
 jest.mock('@/components/features/invites/PendingInvitesList', () => ({
@@ -15,7 +15,17 @@ jest.mock('@/components/features/invites/PendingInvitesList', () => ({
 }))
 
 jest.mock('@/components/features/trips/TripNotificationPreferencesSection', () => ({
-  TripNotificationPreferencesSection: () => <div>Notification Preferences</div>,
+  TripNotificationPreferencesSection: () => (
+    <div data-testid="notification-prefs-section">Notification Preferences Section Content</div>
+  ),
+}))
+
+jest.mock('@/components/features/trips/RemoveParticipantDialog', () => ({
+  RemoveParticipantDialog: () => <div>Remove Participant Dialog</div>,
+}))
+
+jest.mock('@/components/features/trips/ChangeRoleDialog', () => ({
+  ChangeRoleDialog: () => <div>Change Role Dialog</div>,
 }))
 
 // Mock next/link
@@ -55,12 +65,12 @@ describe('SettingsSection', () => {
   }
 
   const mockGlobalPreferences = {
-    invites: true,
-    itinerary: true,
-    expenses: true,
-    photos: true,
-    chat: true,
-    settlements: true,
+    email_trip_invites: true,
+    email_expense_updates: true,
+    email_trip_updates: true,
+    push_trip_invites: false,
+    push_expense_updates: false,
+    push_trip_updates: false,
   }
 
   it('renders the Settings heading', () => {
@@ -218,7 +228,7 @@ describe('SettingsSection', () => {
   })
 
   it('renders three accordion sections for owners', () => {
-    const { container } = render(
+    render(
       <SettingsSection
         trip={mockTrip}
         isOwner={true}
@@ -228,14 +238,14 @@ describe('SettingsSection', () => {
       />
     )
 
-    // Count accordion items (they have data-state attribute from Radix)
-    const accordionItems = container.querySelectorAll('[data-state]')
     // Should have 3 sections: Participants, Invitations, Notifications
-    expect(accordionItems.length).toBeGreaterThanOrEqual(3)
+    expect(screen.getByText('Participants')).toBeInTheDocument()
+    expect(screen.getByText('Invitations')).toBeInTheDocument()
+    expect(screen.getByText('Notification Preferences')).toBeInTheDocument()
   })
 
   it('renders two accordion sections for non-owners', () => {
-    const { container } = render(
+    render(
       <SettingsSection
         trip={mockTrip}
         isOwner={false}
@@ -245,10 +255,9 @@ describe('SettingsSection', () => {
       />
     )
 
-    // Count accordion items
-    const accordionItems = container.querySelectorAll('[data-state]')
     // Should have 2 sections: Participants, Notifications (no Invitations)
-    expect(accordionItems.length).toBeGreaterThanOrEqual(2)
-    expect(accordionItems.length).toBeLessThan(4)
+    expect(screen.getByText('Participants')).toBeInTheDocument()
+    expect(screen.queryByText('Invitations')).not.toBeInTheDocument()
+    expect(screen.getByText('Notification Preferences')).toBeInTheDocument()
   })
 })
