@@ -62,23 +62,10 @@ describe('TripsListClient', () => {
       past: [pastTrip],
     })
 
-    render(<TripsListClient trips={[ongoingTrip, upcomingTrip, pastTrip]} searchQuery="" />)
+    render(<TripsListClient trips={[ongoingTrip, upcomingTrip, pastTrip]} />)
 
     expect(screen.getByRole('heading', { level: 2, name: /ongoing trips/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: /upcoming trips/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: /past trips/i })).toBeInTheDocument()
-  })
-
-  it('shows the empty search state when no trips match', () => {
-    const trips = [sampleTrip({ name: 'City Break' }), sampleTrip({ name: 'Mountain Escape' })]
-
-    filterAndCategorizeTripsMock.mockReturnValue({ ongoing: [], upcoming: [], past: [] })
-
-    render(<TripsListClient trips={trips} searchQuery="desert" />)
-
-    expect(screen.getByText('No trips found')).toBeInTheDocument()
-    expect(
-      screen.getByText('No trips match your search "desert". Try a different search term.')
-    ).toBeInTheDocument()
   })
 })

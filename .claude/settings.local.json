@@ -68,7 +68,11 @@
       "Bash(pkill:*)",
       "Bash(wc:*)",
       "Bash(npx next build:*)",
-      "Bash(turbo run lint:*)"
+      "Bash(turbo run lint:*)",
+      "Bash(timeout 60 npm test:*)",
+      "Bash(node -e:*)",
+      "Bash(timeout 45 npm test:*)",
+      "Bash(npx jest tests/components/login.test.tsx --testTimeout=10000)"
     ],
     "deny": [],
     "ask": []

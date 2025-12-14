@@ -6,25 +6,24 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@tripthreads/core'
 import { createItineraryItem, updateItineraryItem, deleteItineraryItem } from '@tripthreads/core'
 
-// Mock Supabase
+// Mock Supabase - create mocks that can be reused
+const mockSingle = jest.fn()
+const mockSelect = jest.fn(() => ({ single: mockSingle }))
+const mockDeleteEq = jest.fn()
+const mockEq = jest.fn(() => ({ select: mockSelect }))
+const mockInsert = jest.fn(() => ({ select: mockSelect }))
+const mockUpdate = jest.fn(() => ({ eq: mockEq, select: mockSelect }))
+const mockDelete = jest.fn(() => ({ eq: mockDeleteEq }))
+const mockFrom = jest.fn(() => ({
+  insert: mockInsert,
+  update: mockUpdate,
+  delete: mockDelete,
+  select: mockSelect,
+  eq: mockEq,
+}))
+
 const mockSupabase = {
-  from: jest.fn(() => ({
-    insert: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-    })),
-    delete: jest.fn(() => ({
-      eq: jest.fn(),
-    })),
-  })),
+  from: mockFrom,
 }
 const supabase = mockSupabase as unknown as SupabaseClient<Database>
 
@@ -56,12 +55,12 @@ describe('Itinerary CRUD Integration Tests', () => {
         error: null,
       }
 
-      mockSupabase.from().insert().select().single.mockResolvedValue(mockResponse)
+      mockSingle.mockResolvedValue(mockResponse)
 
       const result = await createItineraryItem(supabase, mockItem)
 
       expect(result).toEqual(mockItem)
-      expect(mockSupabase.from).toHaveBeenCalledWith('itinerary_items')
+      expect(mockFrom).toHaveBeenCalledWith('itinerary_items')
     })
 
     it('should handle creation errors', async () => {
@@ -70,7 +69,7 @@ describe('Itinerary CRUD Integration Tests', () => {
         code: '23505',
       }
 
-      mockSupabase.from().insert().select().single.mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: null,
         error: mockError,
       })
@@ -100,7 +99,7 @@ describe('Itinerary CRUD Integration Tests', () => {
         error: null,
       }
 
-      mockSupabase.from().update().eq().select().single.mockResolvedValue(mockResponse)
+      mockSingle.mockResolvedValue(mockResponse)
 
       const result = await updateItineraryItem(supabase, 'item-123', {
         title: 'Updated Title',
@@ -108,19 +107,14 @@ describe('Itinerary CRUD Integration Tests', () => {
       })
 
       expect(result).toEqual(updatedItem)
-      expect(mockSupabase.from).toHaveBeenCalledWith('itinerary_items')
+      expect(mockFrom).toHaveBeenCalledWith('itinerary_items')
     })
 
     it('should handle update errors', async () => {
-      mockSupabase
-        .from()
-        .update()
-        .eq()
-        .select()
-        .single.mockResolvedValue({
-          data: null,
-          error: { message: 'Not found', code: 'PGRST116' },
-        })
+      mockSingle.mockResolvedValue({
+        data: null,
+        error: { message: 'Not found', code: 'PGRST116' },
+      })
 
       await expect(updateItineraryItem(supabase, 'item-123', { title: 'Test' })).rejects.toThrow(
         'Failed to update itinerary item'
@@ -130,22 +124,19 @@ describe('Itinerary CRUD Integration Tests', () => {
 
   describe('deleteItineraryItem', () => {
     it('should delete an itinerary item successfully', async () => {
-      mockSupabase.from().delete().eq.mockResolvedValue({
+      mockDeleteEq.mockResolvedValue({
         error: null,
       })
 
       await deleteItineraryItem(supabase, 'item-123')
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('itinerary_items')
+      expect(mockFrom).toHaveBeenCalledWith('itinerary_items')
     })
 
     it('should handle deletion errors', async () => {
-      mockSupabase
-        .from()
-        .delete()
-        .eq.mockResolvedValue({
-          error: { message: 'Not found', code: 'PGRST116' },
-        })
+      mockDeleteEq.mockResolvedValue({
+        error: { message: 'Not found', code: 'PGRST116' },
+      })
 
       await expect(deleteItineraryItem(supabase, 'item-123')).rejects.toThrow(
         'Failed to delete itinerary item'
@@ -164,28 +155,19 @@ describe('Itinerary CRUD Integration Tests', () => {
         created_by: 'user-123',
       }
 
-      mockSupabase
-        .from()
-        .insert()
-        .select()
-        .single.mockResolvedValue({
-          data: { ...newItem, id: 'item-123' },
-          error: null,
-        })
+      mockSingle.mockResolvedValue({
+        data: { ...newItem, id: 'item-123' },
+        error: null,
+      })
 
       const created = await createItineraryItem(supabase, newItem)
       expect(created.id).toBe('item-123')
 
       // Update
-      mockSupabase
-        .from()
-        .update()
-        .eq()
-        .select()
-        .single.mockResolvedValue({
-          data: { ...created, title: 'Art Museum Visit' },
-          error: null,
-        })
+      mockSingle.mockResolvedValue({
+        data: { ...created, title: 'Art Museum Visit' },
+        error: null,
+      })
 
       const updated = await updateItineraryItem(supabase, 'item-123', {
         title: 'Art Museum Visit',
@@ -193,10 +175,10 @@ describe('Itinerary CRUD Integration Tests', () => {
       expect(updated.title).toBe('Art Museum Visit')
 
       // Delete
-      mockSupabase.from().delete().eq.mockResolvedValue({ error: null })
+      mockDeleteEq.mockResolvedValue({ error: null })
 
       await deleteItineraryItem(supabase, 'item-123')
-      expect(mockSupabase.from).toHaveBeenCalledWith('itinerary_items')
+      expect(mockFrom).toHaveBeenCalledWith('itinerary_items')
     })
   })
 })

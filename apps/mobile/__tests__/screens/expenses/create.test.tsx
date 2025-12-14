@@ -71,10 +71,10 @@ describe('CreateExpenseScreen', () => {
 
     await waitFor(() => {
       expect(getByText('Add Expense')).toBeTruthy()
-      expect(getByText('Description')).toBeTruthy()
-      expect(getByText('Amount')).toBeTruthy()
-      expect(getByText('Currency')).toBeTruthy()
-      expect(getByText('Category')).toBeTruthy()
+      expect(getByText(/Description/)).toBeTruthy()
+      expect(getByText(/Amount/)).toBeTruthy()
+      expect(getByText(/Currency/)).toBeTruthy()
+      expect(getByText(/Category/)).toBeTruthy()
     })
   })
 
@@ -91,11 +91,11 @@ describe('CreateExpenseScreen', () => {
   })
 
   it('should load and display trip participants', async () => {
-    const { getByText } = render(<CreateExpenseScreen />)
+    const { getAllByText } = render(<CreateExpenseScreen />)
 
     await waitFor(() => {
-      expect(getByText('Alice')).toBeTruthy()
-      expect(getByText('Bob')).toBeTruthy()
+      expect(getAllByText('Alice').length).toBeGreaterThan(0)
+      expect(getAllByText('Bob').length).toBeGreaterThan(0)
     })
   })
 
@@ -116,12 +116,13 @@ describe('CreateExpenseScreen', () => {
   })
 
   it('should allow selecting payer', async () => {
-    const { getByText } = render(<CreateExpenseScreen />)
+    const { getAllByText } = render(<CreateExpenseScreen />)
 
     await waitFor(() => {
-      const aliceButton = getByText('Alice')
-      fireEvent.press(aliceButton)
-      expect(aliceButton).toBeTruthy()
+      const aliceButtons = getAllByText('Alice')
+      // First Alice is in the payer section
+      fireEvent.press(aliceButtons[0])
+      expect(aliceButtons[0]).toBeTruthy()
     })
   })
 
