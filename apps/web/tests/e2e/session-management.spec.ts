@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 /**
  * Session Management E2E Tests
@@ -13,11 +13,7 @@ import { test, expect } from '@playwright/test'
 /**
  * Helper to create a unique test user for each test
  */
-async function createTestUser(page: {
-  goto: (url: string) => Promise<void>
-  fill: (selector: string, value: string) => Promise<void>
-  click: (selector: string) => Promise<void>
-}) {
+async function createTestUser(page: Page) {
   const testEmail = `session-test-${Date.now()}-${Math.random().toString(36).substring(7)}@tripthreads.test`
   const testPassword = 'SessionTest123!'
   const testName = 'Session Test User'

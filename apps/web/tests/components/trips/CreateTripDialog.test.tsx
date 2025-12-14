@@ -5,17 +5,11 @@
  * and loading state behaviour.
  */
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals'
+import { beforeEach, describe, it, jest } from '@jest/globals'
 import '@testing-library/jest-dom'
-import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type React from 'react'
-
-declare module '@jest/globals' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface Matchers<R = void> extends TestingLibraryMatchers<typeof expect.stringContaining, R> {}
-}
 
 // Type the mock with the actual return type from the action
 const mockCreateTrip: jest.MockedFunction<typeof import('@/app/actions/trips').createTrip> =
