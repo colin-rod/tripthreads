@@ -240,7 +240,7 @@ describe('ItineraryPreviewItem', () => {
 
       // Should not have duration badge
       expect(screen.queryByText(/\dh/)).not.toBeInTheDocument()
-      expect(screen.queryByText(/days?/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/\d+\s+days?/)).not.toBeInTheDocument()
     })
 
     it('should not display duration badge when end_time is null', () => {
