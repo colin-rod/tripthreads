@@ -107,7 +107,9 @@ describe('ItineraryItemDialog', () => {
         />
       )
 
-      expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument()
+      // Use getAllByRole since there are multiple close buttons (dialog X + explicit Close button)
+      const closeButtons = screen.getAllByRole('button', { name: /close/i })
+      expect(closeButtons.length).toBeGreaterThan(0)
       expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument()
     })
@@ -178,7 +180,7 @@ describe('ItineraryItemDialog', () => {
       // Add a link
       const linkTitleInput = screen.getByPlaceholderText('Link title')
       const linkUrlInput = screen.getByPlaceholderText('URL')
-      const addButton = screen.getByRole('button', { name: '' }) // Plus icon button
+      const addButton = screen.getByRole('button', { name: /add link/i })
 
       await user.type(linkTitleInput, 'Museum Website')
       await user.type(linkUrlInput, 'https://museum.example.com')
@@ -189,7 +191,7 @@ describe('ItineraryItemDialog', () => {
       expect(screen.getByText('https://museum.example.com')).toBeInTheDocument()
 
       // Remove link
-      const removeButton = screen.getByRole('button', { name: '' }) // X icon button
+      const removeButton = screen.getByRole('button', { name: /remove link/i })
       await user.click(removeButton)
 
       // Verify link was removed
@@ -210,7 +212,7 @@ describe('ItineraryItemDialog', () => {
         />
       )
 
-      const allDaySwitch = screen.getByRole('switch')
+      const allDaySwitch = screen.getByRole('switch', { name: /all.day/i })
       expect(allDaySwitch).not.toBeChecked()
 
       await user.click(allDaySwitch)

@@ -297,8 +297,8 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input
-                  id="title"
                   {...register('title', { required: 'Title is required' })}
+                  id="title"
                   disabled={isViewMode}
                   placeholder="e.g., Flight to Paris"
                 />
@@ -309,8 +309,8 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
-                  id="description"
                   {...register('description')}
+                  id="description"
                   disabled={isViewMode}
                   placeholder="Add details about this item..."
                   rows={3}
@@ -325,6 +325,7 @@ export function ItineraryItemDialog({
                   checked={isAllDay}
                   onCheckedChange={checked => setValue('isAllDay', checked)}
                   disabled={isViewMode}
+                  aria-label="All-day event"
                 />
               </div>
 
@@ -332,9 +333,9 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="startTime">{isAllDay ? 'Start Date' : 'Start Date & Time'} *</Label>
                 <Input
+                  {...register('startTime', { required: 'Start time is required' })}
                   id="startTime"
                   type={isAllDay ? 'date' : 'datetime-local'}
-                  {...register('startTime', { required: 'Start time is required' })}
                   disabled={isViewMode}
                 />
                 {errors.startTime && (
@@ -346,9 +347,9 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="endTime">{isAllDay ? 'End Date' : 'End Date & Time'}</Label>
                 <Input
+                  {...register('endTime')}
                   id="endTime"
                   type={isAllDay ? 'date' : 'datetime-local'}
-                  {...register('endTime')}
                   disabled={isViewMode}
                 />
               </div>
@@ -357,8 +358,8 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Input
-                  id="location"
                   {...register('location')}
+                  id="location"
                   disabled={isViewMode}
                   placeholder="e.g., Charles de Gaulle Airport"
                 />
@@ -368,8 +369,8 @@ export function ItineraryItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
-                  id="notes"
                   {...register('notes')}
+                  id="notes"
                   disabled={isViewMode}
                   placeholder="Additional notes, reminders, or important information..."
                   rows={4}
@@ -401,6 +402,7 @@ export function ItineraryItemDialog({
                           size="icon"
                           onClick={() => removeLink(index)}
                           className="flex-shrink-0"
+                          aria-label="Remove link"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -428,6 +430,7 @@ export function ItineraryItemDialog({
                         size="icon"
                         onClick={addLink}
                         disabled={!newLink.title || !newLink.url}
+                        aria-label="Add link"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
