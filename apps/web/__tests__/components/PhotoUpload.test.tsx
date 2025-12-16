@@ -29,16 +29,19 @@ describe('PhotoUpload Component', () => {
     // Clear mock call history but preserve implementations
     jest.clearAllMocks()
 
-    // Re-setup the image compression mocks since clearAllMocks clears implementations
-    ;(imageCompression.compressImage as jest.Mock).mockImplementation((file: File) =>
-      Promise.resolve(file)
-    )
-    ;(imageCompression.generateThumbnail as jest.Mock).mockImplementation((file: File) =>
-      Promise.resolve(file)
-    )
-    ;(imageCompression.extractDateTaken as jest.Mock).mockImplementation(() =>
-      Promise.resolve(new Date('2025-10-15T14:30:00Z'))
-    )
+    // Re-setup the image compression mocks with delays to allow React to render intermediate states
+    ;(imageCompression.compressImage as jest.Mock).mockImplementation(async (file: File) => {
+      await new Promise(resolve => setTimeout(resolve, 50)) // 50ms delay
+      return file
+    })
+    ;(imageCompression.generateThumbnail as jest.Mock).mockImplementation(async (file: File) => {
+      await new Promise(resolve => setTimeout(resolve, 30)) // 30ms delay
+      return file
+    })
+    ;(imageCompression.extractDateTaken as jest.Mock).mockImplementation(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20)) // 20ms delay
+      return new Date('2025-10-15T14:30:00Z')
+    })
     ;(imageCompression.isValidImageType as jest.Mock).mockImplementation((file: File) =>
       file.type.startsWith('image/')
     )
@@ -48,14 +51,33 @@ describe('PhotoUpload Component', () => {
     ;(imageCompression.formatFileSize as jest.Mock).mockImplementation(
       (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)} MB`
     )
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        canUpload: true,
-        remaining: 24,
-        total: 1,
-        limit: 25,
-      }),
+
+    // Fetch mock with conditional delays
+    ;(global.fetch as jest.Mock).mockImplementation(async (url, options) => {
+      // Permission check (GET) - no delay for initial render
+      if (!options || options.method !== 'POST') {
+        return {
+          ok: true,
+          json: async () => ({
+            canUpload: true,
+            remaining: 24,
+            total: 1,
+            limit: 25,
+          }),
+        }
+      }
+
+      // Photo upload (POST) - add network delay
+      await new Promise(resolve => setTimeout(resolve, 100)) // 100ms delay
+      return {
+        ok: true,
+        json: async () => ({
+          canUpload: true,
+          remaining: 24,
+          total: 1,
+          limit: 25,
+        }),
+      }
     })
   })
 
@@ -286,6 +308,32 @@ describe('PhotoUpload Component', () => {
       })
     })
 
+    it('shows progress bar during upload', async () => {
+      const user = userEvent.setup()
+      render(<PhotoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
+
+      const fileInput = screen.getByLabelText(/select photo/i) as HTMLInputElement
+      const file = new File(['image'], 'photo.jpg', { type: 'image/jpeg' })
+
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      // Wait for the photo to be added to the preview
+      await waitFor(() => {
+        expect(screen.getByText(/photo\.jpg/i)).toBeInTheDocument()
+      })
+
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
+      await user.click(uploadButton)
+
+      // Verify both uploading text and progress bar appear together during upload
+      await waitFor(() => {
+        expect(screen.getByText(/uploading/i)).toBeInTheDocument()
+        // Check for progress element with aria-valuemax (Radix UI Progress uses this)
+        const progressElement = screen.getByRole('progressbar')
+        expect(progressElement).toBeInTheDocument()
+      })
+    })
+
     it('compresses images before upload', async () => {
       const user = userEvent.setup()
 
@@ -351,6 +399,29 @@ describe('PhotoUpload Component', () => {
     it('shows error message on upload failure', async () => {
       const user = userEvent.setup()
 
+      // Mock fetch to fail on POST (upload) but succeed on permission check
+      ;(global.fetch as jest.Mock).mockImplementation(async (url, options) => {
+        // Permission check (GET) - return success
+        if (!options || options.method !== 'POST') {
+          return {
+            ok: true,
+            json: async () => ({
+              canUpload: true,
+              remaining: 24,
+              total: 1,
+              limit: 25,
+            }),
+          }
+        }
+
+        // Photo upload (POST) - add delay then fail
+        await new Promise(resolve => setTimeout(resolve, 100))
+        return {
+          ok: false,
+          json: async () => ({ error: 'Upload failed' }),
+        }
+      })
+
       render(<PhotoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
       const fileInput = screen.getByLabelText(/select photo/i) as HTMLInputElement
@@ -361,12 +432,6 @@ describe('PhotoUpload Component', () => {
       // Wait for the photo to be added to the preview
       await waitFor(() => {
         expect(screen.getByText(/photo\.jpg/i)).toBeInTheDocument()
-      })
-
-      // Mock the upload API to fail AFTER the file is selected
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ error: 'Upload failed' }),
       })
 
       // More specific button query - matches "Upload 1 Photo"

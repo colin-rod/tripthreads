@@ -165,9 +165,9 @@ describe('ItineraryListItem', () => {
     it('should not display duration badge for all-day items', () => {
       render(<ListView items={[mockAllDayItem]} currentUserId="user-123" />)
 
-      // Should not have duration badge
-      expect(screen.queryByText(/\dh/)).not.toBeInTheDocument()
-      expect(screen.queryByText(/days?/)).not.toBeInTheDocument()
+      // Should not have duration badge (check for specific duration text patterns)
+      expect(screen.queryByText(/^\d+h$/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/^\d+ days?$/)).not.toBeInTheDocument()
     })
 
     it('should not display duration badge when end_time is null', () => {
@@ -265,7 +265,7 @@ describe('ItineraryListItem', () => {
 
       const buttons = screen.getAllByRole('button')
       const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      expect(expandButton).not.toBeInTheDocument()
+      expect(expandButton).toBeUndefined()
     })
   })
 
@@ -318,8 +318,8 @@ describe('ItineraryListItem', () => {
       const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
       await user.click(expandButton!)
 
-      const link1 = screen.getByText('https://airline.com/checkin')
-      const link2 = screen.getByText('https://flightaware.com/track123')
+      const link1 = screen.getByText('Check-in')
+      const link2 = screen.getByText('Flight Tracker')
 
       expect(link1).toBeInTheDocument()
       expect(link1.closest('a')).toHaveAttribute('href', 'https://airline.com/checkin')
@@ -327,6 +327,7 @@ describe('ItineraryListItem', () => {
       expect(link1.closest('a')).toHaveAttribute('rel', 'noopener noreferrer')
 
       expect(link2).toBeInTheDocument()
+      expect(link2.closest('a')).toHaveAttribute('href', 'https://flightaware.com/track123')
     })
 
     it('should not display notes section when notes is null', async () => {
@@ -365,7 +366,9 @@ describe('ItineraryListItem', () => {
       const moreButton = buttons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
+          svg?.classList.contains('lucide-ellipsis') ||
           svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
           svg?.parentElement?.classList.contains('lucide-more-horizontal')
         )
       })
@@ -380,7 +383,9 @@ describe('ItineraryListItem', () => {
       const moreButton = buttons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
+          svg?.classList.contains('lucide-ellipsis') ||
           svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
           svg?.parentElement?.classList.contains('lucide-more-horizontal')
         )
       })
@@ -397,14 +402,16 @@ describe('ItineraryListItem', () => {
       const moreButton = buttons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
+          svg?.classList.contains('lucide-ellipsis') ||
           svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
           svg?.parentElement?.classList.contains('lucide-more-horizontal')
         )
       })
       await user.click(moreButton!)
 
       // Click Edit option
-      const editOption = screen.getByText('Edit')
+      const editOption = screen.getByRole('menuitem', { name: /edit/i })
       await user.click(editOption)
 
       expect(mockOnEdit).toHaveBeenCalledWith(mockTimedItem)
@@ -422,14 +429,16 @@ describe('ItineraryListItem', () => {
       const moreButton = buttons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
+          svg?.classList.contains('lucide-ellipsis') ||
           svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
           svg?.parentElement?.classList.contains('lucide-more-horizontal')
         )
       })
       await user.click(moreButton!)
 
       // Click Delete option
-      const deleteOption = screen.getByText('Delete')
+      const deleteOption = screen.getByRole('menuitem', { name: /delete/i })
       await user.click(deleteOption)
 
       expect(mockOnDelete).toHaveBeenCalledWith(mockTimedItem)
@@ -460,7 +469,9 @@ describe('ItineraryListItem', () => {
       const moreButton = buttons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
+          svg?.classList.contains('lucide-ellipsis') ||
           svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
           svg?.parentElement?.classList.contains('lucide-more-horizontal')
         )
       })
@@ -583,7 +594,7 @@ describe('ItineraryListItem', () => {
       expect(screen.getByText('Transport Details')).toBeInTheDocument()
       expect(screen.getByText('JFK → CDG')).toBeInTheDocument()
       expect(screen.getByText('Remember to check in online 24 hours before')).toBeInTheDocument()
-      expect(screen.getByText('https://airline.com/checkin')).toBeInTheDocument()
+      expect(screen.getByText('Check-in')).toBeInTheDocument()
     })
 
     it('should maintain responsive layout with all features', () => {
