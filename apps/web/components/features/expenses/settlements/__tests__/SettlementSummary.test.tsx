@@ -305,7 +305,9 @@ describe('SettlementSummary', () => {
       render(<SettlementSummary summary={mockSummaryWithPending} tripId="trip-1" />)
 
       // UserBalanceCard should not be rendered initially
-      expect(screen.queryByText('Alice Johnson')).not.toBeInTheDocument()
+      // Check for UserBalanceCard-specific text patterns (e.g., "Owed €30.00", "Owes €30.00")
+      expect(screen.queryByText(/^Owed €/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/^Owes €/)).not.toBeInTheDocument()
     })
 
     it('should show individual balances when toggled', async () => {
@@ -316,9 +318,11 @@ describe('SettlementSummary', () => {
       const toggleButton = screen.getByText('Individual Balances')
       await user.click(toggleButton)
 
-      // Should show user names from balances
-      expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
-      expect(screen.getByText('Benji Rodriguez')).toBeInTheDocument()
+      // Should show UserBalanceCard-specific balance text
+      // Alice has +3000 EUR → "Owed €30.00"
+      // Benji has -3000 EUR → "Owes €30.00"
+      expect(screen.getByText(/^Owed €30\.00$/)).toBeInTheDocument()
+      expect(screen.getByText(/^Owes €30\.00$/)).toBeInTheDocument()
     })
 
     it('should persist balances toggle state to localStorage', async () => {
@@ -337,8 +341,9 @@ describe('SettlementSummary', () => {
 
       render(<SettlementSummary summary={mockSummaryWithPending} tripId="trip-1" />)
 
-      // Should show balances on mount
-      expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
+      // Should show balances on mount - check for UserBalanceCard-specific text
+      expect(screen.getByText(/^Owed €30\.00$/)).toBeInTheDocument()
+      expect(screen.getByText(/^Owes €30\.00$/)).toBeInTheDocument()
     })
   })
 
@@ -359,7 +364,8 @@ describe('SettlementSummary', () => {
 
       // Dialog should be open
       expect(screen.getByRole('dialog')).toBeInTheDocument()
-      expect(screen.getByText('Mark as Paid')).toBeInTheDocument()
+      // Verify dialog-specific content (not just button text which appears twice)
+      expect(screen.getByRole('button', { name: /confirm payment/i })).toBeInTheDocument()
     })
 
     it('should show settlement details in dialog', async () => {
