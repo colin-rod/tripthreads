@@ -26,7 +26,28 @@ describe('PhotoUpload Component', () => {
   const mockOnUploadComplete = jest.fn()
 
   beforeEach(() => {
+    // Clear mock call history but preserve implementations
     jest.clearAllMocks()
+
+    // Re-setup the image compression mocks since clearAllMocks clears implementations
+    ;(imageCompression.compressImage as jest.Mock).mockImplementation((file: File) =>
+      Promise.resolve(file)
+    )
+    ;(imageCompression.generateThumbnail as jest.Mock).mockImplementation((file: File) =>
+      Promise.resolve(file)
+    )
+    ;(imageCompression.extractDateTaken as jest.Mock).mockImplementation(() =>
+      Promise.resolve(new Date('2025-10-15T14:30:00Z'))
+    )
+    ;(imageCompression.isValidImageType as jest.Mock).mockImplementation((file: File) =>
+      file.type.startsWith('image/')
+    )
+    ;(imageCompression.isWithinSizeLimit as jest.Mock).mockImplementation(
+      (file: File) => file.size <= 10 * 1024 * 1024
+    )
+    ;(imageCompression.formatFileSize as jest.Mock).mockImplementation(
+      (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)} MB`
+    )
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -137,21 +158,30 @@ describe('PhotoUpload Component', () => {
   })
 
   describe('File Validation', () => {
-    it('rejects non-image files', async () => {
-      const user = userEvent.setup()
+    it('shows error and rejects non-image files', async () => {
       render(<PhotoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
+
+      // Wait for component to finish initial load
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /upload photo/i })).toBeInTheDocument()
+      })
 
       const fileInput = screen.getByLabelText(/select photo/i) as HTMLInputElement
       const file = new File(['pdf'], 'document.pdf', { type: 'application/pdf' })
 
-      await user.upload(fileInput, file)
+      // The mock will automatically return false for PDF files (type doesn't start with 'image/')
+      fireEvent.change(fileInput, { target: { files: [file] } })
 
+      // Verify error message appears
       await waitFor(() => {
         expect(screen.getByText(/invalid file type/i)).toBeInTheDocument()
       })
+
+      // Verify the "Selected Photos" section does NOT appear
+      expect(screen.queryByText(/selected photos/i)).not.toBeInTheDocument()
     })
 
-    it('rejects files over 10MB', async () => {
+    it('shows error and rejects files over 10MB', async () => {
       const user = userEvent.setup()
       ;(imageCompression.isWithinSizeLimit as jest.Mock).mockReturnValueOnce(false)
 
@@ -164,9 +194,13 @@ describe('PhotoUpload Component', () => {
 
       await user.upload(fileInput, largeFile)
 
+      // Verify error message appears
       await waitFor(() => {
         expect(screen.getByText(/file size exceeds 10mb/i)).toBeInTheDocument()
       })
+
+      // Verify the "Selected Photos" section does NOT appear (file wasn't added to preview)
+      expect(screen.queryByText(/selected photos/i)).not.toBeInTheDocument()
     })
   })
 
@@ -236,10 +270,16 @@ describe('PhotoUpload Component', () => {
       const fileInput = screen.getByLabelText(/select photo/i) as HTMLInputElement
       const file = new File(['image'], 'photo.jpg', { type: 'image/jpeg' })
 
-      await user.upload(fileInput, file)
+      fireEvent.change(fileInput, { target: { files: [file] } })
 
-      const uploadButton = screen.getByRole('button', { name: /upload/i })
-      await user.click(uploadButton)
+      // Wait for the photo to be added to the preview
+      await waitFor(() => {
+        expect(screen.getByText(/photo\.jpg/i)).toBeInTheDocument()
+      })
+
+      // More specific button query - matches "Upload 1 Photo"
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
+      await user.click(uploadButton) // We still need user.click() for the button
 
       await waitFor(() => {
         expect(screen.getByText(/uploading/i)).toBeInTheDocument()
@@ -256,7 +296,8 @@ describe('PhotoUpload Component', () => {
 
       await user.upload(fileInput, file)
 
-      const uploadButton = screen.getByRole('button', { name: /upload/i })
+      // More specific button query - matches "Upload 1 Photo"
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
       await user.click(uploadButton)
 
       await waitFor(() => {
@@ -274,7 +315,8 @@ describe('PhotoUpload Component', () => {
 
       await user.upload(fileInput, file)
 
-      const uploadButton = screen.getByRole('button', { name: /upload/i })
+      // More specific button query - matches "Upload 1 Photo"
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
       await user.click(uploadButton)
 
       await waitFor(() => {
@@ -297,7 +339,8 @@ describe('PhotoUpload Component', () => {
 
       await user.upload(fileInput, file)
 
-      const uploadButton = screen.getByRole('button', { name: /upload/i })
+      // More specific button query - matches "Upload 1 Photo"
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
       await user.click(uploadButton)
 
       await waitFor(() => {
@@ -307,10 +350,6 @@ describe('PhotoUpload Component', () => {
 
     it('shows error message on upload failure', async () => {
       const user = userEvent.setup()
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ error: 'Upload failed' }),
-      })
 
       render(<PhotoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -319,7 +358,19 @@ describe('PhotoUpload Component', () => {
 
       await user.upload(fileInput, file)
 
-      const uploadButton = screen.getByRole('button', { name: /upload/i })
+      // Wait for the photo to be added to the preview
+      await waitFor(() => {
+        expect(screen.getByText(/photo\.jpg/i)).toBeInTheDocument()
+      })
+
+      // Mock the upload API to fail AFTER the file is selected
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Upload failed' }),
+      })
+
+      // More specific button query - matches "Upload 1 Photo"
+      const uploadButton = screen.getByRole('button', { name: /upload 1 photo/i })
       await user.click(uploadButton)
 
       await waitFor(() => {
