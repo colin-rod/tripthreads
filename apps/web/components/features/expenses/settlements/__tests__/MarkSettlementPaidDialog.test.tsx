@@ -11,6 +11,9 @@ import userEvent from '@testing-library/user-event'
 import { MarkSettlementPaidDialog } from '../MarkSettlementPaidDialog'
 import { formatCurrencyFromMinorUnits } from '@tripthreads/core'
 import type { SettlementWithUsers } from '@tripthreads/core'
+import '@testing-library/jest-dom'
+
+type OnConfirmFn = (settlementId: string, note?: string) => void | Promise<void>
 
 const mockSettlement: SettlementWithUsers = {
   id: 'settlement-1',
@@ -46,7 +49,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -60,7 +63,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={false}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -73,7 +76,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={null}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -86,7 +89,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -105,7 +108,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -120,7 +123,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
           currentUserId="benji-id"
         />
       )
@@ -136,7 +139,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
           currentUserId="alice-id"
         />
       )
@@ -152,7 +155,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
           currentUserId="other-user-id"
         />
       )
@@ -169,7 +172,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -185,7 +188,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -201,7 +204,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -216,7 +219,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -233,7 +236,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -245,7 +248,7 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should call onConfirm with settlementId and note when confirmed', async () => {
       const user = userEvent.setup()
-      const onConfirm = jest.fn()
+      const onConfirm = jest.fn() as jest.MockedFunction<OnConfirmFn>
 
       render(
         <MarkSettlementPaidDialog
@@ -269,7 +272,7 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should call onConfirm with undefined note if note is empty', async () => {
       const user = userEvent.setup()
-      const onConfirm = jest.fn()
+      const onConfirm = jest.fn() as jest.MockedFunction<OnConfirmFn>
 
       render(
         <MarkSettlementPaidDialog
@@ -290,7 +293,7 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should trim whitespace from note', async () => {
       const user = userEvent.setup()
-      const onConfirm = jest.fn()
+      const onConfirm = jest.fn() as jest.MockedFunction<OnConfirmFn>
 
       render(
         <MarkSettlementPaidDialog
@@ -315,7 +318,9 @@ describe('MarkSettlementPaidDialog', () => {
     it('should close dialog after successful confirmation', async () => {
       const user = userEvent.setup()
       const onOpenChange = jest.fn()
-      const onConfirm = jest.fn().mockResolvedValue(undefined)
+      const onConfirm = jest
+        .fn()
+        .mockImplementation(async () => {}) as jest.MockedFunction<OnConfirmFn>
 
       render(
         <MarkSettlementPaidDialog
@@ -336,7 +341,9 @@ describe('MarkSettlementPaidDialog', () => {
 
     it('should reset note after successful confirmation', async () => {
       const user = userEvent.setup()
-      const onConfirm = jest.fn().mockResolvedValue(undefined)
+      const onConfirm = jest
+        .fn()
+        .mockImplementation(async () => {}) as jest.MockedFunction<OnConfirmFn>
 
       const { rerender } = render(
         <MarkSettlementPaidDialog
@@ -386,7 +393,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -402,7 +409,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={mockSettlement}
           open={true}
           onOpenChange={onOpenChange}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
@@ -511,7 +518,7 @@ describe('MarkSettlementPaidDialog', () => {
           settlement={usdSettlement}
           open={true}
           onOpenChange={jest.fn()}
-          onConfirm={jest.fn()}
+          onConfirm={jest.fn() as OnConfirmFn}
         />
       )
 
