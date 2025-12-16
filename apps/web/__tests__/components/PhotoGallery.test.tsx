@@ -3,13 +3,19 @@
  */
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import PhotoGallery from '@/components/features/feed/PhotoGallery'
-import { getMediaFilesGroupedByDate } from '@tripthreads/core'
-import { createClient } from '@/lib/supabase/client'
 
-// Mock dependencies
-jest.mock('@/lib/supabase/client')
+// Create mock object at module level (hoisted)
+const mockSupabase = {
+  from: jest.fn(),
+}
+
+// Mock dependencies with factory functions (these run BEFORE imports)
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: jest.fn(() => mockSupabase),
+}))
+
 jest.mock('@tripthreads/core')
+
 jest.mock('date-fns', () => ({
   format: jest.fn((date: Date, formatStr: string) => {
     if (formatStr === 'EEEE, MMMM d, yyyy') {
@@ -19,11 +25,9 @@ jest.mock('date-fns', () => ({
   }),
 }))
 
-const mockSupabase = {
-  from: jest.fn(),
-}
-
-;(createClient as jest.Mock).mockReturnValue(mockSupabase)
+// NOW import components (mocks are already in place)
+import PhotoGallery from '@/components/features/feed/PhotoGallery'
+import { getMediaFilesGroupedByDate } from '@tripthreads/core'
 
 describe('PhotoGallery', () => {
   const mockTripId = 'trip-123'
@@ -105,8 +109,9 @@ describe('PhotoGallery', () => {
       render(<PhotoGallery tripId={mockTripId} onPhotoClick={mockOnPhotoClick} />)
 
       await waitFor(() => {
-        // Should show date headers
-        expect(screen.getByText('Monday, January 15, 2025')).toBeInTheDocument()
+        // Should show date headers (there are two groups with this date format)
+        const dateHeaders = screen.getAllByText('Monday, January 15, 2025')
+        expect(dateHeaders.length).toBeGreaterThan(0)
 
         // Should show photo count
         expect(screen.getByText('(2 photos)')).toBeInTheDocument()
@@ -171,17 +176,16 @@ describe('PhotoGallery', () => {
       render(<PhotoGallery tripId={mockTripId} onPhotoClick={mockOnPhotoClick} />)
 
       await waitFor(() => {
-        const photoCard = screen.getByRole('img').closest('div[role="button"]')
-        expect(photoCard).toBeInTheDocument()
+        expect(screen.getByAltText('Test photo')).toBeInTheDocument()
       })
 
-      const photoCard = screen.getByRole('img').closest('div[role="button"]')
+      const photoCard = screen.getByAltText('Test photo').closest('.cursor-pointer')
       fireEvent.click(photoCard!)
 
-      expect(mockOnPhotoClick).toHaveBeenCalledWith('photo-1')
+      expect(mockOnPhotoClick).toHaveBeenCalledWith('photo-1', 'https://example.com/photo1.jpg')
     })
 
-    it('should show hover overlay with caption', async () => {
+    it('should show caption when available', async () => {
       const mockGroupedPhotos = {
         '2025-01-15': [
           {
@@ -201,7 +205,29 @@ describe('PhotoGallery', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Beautiful sunset')).toBeInTheDocument()
-        expect(screen.getByText('Alice Smith')).toBeInTheDocument()
+      })
+    })
+
+    it('should show user name when no caption', async () => {
+      const mockGroupedPhotos = {
+        '2025-01-15': [
+          {
+            id: 'photo-1',
+            url: 'https://example.com/photo1.jpg',
+            thumbnail_url: 'https://example.com/thumb1.jpg',
+            caption: null,
+            date_taken: '2025-01-15T18:00:00Z',
+            user: { id: 'user-1', full_name: 'Alice Smith', avatar_url: null },
+          },
+        ],
+      }
+
+      ;(getMediaFilesGroupedByDate as jest.Mock).mockResolvedValue(mockGroupedPhotos)
+
+      render(<PhotoGallery tripId={mockTripId} onPhotoClick={mockOnPhotoClick} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('by Alice Smith')).toBeInTheDocument()
       })
     })
   })
@@ -250,7 +276,7 @@ describe('PhotoGallery', () => {
       render(<PhotoGallery tripId={mockTripId} onPhotoClick={mockOnPhotoClick} />)
 
       await waitFor(() => {
-        expect(screen.getByText(/no photos yet/i)).toBeInTheDocument()
+        expect(screen.getByText('Failed to fetch')).toBeInTheDocument()
       })
     })
   })
