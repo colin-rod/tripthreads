@@ -79,16 +79,16 @@ describe('TripSwitcher', () => {
       const user = userEvent.setup()
       const trips = [
         createMockTrip('past-trip', 'Past Trip', '2024-01-01', '2024-01-05'),
-        createMockTrip('ongoing-trip', 'Ongoing Trip', '2025-11-28', '2025-12-05'),
-        createMockTrip('upcoming-trip', 'Upcoming Trip', '2025-12-10', '2025-12-15'),
+        createMockTrip('ongoing-trip', 'Ongoing Trip', '2025-12-10', '2025-12-20'),
+        createMockTrip('upcoming-trip', 'Upcoming Trip', '2025-12-25', '2025-12-30'),
       ]
 
       render(
         <TripSwitcher currentTripId="ongoing-trip" currentTripName="Ongoing Trip" trips={trips} />
       )
 
-      // Open dropdown
-      const trigger = screen.getByRole('button', { name: /switch trip/i })
+      // Open dropdown - use getByLabelText for better accessibility querying
+      const trigger = screen.getByLabelText('Switch trip')
       await user.click(trigger)
 
       // Wait for dropdown content to appear and verify trips shown
@@ -106,15 +106,15 @@ describe('TripSwitcher', () => {
     it('sorts trips by start date (chronological)', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-3', 'Third Trip', '2025-12-20', '2025-12-25'),
-        createMockTrip('trip-1', 'First Trip', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Second Trip', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-3', 'Third Trip', '2025-12-25', '2025-12-30'),
+        createMockTrip('trip-1', 'First Trip', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Second Trip', '2025-12-21', '2025-12-24'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="First Trip" trips={trips} />)
 
       // Open dropdown
-      const trigger = screen.getByRole('button', { name: /switch trip/i })
+      const trigger = screen.getByLabelText('Switch trip')
       await user.click(trigger)
 
       // Wait for menu items to appear
@@ -135,7 +135,7 @@ describe('TripSwitcher', () => {
       expect(screen.getByRole('heading', { name: 'Current Trip' })).toBeInTheDocument()
 
       // Should NOT have dropdown trigger
-      expect(screen.queryByRole('button', { name: /switch trip/i })).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Switch trip')).not.toBeInTheDocument()
     })
   })
 
@@ -143,14 +143,14 @@ describe('TripSwitcher', () => {
     it('highlights current trip with bg-accent background', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
 
       // Open dropdown
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
 
       // Wait for menu items
       const menuItems = await screen.findAllByRole('menuitem')
@@ -166,13 +166,13 @@ describe('TripSwitcher', () => {
     it('displays correct status badges for ongoing and upcoming trips', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('ongoing', 'Ongoing Trip', '2025-11-28', '2025-12-05'),
-        createMockTrip('upcoming', 'Upcoming Trip', '2025-12-10', '2025-12-15'),
+        createMockTrip('ongoing', 'Ongoing Trip', '2025-12-10', '2025-12-20'),
+        createMockTrip('upcoming', 'Upcoming Trip', '2025-12-25', '2025-12-30'),
       ]
 
       render(<TripSwitcher currentTripId="ongoing" currentTripName="Ongoing Trip" trips={trips} />)
 
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
 
       // Wait for menu items with badges
       const menuItems = await screen.findAllByRole('menuitem')
@@ -187,14 +187,14 @@ describe('TripSwitcher', () => {
     it('navigates to trip overview on trip selection', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
 
       // Open dropdown
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
 
       // Wait for and click Trip B
       const tripB = await screen.findByText('Trip B')
@@ -208,8 +208,8 @@ describe('TripSwitcher', () => {
       const user = userEvent.setup()
       const onClose = jest.fn()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(
@@ -221,7 +221,7 @@ describe('TripSwitcher', () => {
         />
       )
 
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
       const tripB = await screen.findByText('Trip B')
       await user.click(tripB)
 
@@ -231,12 +231,12 @@ describe('TripSwitcher', () => {
 
   describe('Empty State Handling', () => {
     it('renders static trip name when fewer than 2 active trips', () => {
-      const trips = [createMockTrip('only-trip', 'Only Trip', '2025-12-01', '2025-12-05')]
+      const trips = [createMockTrip('only-trip', 'Only Trip', '2025-12-10', '2025-12-20')]
 
       render(<TripSwitcher currentTripId="only-trip" currentTripName="Only Trip" trips={trips} />)
 
       // Should NOT have dropdown trigger
-      expect(screen.queryByRole('button', { name: /switch trip/i })).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Switch trip')).not.toBeInTheDocument()
 
       // Should have static heading
       expect(screen.getByRole('heading', { name: 'Only Trip' })).toBeInTheDocument()
@@ -264,13 +264,13 @@ describe('TripSwitcher', () => {
       const longName =
         'My Amazing European Adventure Across 7 Countries Including France, Italy, Spain, and More'
       const trips = [
-        createMockTrip('trip-1', longName, '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Short Trip', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', longName, '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Short Trip', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName={longName} trips={trips} />)
 
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
 
       // Wait for dropdown and find the truncated span
       await waitFor(() => {
@@ -283,26 +283,26 @@ describe('TripSwitcher', () => {
   describe('Accessibility', () => {
     it('has proper ARIA attributes on trigger button', () => {
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
 
-      const trigger = screen.getByRole('button', { name: /switch trip/i })
+      const trigger = screen.getByLabelText('Switch trip')
       expect(trigger).toHaveAttribute('aria-label', 'Switch trip')
     })
 
     it('marks current trip with aria-current attribute', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
 
-      await user.click(screen.getByRole('button', { name: /switch trip/i }))
+      await user.click(screen.getByLabelText('Switch trip'))
 
       const menuItems = await screen.findAllByRole('menuitem')
       // First item is the current trip (Trip A)
@@ -314,13 +314,13 @@ describe('TripSwitcher', () => {
     it('supports keyboard navigation', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-01', '2025-12-05'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-10', '2025-12-15'),
+        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
+        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
 
-      const trigger = screen.getByRole('button', { name: /switch trip/i })
+      const trigger = screen.getByLabelText('Switch trip')
 
       // Focus and open with keyboard
       await user.tab()
