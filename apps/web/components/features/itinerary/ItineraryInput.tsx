@@ -202,7 +202,9 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
 
     // Extract location (look for "to", "in", "at" patterns)
     let location: string | undefined
-    const locationMatch = text.match(/(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+on|\s+at|\s+from|$)/)
+    const locationMatch = text.match(
+      /(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+\d|\s+on|\s+at|\s+from|$)/
+    )
     if (locationMatch) {
       location = locationMatch[1].trim()
     }
@@ -400,6 +402,7 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="all-day"
+                          aria-label="All day"
                           checked={editedIsAllDay}
                           onCheckedChange={setEditedIsAllDay}
                         />
@@ -410,6 +413,7 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="date-range"
+                          aria-label="Date range"
                           checked={editedIsRange}
                           onCheckedChange={checked => {
                             setEditedIsRange(checked)

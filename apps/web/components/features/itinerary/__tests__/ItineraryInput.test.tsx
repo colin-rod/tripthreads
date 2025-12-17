@@ -83,11 +83,11 @@ describe('ItineraryInput Component', () => {
       await user.type(input, 'Flight to Paris Monday 9am')
       await user.click(screen.getByRole('button', { name: /add/i }))
 
-      expect(screen.getByText(/parsing\.\.\./i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /parsing\.\.\./i })).toBeDisabled()
+      expect(screen.getByText(/adding\.\.\./i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /adding\.\.\./i })).toBeDisabled()
 
       await waitFor(() => {
-        expect(screen.queryByText(/parsing\.\.\./i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/adding\.\.\./i)).not.toBeInTheDocument()
       })
     })
 
@@ -799,16 +799,17 @@ describe('ItineraryInput Component', () => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
       })
 
-      // Click Reset button
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      // Click Edit button to enter edit mode
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Verify edit mode is active - Cancel button should be visible
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument()
 
       // Verify description field is editable
-      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      const descriptionInput = screen.getByPlaceholderText(/enter description/i)
       expect(descriptionInput).toBeInTheDocument()
+      expect(descriptionInput).toHaveValue('Flight to Paris Monday 9am')
       expect(descriptionInput.tagName).toBe('INPUT')
     })
 
@@ -842,14 +843,14 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
 
       // Click Cancel
       await user.click(screen.getByRole('button', { name: /cancel/i }))
 
       // Verify edit mode is exited - Edit button should be visible again
-      expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
     })
 
@@ -883,10 +884,10 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Edit description
-      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      const descriptionInput = screen.getByPlaceholderText(/enter description/i)
       await user.clear(descriptionInput)
       await user.type(descriptionInput, 'Flight to London Monday 10am')
 
@@ -923,10 +924,10 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Edit description
-      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      const descriptionInput = screen.getByPlaceholderText(/enter description/i)
       await user.clear(descriptionInput)
       await user.type(descriptionInput, 'Flight to London Monday 10am')
 
@@ -972,10 +973,10 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Clear description (invalid)
-      const descriptionInput = screen.getByDisplayValue('Flight to Paris Monday 9am')
+      const descriptionInput = screen.getByPlaceholderText(/enter description/i)
       await user.clear(descriptionInput)
 
       // Try to submit
@@ -1020,7 +1021,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Find and toggle all-day switch
       const allDaySwitch = screen.getByRole('switch', { name: /all day/i })
@@ -1063,7 +1064,7 @@ describe('ItineraryInput Component', () => {
       })
 
       // Enter edit mode
-      await user.click(screen.getByRole('button', { name: /reset/i }))
+      await user.click(screen.getByRole('button', { name: /^edit$/i }))
 
       // Find and toggle date range switch
       const dateRangeSwitch = screen.getByRole('switch', { name: /date range/i })
