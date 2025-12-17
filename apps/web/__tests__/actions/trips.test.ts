@@ -10,20 +10,22 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, jest, beforeEach } from '@jest/globals'
-import { removeParticipant, updateParticipantRole, leaveTrip } from '@/app/actions/trips'
 
-// Mock Supabase clients
+// Mock BEFORE importing the modules
 jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn<any, any>(),
-  createServiceClient: jest.fn<any, any>(),
+  createClient: jest.fn(),
+  createServiceClient: jest.fn(),
 }))
 
-// Mock Next.js cache revalidation
 jest.mock('next/cache', () => ({
-  revalidatePath: jest.fn<any, any>(),
+  revalidatePath: jest.fn(),
 }))
 
+// Import after mocks are defined
+import { removeParticipant, updateParticipantRole, leaveTrip } from '@/app/actions/trips'
 import { createClient } from '@/lib/supabase/server'
+
+const createClientMock = createClient as jest.MockedFunction<typeof createClient>
 
 describe('removeParticipant', () => {
   beforeEach(() => {
@@ -33,26 +35,24 @@ describe('removeParticipant', () => {
   it('should successfully remove a participant as trip owner', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
-      from: jest.fn<any, any>((table: string) => {
+      from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            delete: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({ data: null, error: null }),
+            delete: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'participant-456', role: 'participant' },
@@ -63,7 +63,7 @@ describe('removeParticipant', () => {
       }),
     } as any
 
-    ;(createClient as any).mockResolvedValue(mockSupabase)
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'participant-456')
 
@@ -78,7 +78,9 @@ describe('removeParticipant', () => {
           .fn()
           .mockResolvedValue({ data: { user: null }, error: { message: 'Not authenticated' } }),
       },
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'participant-456')
 
@@ -94,14 +96,16 @@ describe('removeParticipant', () => {
           .mockResolvedValue({ data: { user: { id: 'participant-999' } }, error: null }),
       },
       from: jest.fn(() => ({
-        select: jest.fn<any, any>().mockReturnThis(),
-        eq: jest.fn<any, any>().mockReturnThis(),
-        single: jest.fn<any, any>().mockResolvedValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
           data: { user_id: 'participant-999', role: 'participant' },
           error: null,
         }),
       })),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'participant-456')
 
@@ -113,9 +117,7 @@ describe('removeParticipant', () => {
     let fromCallCount = 0
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
@@ -123,9 +125,9 @@ describe('removeParticipant', () => {
           if (fromCallCount === 1) {
             // First call: Get current user's participant record (.select().eq().eq().single())
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
-              eq: jest.fn<any, any>().mockReturnThis(),
-              single: jest.fn<any, any>().mockResolvedValue({
+              select: jest.fn().mockReturnThis(),
+              eq: jest.fn().mockReturnThis(),
+              single: jest.fn().mockResolvedValue({
                 data: { user_id: 'owner-123', role: 'owner' },
                 error: null,
               }),
@@ -135,7 +137,7 @@ describe('removeParticipant', () => {
             // Second call: Get all owners (.select().eq('trip_id').eq('role'))
             let eqCallCount = 0
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
               eq: jest.fn(() => {
                 eqCallCount++
                 if (eqCallCount === 1) {
@@ -155,7 +157,9 @@ describe('removeParticipant', () => {
         }
         return {}
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'owner-123')
 
@@ -166,26 +170,24 @@ describe('removeParticipant', () => {
   it('should allow removing a second owner if multiple owners exist', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            delete: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({ data: null, error: null }),
+            delete: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'owner-789', role: 'owner' },
@@ -194,7 +196,9 @@ describe('removeParticipant', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'owner-789')
 
@@ -204,29 +208,27 @@ describe('removeParticipant', () => {
   it('should handle database errors gracefully', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            delete: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({
+            delete: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
               data: null,
               error: { message: 'Database error' },
             }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'participant-456', role: 'participant' },
@@ -235,7 +237,9 @@ describe('removeParticipant', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await removeParticipant('trip-123', 'participant-456')
 
@@ -252,29 +256,27 @@ describe('updateParticipantRole', () => {
   it('should successfully update participant role as trip owner', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            update: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({
+            update: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
               data: { user_id: 'participant-456', role: 'viewer' },
               error: null,
             }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'participant-456', role: 'participant' },
@@ -283,7 +285,9 @@ describe('updateParticipantRole', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'participant-456', 'viewer')
 
@@ -298,7 +302,9 @@ describe('updateParticipantRole', () => {
           .fn()
           .mockResolvedValue({ data: { user: null }, error: { message: 'Not authenticated' } }),
       },
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'participant-456', 'viewer')
 
@@ -314,14 +320,16 @@ describe('updateParticipantRole', () => {
           .mockResolvedValue({ data: { user: { id: 'participant-999' } }, error: null }),
       },
       from: jest.fn(() => ({
-        select: jest.fn<any, any>().mockReturnThis(),
-        eq: jest.fn<any, any>().mockReturnThis(),
-        single: jest.fn<any, any>().mockResolvedValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
           data: { user_id: 'participant-999', role: 'participant' },
           error: null,
         }),
       })),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'participant-456', 'viewer')
 
@@ -333,9 +341,7 @@ describe('updateParticipantRole', () => {
     let fromCallCount = 0
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
@@ -343,9 +349,9 @@ describe('updateParticipantRole', () => {
           if (fromCallCount === 1) {
             // First call: Get current user's participant record
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
-              eq: jest.fn<any, any>().mockReturnThis(),
-              single: jest.fn<any, any>().mockResolvedValue({
+              select: jest.fn().mockReturnThis(),
+              eq: jest.fn().mockReturnThis(),
+              single: jest.fn().mockResolvedValue({
                 data: { user_id: 'owner-123', role: 'owner' },
                 error: null,
               }),
@@ -355,7 +361,7 @@ describe('updateParticipantRole', () => {
             // Second call: Get all owners (.select().eq('trip_id').eq('role'))
             let eqCallCount = 0
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
               eq: jest.fn(() => {
                 eqCallCount++
                 if (eqCallCount === 1) {
@@ -375,7 +381,9 @@ describe('updateParticipantRole', () => {
         }
         return {}
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'owner-123', 'participant')
 
@@ -386,29 +394,27 @@ describe('updateParticipantRole', () => {
   it('should allow demoting a second owner if multiple owners exist', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            update: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({
+            update: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-789', role: 'participant' },
               error: null,
             }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'owner-789', role: 'owner' },
@@ -417,7 +423,9 @@ describe('updateParticipantRole', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'owner-789', 'participant')
 
@@ -427,19 +435,19 @@ describe('updateParticipantRole', () => {
   it('should handle invalid role values', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn(() => ({
-        select: jest.fn<any, any>().mockReturnThis(),
-        eq: jest.fn<any, any>().mockReturnThis(),
-        single: jest.fn<any, any>().mockResolvedValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
           data: { user_id: 'owner-123', role: 'owner' },
           error: null,
         }),
       })),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'participant-456', 'invalid' as any)
 
@@ -450,29 +458,27 @@ describe('updateParticipantRole', () => {
   it('should handle database errors gracefully', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            update: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({
+            update: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
               data: null,
               error: { message: 'Update failed' },
             }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'participant-456', role: 'participant' },
@@ -481,7 +487,9 @@ describe('updateParticipantRole', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await updateParticipantRole('trip-123', 'participant-456', 'viewer')
 
@@ -503,16 +511,18 @@ describe('leaveTrip', () => {
           .mockResolvedValue({ data: { user: { id: 'participant-456' } }, error: null }),
       },
       from: jest.fn(() => ({
-        select: jest.fn<any, any>().mockReturnThis(),
-        eq: jest.fn<any, any>().mockReturnThis(),
-        single: jest.fn<any, any>().mockResolvedValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
           data: { user_id: 'participant-456', role: 'participant' },
           error: null,
         }),
-        delete: jest.fn<any, any>().mockReturnThis(),
-        maybeSingle: jest.fn<any, any>().mockResolvedValue({ data: null, error: null }),
+        delete: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
       })),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await leaveTrip('trip-123')
 
@@ -527,7 +537,9 @@ describe('leaveTrip', () => {
           .fn()
           .mockResolvedValue({ data: { user: null }, error: { message: 'Not authenticated' } }),
       },
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await leaveTrip('trip-123')
 
@@ -539,9 +551,7 @@ describe('leaveTrip', () => {
     let fromCallCount = 0
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
@@ -549,9 +559,9 @@ describe('leaveTrip', () => {
           if (fromCallCount === 1) {
             // First call: Get current user's participant record
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
-              eq: jest.fn<any, any>().mockReturnThis(),
-              single: jest.fn<any, any>().mockResolvedValue({
+              select: jest.fn().mockReturnThis(),
+              eq: jest.fn().mockReturnThis(),
+              single: jest.fn().mockResolvedValue({
                 data: { user_id: 'owner-123', role: 'owner' },
                 error: null,
               }),
@@ -561,7 +571,7 @@ describe('leaveTrip', () => {
             // Second call: Get all owners (.select().eq('trip_id').eq('role'))
             let eqCallCount = 0
             const chainable: any = {
-              select: jest.fn<any, any>().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
               eq: jest.fn(() => {
                 eqCallCount++
                 if (eqCallCount === 1) {
@@ -581,7 +591,9 @@ describe('leaveTrip', () => {
         }
         return {}
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await leaveTrip('trip-123')
 
@@ -594,26 +606,24 @@ describe('leaveTrip', () => {
   it('should allow owner to leave if multiple owners exist', async () => {
     const mockSupabase: any = {
       auth: {
-        getUser: jest
-          .fn<any, any>()
-          .mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
+        getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'owner-123' } }, error: null }),
       },
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {
-            select: jest.fn<any, any>().mockReturnThis(),
-            eq: jest.fn<any, any>().mockReturnThis(),
-            single: jest.fn<any, any>().mockResolvedValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
               data: { user_id: 'owner-123', role: 'owner' },
               error: null,
             }),
-            delete: jest.fn<any, any>().mockReturnThis(),
-            maybeSingle: jest.fn<any, any>().mockResolvedValue({ data: null, error: null }),
+            delete: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
           }
         }
         return {
-          select: jest.fn<any, any>().mockReturnThis(),
-          eq: jest.fn<any, any>().mockResolvedValue({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockResolvedValue({
             data: [
               { user_id: 'owner-123', role: 'owner' },
               { user_id: 'owner-789', role: 'owner' },
@@ -622,7 +632,9 @@ describe('leaveTrip', () => {
           }),
         }
       }),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await leaveTrip('trip-123')
 
@@ -637,19 +649,21 @@ describe('leaveTrip', () => {
           .mockResolvedValue({ data: { user: { id: 'participant-456' } }, error: null }),
       },
       from: jest.fn(() => ({
-        select: jest.fn<any, any>().mockReturnThis(),
-        eq: jest.fn<any, any>().mockReturnThis(),
-        single: jest.fn<any, any>().mockResolvedValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
           data: { user_id: 'participant-456', role: 'participant' },
           error: null,
         }),
-        delete: jest.fn<any, any>().mockReturnThis(),
-        maybeSingle: jest.fn<any, any>().mockResolvedValue({
+        delete: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({
           data: null,
           error: { message: 'Delete failed' },
         }),
       })),
-    }(createClient as any).mockResolvedValue(mockSupabase)
+    } as any
+
+    createClientMock.mockResolvedValue(mockSupabase)
 
     const result = await leaveTrip('trip-123')
 
