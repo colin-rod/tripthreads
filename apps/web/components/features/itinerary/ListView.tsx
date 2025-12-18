@@ -16,7 +16,7 @@ import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { groupItineraryItemsByDate, ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import {
   DropdownMenu,
@@ -25,6 +25,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import { DurationBadge } from './DurationBadge'
+import { ItineraryItemTooltip } from './ItineraryItemTooltip'
+import { MetadataSection } from './MetadataSection'
+import { useState } from 'react'
 
 interface ListViewProps {
   items: ItineraryItemWithParticipants[]
@@ -100,6 +104,7 @@ function ItineraryListItem({
   onEdit,
   onDelete,
 }: ItineraryListItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const config = ITINERARY_ITEM_TYPE_CONFIG[item.type]
   const iconName = config.icon as keyof typeof LucideIcons
   const IconComponent = (LucideIcons[iconName] as LucideIcon | undefined) || LucideIcons.Calendar
@@ -109,56 +114,114 @@ function ItineraryListItem({
 
   const canEdit = item.created_by === currentUserId // Simplified - RLS will enforce full rules
 
-  return (
-    <div
-      className={cn(
-        'group relative rounded-lg border bg-card p-4 transition-all hover:shadow-md cursor-pointer',
-        config.bgColor
-      )}
-      onClick={onClick}
-    >
-      <div className="flex items-start justify-between gap-4">
-        {/* Icon and content */}
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          {/* Icon */}
-          <div className={cn('mt-1 flex-shrink-0', config.color)}>
-            <IconComponent className="h-5 w-5" />
-          </div>
+  // Check if there's additional content to show when expanded
+  const hasExpandableContent =
+    (item.metadata && Object.keys(item.metadata).length > 0) ||
+    item.notes ||
+    (item.links && item.links.length > 0)
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-3">
-              <span className="font-medium text-base">{item.title}</span>
-              {!item.is_all_day && (
-                <span className="text-sm text-muted-foreground">{timeString}</span>
-              )}
+  return (
+    <ItineraryItemTooltip item={item}>
+      <div
+        className={cn(
+          'group relative rounded-lg border bg-card p-4 transition-all hover:shadow-md cursor-pointer',
+          config.bgColor
+        )}
+        onClick={onClick}
+      >
+        <div className="flex items-start justify-between gap-4">
+          {/* Icon and content */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Icon */}
+            <div className={cn('mt-1 flex-shrink-0', config.color)}>
+              <IconComponent className="h-5 w-5" />
             </div>
 
-            {item.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-            )}
-
-            {item.location && (
-              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                <LucideIcons.MapPin className="h-3 w-3" />
-                <span className="truncate">{item.location}</span>
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-3">
+                <span className="font-medium text-base truncate">{item.title}</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-sm text-muted-foreground">{timeString}</span>
+                  <DurationBadge
+                    startTime={item.start_time}
+                    endTime={item.end_time}
+                    isAllDay={item.is_all_day}
+                    size="sm"
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Participants */}
-            {item.participants && item.participants.length > 0 && (
-              <div className="flex items-center gap-1 mt-2">
-                <LucideIcons.Users className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  {item.participants.length} participant
-                  {item.participants.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
+              {item.description && (
+                <p
+                  className={cn(
+                    'text-sm text-muted-foreground mt-1',
+                    !isExpanded && 'line-clamp-2'
+                  )}
+                >
+                  {item.description}
+                </p>
+              )}
+
+              {item.location && (
+                <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                  <LucideIcons.MapPin className="h-3 w-3" />
+                  <span className="truncate">{item.location}</span>
+                </div>
+              )}
+
+              {/* Participants */}
+              {item.participants && item.participants.length > 0 && (
+                <div className="flex items-center gap-1 mt-2">
+                  <LucideIcons.Users className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {item.participants.length} participant
+                    {item.participants.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+
+              {/* Expanded Details */}
+              {isExpanded && hasExpandableContent && (
+                <div className="mt-4 pt-4 border-t space-y-3">
+                  {/* Metadata Section */}
+                  <MetadataSection item={item} />
+
+                  {/* Notes */}
+                  {item.notes && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
+                      <p className="text-sm text-foreground">{item.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Links */}
+                  {item.links && item.links.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Links</p>
+                      <div className="space-y-1">
+                        {item.links.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline block truncate"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {link.title || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Type badge and actions */}
+        {/* Type badge, expand button, and actions */}
         <div className="flex items-start gap-2 flex-shrink-0">
           {/* Type label */}
           <div
@@ -166,6 +229,22 @@ function ItineraryListItem({
           >
             {config.label}
           </div>
+
+          {/* Expand/collapse button */}
+          {hasExpandableContent && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={e => {
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
+              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+            >
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          )}
 
           {/* Actions menu */}
           {canEdit && (
@@ -204,6 +283,6 @@ function ItineraryListItem({
           )}
         </div>
       </div>
-    </div>
+    </ItineraryItemTooltip>
   )
 }

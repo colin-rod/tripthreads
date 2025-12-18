@@ -19,8 +19,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Edit3, Info } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { fetchTripParticipants } from '@/app/actions/expenses'
 import { ParticipantDisambiguationDialog } from './ParticipantDisambiguationDialog'
 import { UnmatchedParticipantDialog } from './UnmatchedParticipantDialog'
@@ -275,8 +276,26 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Add Expense</CardTitle>
-          <CardDescription>
-            Describe your expense in plain language (e.g., "Dinner €60 split 4 ways")
+          <CardDescription className="flex items-center gap-2">
+            <span>Describe your expense in plain language</span>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="font-medium text-xs">Examples:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs">
+                      <li>Dinner €60 split 4 ways</li>
+                      <li>Alice paid $120 for hotel, split between Alice, Bob, Carol</li>
+                      <li>Taxi £45, Bob owes half</li>
+                      <li>¥2500 lunch split 3 ways</li>
+                    </ul>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -298,10 +317,10 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Parsing...
+                    Adding...
                   </>
                 ) : (
-                  'Parse'
+                  'Add'
                 )}
               </Button>
             ) : (
@@ -475,17 +494,6 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
           )}
         </CardContent>
       </Card>
-
-      {/* Help Text */}
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p className="font-medium">Examples:</p>
-        <ul className="list-disc list-inside space-y-0.5 ml-2">
-          <li>Dinner €60 split 4 ways</li>
-          <li>Alice paid $120 for hotel, split between Alice, Bob, Carol</li>
-          <li>Taxi £45, Bob owes half</li>
-          <li>¥2500 lunch split 3 ways</li>
-        </ul>
-      </div>
 
       {/* Disambiguation Dialog */}
       {resolutionResult && (

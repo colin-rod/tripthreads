@@ -156,9 +156,9 @@ describe('ItineraryItemDetailScreen', () => {
       fireEvent.press(screen.getByText('✏️ Edit'))
 
       await waitFor(() => {
-        expect(screen.getByText('Type')).toBeTruthy()
-        expect(screen.getByText('Title')).toBeTruthy()
-        expect(screen.getByText('Start Time')).toBeTruthy()
+        expect(screen.getByText(/Type\s*\*/)).toBeTruthy()
+        expect(screen.getByText(/Title\s*\*/)).toBeTruthy()
+        expect(screen.getByText(/Start Time\s*\*/)).toBeTruthy()
         expect(screen.getByText('End Time (Optional)')).toBeTruthy()
         expect(screen.getByText('Location')).toBeTruthy()
         expect(screen.getByText('Description')).toBeTruthy()
@@ -264,15 +264,17 @@ describe('ItineraryItemDetailScreen', () => {
 
       expect(screen.getByText('Loading...')).toBeTruthy()
 
+      // Wait for content to appear instead of loading to disappear
       await waitFor(() => {
-        expect(screen.queryByText('Loading...')).toBeFalsy()
+        expect(screen.getByText('Visit Eiffel Tower')).toBeTruthy()
       })
+
+      // Then verify loading is gone
+      expect(screen.queryByText('Loading...')).toBeFalsy()
     })
 
     it('should show not found message when item does not exist', async () => {
-      ;(ItineraryQueries.getItineraryItem as jest.Mock).mockRejectedValue(
-        new Error('Not found')
-      )
+      ;(ItineraryQueries.getItineraryItem as jest.Mock).mockRejectedValue(new Error('Not found'))
 
       render(<ItineraryItemDetailScreen />)
 

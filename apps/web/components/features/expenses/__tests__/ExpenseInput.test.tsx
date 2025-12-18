@@ -62,11 +62,11 @@ describe('ExpenseInput Component', () => {
   })
 
   describe('Component Rendering', () => {
-    it('renders input field and parse button', () => {
+    it('renders input field and add button', () => {
       render(<ExpenseInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
 
       expect(screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /parse/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument()
     })
 
     it('shows loading spinner during parse', async () => {
@@ -103,16 +103,16 @@ describe('ExpenseInput Component', () => {
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
 
-      const parseButton = screen.getByRole('button', { name: /parse/i })
-      await user.click(parseButton)
+      const addButton = screen.getByRole('button', { name: /add/i })
+      await user.click(addButton)
 
       // Loading state should appear
-      expect(screen.getByText(/parsing\.\.\./i)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /parsing\.\.\./i })).toBeDisabled()
+      expect(screen.getByText(/adding\.\.\./i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /adding\.\.\./i })).toBeDisabled()
 
-      // Wait for parse to complete
+      // Wait for add to complete
       await waitFor(() => {
-        expect(screen.queryByText(/parsing\.\.\./i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/adding\.\.\./i)).not.toBeInTheDocument()
       })
     })
 
@@ -132,7 +132,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Invalid input')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/failed to parse expense/i)).toBeInTheDocument()
@@ -164,7 +164,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60 split 4 ways')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -177,7 +177,7 @@ describe('ExpenseInput Component', () => {
 
       render(<ExpenseInput tripId={mockTripId} onSubmit={mockOnSubmit} />)
 
-      const parseButton = screen.getByRole('button', { name: /parse/i })
+      const parseButton = screen.getByRole('button', { name: /add/i })
 
       // Button should be disabled when input is empty
       expect(parseButton).toBeDisabled()
@@ -215,7 +215,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Taxi $100')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -245,7 +245,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         // Should display €60.00, not €6000
@@ -276,7 +276,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Groceries £45')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/£45\.00/i)).toBeInTheDocument()
@@ -307,7 +307,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner $120 split 4 ways')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/equal/i)).toBeInTheDocument()
@@ -338,7 +338,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner $120 split 4 ways')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/4 people/i)).toBeInTheDocument()
@@ -369,7 +369,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Hotel $120 split between Alice, Bob, Charlie')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         // Participants should be resolved to full names
@@ -403,7 +403,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/confidence: 95%/i)).toBeInTheDocument()
@@ -433,14 +433,14 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
       })
 
-      // Click Edit button
-      const editButton = screen.getByRole('button', { name: /edit/i })
+      // Click Reset button
+      const editButton = screen.getByRole('button', { name: /reset/i })
       await user.click(editButton)
 
       // Preview should disappear, allowing re-parse
@@ -486,19 +486,19 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/€60\.00/i)).toBeInTheDocument()
       })
 
       // Edit and re-parse
-      const editButton = screen.getByRole('button', { name: /edit/i })
+      const editButton = screen.getByRole('button', { name: /reset/i })
       await user.click(editButton)
 
       await user.clear(input)
       await user.type(input, 'Dinner €70')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/€70\.00/i)).toBeInTheDocument()
@@ -528,7 +528,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -569,7 +569,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Hotel $120 split between Alice Smith, Bob Johnson')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         // Should show resolved names with check marks (high confidence)
@@ -613,7 +613,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Hotel $120 split between Alice, Bob')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -654,7 +654,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Hotel $120 split between Alice, Dave')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         // Should show warning about unmatched names
@@ -686,7 +686,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Hotel $120 split between Alice, UnknownPerson')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/could not be matched/i)).toBeInTheDocument()
@@ -729,7 +729,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60 split 4 ways')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -778,7 +778,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Taxi $100 split 2 ways')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -814,7 +814,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -855,7 +855,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -896,7 +896,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/preview/i)).toBeInTheDocument()
@@ -931,7 +931,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/request timeout/i)).toBeInTheDocument()
@@ -955,7 +955,7 @@ describe('ExpenseInput Component', () => {
 
       const input = screen.getByPlaceholderText(/e\.g\., Dinner €60 split 4 ways/i)
       await user.type(input, 'Dinner €60')
-      await user.click(screen.getByRole('button', { name: /parse/i }))
+      await user.click(screen.getByRole('button', { name: /add/i }))
 
       await waitFor(() => {
         expect(screen.getByText(/rate limit exceeded/i)).toBeInTheDocument()

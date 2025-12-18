@@ -1,11 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { FileImage, Loader2, Send } from 'lucide-react'
+import {
+  Bug,
+  FileImage,
+  Lightbulb,
+  Loader2,
+  MessageSquare,
+  MousePointerClick,
+  Send,
+  X,
+} from 'lucide-react'
 import { submitFeedbackToLinear, type FeedbackCategory } from '@tripthreads/core'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -20,13 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
 
 const feedbackSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -35,6 +38,33 @@ const feedbackSchema = z.object({
 })
 
 type FeedbackFormValues = z.infer<typeof feedbackSchema>
+
+const categoryOptions = [
+  {
+    value: 'bug-report' as const,
+    label: 'Bug Report',
+    icon: Bug,
+    description: 'Report software defects or errors',
+  },
+  {
+    value: 'feature-request' as const,
+    label: 'Feature Request',
+    icon: Lightbulb,
+    description: 'Suggest new features or improvements',
+  },
+  {
+    value: 'general' as const,
+    label: 'General Feedback',
+    icon: MessageSquare,
+    description: 'Share general thoughts or questions',
+  },
+  {
+    value: 'ux-issue' as const,
+    label: 'UX Issue',
+    icon: MousePointerClick,
+    description: 'Report usability or design problems',
+  },
+] satisfies ChipOption<FeedbackCategory>[]
 
 interface FeedbackModalProps {
   open: boolean
@@ -100,6 +130,47 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     reader.readAsDataURL(file)
   }
 
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      // Only handle paste when modal is open
+      if (!open) return
+
+      const items = event.clipboardData?.items
+      if (!items) return
+
+      // Look for image items in clipboard
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) {
+            handleScreenshotUpload(file)
+            toast({
+              title: 'Screenshot pasted',
+              description: 'Your screenshot has been added to the feedback.',
+            })
+            event.preventDefault()
+          }
+          break
+        }
+      }
+    },
+    [open, toast]
+  )
+
+  const handleRemoveScreenshot = () => {
+    setScreenshotDataUrl(null)
+    setScreenshotName(null)
+  }
+
+  // Add paste event listener
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste)
+    return () => {
+      document.removeEventListener('paste', handlePaste)
+    }
+  }, [handlePaste])
+
   const onSubmit = async (values: FeedbackFormValues) => {
     try {
       setIsSubmitting(true)
@@ -142,7 +213,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Share feedback</DialogTitle>
           <DialogDescription>
@@ -151,7 +222,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex max-h-[calc(85vh-8rem)] flex-col space-y-4 overflow-y-auto pr-1"
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -166,25 +240,17 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select
+            <Label>Category</Label>
+            <ChipSelector
+              options={categoryOptions}
+              value={form.watch('category')}
               onValueChange={value =>
-                form.setValue('category', value as FeedbackCategory, {
+                form.setValue('category', value, {
                   shouldValidate: true,
                 })
               }
-              defaultValue={form.getValues('category')}
-            >
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bug-report">Bug Report</SelectItem>
-                <SelectItem value="feature-request">Feature Request</SelectItem>
-                <SelectItem value="general">General Feedback</SelectItem>
-                <SelectItem value="ux-issue">UX Issue</SelectItem>
-              </SelectContent>
-            </Select>
+              aria-label="Select feedback category"
+            />
             {form.formState.errors.category && (
               <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
             )}
@@ -194,7 +260,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             <Label htmlFor="message">Feedback</Label>
             <Textarea
               id="message"
-              rows={5}
+              rows={3}
               placeholder="What happened? What did you expect?"
               {...form.register('message')}
             />
@@ -205,6 +271,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
           <div className="space-y-2">
             <Label>Screenshot (optional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Upload a file or paste from clipboard (Cmd/Ctrl+V)
+            </p>
             <div className="flex items-center gap-3">
               <input
                 type="file"
@@ -222,15 +291,26 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 {screenshotName ? 'Replace screenshot' : 'Upload screenshot'}
               </Button>
               {screenshotName && (
-                <span className="text-sm text-muted-foreground">{screenshotName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{screenshotName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveScreenshot}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
             {screenshotDataUrl && (
-              <div className="overflow-hidden rounded-lg border border-dashed border-border bg-muted/30 p-3">
+              <div className="overflow-hidden rounded-lg border border-dashed border-border bg-muted/30 p-2">
                 <img
                   src={screenshotDataUrl}
                   alt="Screenshot preview"
-                  className="max-h-48 w-full rounded object-contain"
+                  className="max-h-32 w-full rounded object-contain"
                 />
               </div>
             )}

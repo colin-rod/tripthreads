@@ -63,8 +63,9 @@ const captureExceptionMock = Sentry.captureException as jest.MockedFunction<
 
 // Type-safe references to mocked media functions (module is mocked above)
 const mediaQueryModule = jest.requireMock('../../../../../packages/core/src/queries/media') as any
-const moveAttachmentToGalleryMock = mediaQueryModule.moveAttachmentToGallery as unknown as jest.Mock
-const removeFromGalleryMock = mediaQueryModule.removeFromGallery as unknown as jest.Mock
+const moveAttachmentToGalleryMock =
+  mediaQueryModule.moveAttachmentToGallery as jest.MockedFunction<any>
+const removeFromGalleryMock = mediaQueryModule.removeFromGallery as jest.MockedFunction<any>
 
 const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
 

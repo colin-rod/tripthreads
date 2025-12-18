@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast'
 import { AvatarCropDialog } from './AvatarCropDialog'
 import { updateProfileName, uploadAvatar, deleteAvatar } from '@/app/actions/profile'
 import { validateAvatarFile } from '@/lib/utils/avatar'
-import type { Database } from '@tripthreads/core/types/database'
+import type { Database } from '@tripthreads/core'
 
 type User = Database['public']['Tables']['profiles']['Row']
 
@@ -72,7 +72,7 @@ export function ProfileSection({ user, onUpdate }: ProfileSectionProps) {
     if (user.full_name) {
       return user.full_name
         .split(' ')
-        .map(n => n[0])
+        .map((n: string) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)

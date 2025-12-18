@@ -7,9 +7,11 @@
     ".": "./src/index.ts",
     "./parser": "./src/parser/index.ts",
     "./types/parser": "./src/types/parser.ts",
+    "./types/feedback": "./src/types/feedback.ts",
     "./queries/media": "./src/queries/media.ts",
     "./validation/trip": "./src/validation/trip.ts",
-    "./validation/profile": "./src/validation/profile.ts"
+    "./validation/profile": "./src/validation/profile.ts",
+    "./utils/feedback": "./src/utils/feedback.ts"
   },
   "scripts": {
     "test": "jest",

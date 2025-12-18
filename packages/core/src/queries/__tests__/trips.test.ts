@@ -1,7 +1,15 @@
 /**
- * Unit tests for trip query operations
+ * Integration tests for trip query operations
  *
- * Exercises trip CRUD operations and permission rules similar to expense query tests.
+ * NOTE: These are INTEGRATION tests that run against a real Supabase database.
+ * They test query LOGIC and data flow, not RLS enforcement.
+ *
+ * RLS policies are tested separately in:
+ * - apps/web/tests/integration/rls-security.test.ts (with real JWT auth)
+ * - supabase/tests/rls_security_tests.sql (direct SQL tests)
+ *
+ * These tests use the service role key to bypass RLS and focus on testing
+ * the query functions themselves (CRUD operations, trip access patterns).
  */
 
 import {
@@ -25,7 +33,7 @@ import {
 } from '../trips'
 import { Database } from '../../types/database'
 
-// Test database setup
+// Test database setup - uses service role key to bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -58,17 +66,13 @@ afterAll(async () => {
 })
 
 /**
- * Helper to create authenticated client for a specific user.
- * Uses custom header to tell Postgres RLS policies which user is making the request.
+ * Helper to create a client for testing query logic
+ * Uses service role key to bypass RLS and focus on query functionality
  */
-function getAuthenticatedClient(userId: string): SupabaseClient<Database> {
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
-    global: {
-      headers: {
-        'X-User-Id': userId,
-      },
-    },
-  })
+function getAuthenticatedClient(_userId: string): SupabaseClient<Database> {
+  // Uses service role key to test query logic without RLS interference
+  // RLS is tested separately in integration/rls-security.test.ts
+  return adminClient
 }
 
 /**

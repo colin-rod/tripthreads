@@ -54,8 +54,8 @@ describe('CreateItineraryItemScreen', () => {
     const { getByText, getByPlaceholderText } = render(<CreateItineraryItemScreen />)
 
     expect(getByText('Add Itinerary Item')).toBeTruthy()
-    expect(getByText('Type')).toBeTruthy()
-    expect(getByText('Title')).toBeTruthy()
+    expect(getByText(/Type\s*\*/)).toBeTruthy()
+    expect(getByText(/Title\s*\*/)).toBeTruthy()
     expect(getByPlaceholderText('e.g., Visit Eiffel Tower')).toBeTruthy()
   })
 
@@ -92,10 +92,10 @@ describe('CreateItineraryItemScreen', () => {
   it('should have required field labels marked', () => {
     const { getByText } = render(<CreateItineraryItemScreen />)
 
-    // Type, Title, and Start Time should be marked as required
-    expect(getByText('Type')).toBeTruthy()
-    expect(getByText('Title')).toBeTruthy()
-    expect(getByText('Start Time')).toBeTruthy()
+    // Type, Title, and Start Time should be marked as required (with asterisk)
+    expect(getByText(/Type\s*\*/)).toBeTruthy()
+    expect(getByText(/Title\s*\*/)).toBeTruthy()
+    expect(getByText(/Start Time\s*\*/)).toBeTruthy()
   })
 
   it('should have optional fields', () => {

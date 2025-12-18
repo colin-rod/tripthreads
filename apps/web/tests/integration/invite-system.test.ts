@@ -228,24 +228,16 @@ describeIntegration('Invite System Integration Tests', () => {
       expect(dbInvite!.accepted_at).toBeNull()
     })
 
-    it('TC2.4: Cannot send email invite with invalid email', async () => {
-      const trip = await createTestTrip(aliceClient, TEST_USERS.alice.id)
-      createdTripIds.push(trip.id)
-
-      // Invalid email should fail at validation or DB level
-      await aliceClient.from('trip_invites').insert({
-        trip_id: trip.id,
-        email: 'not-an-email',
-        role: 'participant',
-        invite_type: 'email',
-        status: 'pending',
-        token: 'invalid-email-token',
-        invited_by: TEST_USERS.alice.id,
-      })
-
-      // Should fail (either validation or DB constraint)
-      // This test passes if error exists OR if email validation prevents insert
-      expect(true).toBe(true)
+    it.skip('TC2.4: Cannot send email invite with invalid email', async () => {
+      // TODO: Implement test to verify email validation
+      // This test should verify that invalid email addresses are rejected.
+      //
+      // Expected behavior:
+      // 1. Attempt to create email invite with invalid email (e.g., 'not-an-email')
+      // 2. Expect error from either client-side validation or DB constraint
+      // 3. Verify no invite record is created
+      //
+      // Current state: Test has placeholder assertion that always passes
     })
 
     it('TC2.5: Batch email invites can be created', async () => {
@@ -660,6 +652,13 @@ describeIntegration('Invite System Integration Tests', () => {
 
       await createEmailInvite(aliceClient, trip.id, email, 'participant')
 
+      // TODO: Implement proper test assertion
+      // This test should verify behavior when creating duplicate email invites.
+      //
+      // Expected behavior options:
+      // 1. If unique constraint exists on (trip_id, email), expect error
+      // 2. If no constraint, verify duplicate participants can't be added on acceptance
+      //
       // Try to create duplicate
       await aliceClient.from('trip_invites').insert({
         trip_id: trip.id,
@@ -671,9 +670,8 @@ describeIntegration('Invite System Integration Tests', () => {
         invited_by: TEST_USERS.alice.id,
       })
 
-      // May or may not have unique constraint - if no error, that's also ok
-      // The important thing is no duplicate participants get added
-      expect(true).toBe(true)
+      // Current state: Need to decide on expected behavior and assert accordingly
+      // Either expect error OR verify only one participant gets added later
     })
 
     it('TC6.2: Concurrent acceptance handled gracefully', async () => {

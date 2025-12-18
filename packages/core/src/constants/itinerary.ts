@@ -67,7 +67,7 @@ export const ITINERARY_ITEM_TYPE_CONFIG: Record<ItineraryItemType, ItineraryItem
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
     borderColor: 'border-gray-200',
-    description: 'Meetings, notes, and other items',
+    description: 'Meetings, reminders, and other items',
   },
 }
 

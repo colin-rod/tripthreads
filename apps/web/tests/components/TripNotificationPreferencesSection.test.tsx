@@ -85,8 +85,12 @@ describe('TripNotificationPreferencesSection', () => {
       )
 
       // Check that inherited values are displayed
-      expect(screen.getByText(/Currently enabled in your global settings/)).toBeInTheDocument()
-      expect(screen.getByText(/Currently disabled in your global settings/)).toBeInTheDocument()
+      // There should be multiple instances (one per inherited preference)
+      const enabledMessages = screen.getAllByText(/Currently enabled in your global settings/)
+      const disabledMessages = screen.getAllByText(/Currently disabled in your global settings/)
+
+      expect(enabledMessages.length).toBeGreaterThan(0)
+      expect(disabledMessages.length).toBeGreaterThan(0)
     })
 
     it('should not show Reset button for inherited preferences', () => {
@@ -129,7 +133,9 @@ describe('TripNotificationPreferencesSection', () => {
       )
 
       expect(screen.getByText('How trip notifications work')).toBeInTheDocument()
-      expect(screen.getByText(/Using global settings/)).toBeInTheDocument()
+      // There will be multiple "Using global settings" indicators (one per inherited preference)
+      const indicators = screen.getAllByText(/Using global settings/)
+      expect(indicators.length).toBeGreaterThan(0)
       expect(screen.getByText(/Toggle on\/off/)).toBeInTheDocument()
     })
   })
@@ -148,7 +154,7 @@ describe('TripNotificationPreferencesSection', () => {
       )
 
       // Find and click the invites toggle
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       await waitFor(() => {
@@ -173,7 +179,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       // All switches should be disabled while saving
@@ -205,7 +211,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       await waitFor(() => {
@@ -239,7 +245,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       expect(invitesToggle).toBeChecked()
 
       await user.click(invitesToggle)
@@ -324,7 +330,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       await waitFor(() => {
@@ -357,7 +363,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       // Wait for error handling
@@ -387,7 +393,7 @@ describe('TripNotificationPreferencesSection', () => {
         />
       )
 
-      const invitesToggle = screen.getByRole('switch', { name: /trip_invites/i })
+      const invitesToggle = screen.getByRole('switch', { name: /Trip invitations/i })
       await user.click(invitesToggle)
 
       await waitFor(() => {

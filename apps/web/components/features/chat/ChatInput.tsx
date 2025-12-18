@@ -39,8 +39,10 @@ export function ChatInput({
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionStart, setMentionStart] = useState(0)
   const [autocompletePosition, setAutocompletePosition] = useState({ top: 0, left: 0 })
+  const [shouldFlipBelow, setShouldFlipBelow] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const inputContainerRef = useRef<HTMLDivElement>(null)
 
   const handleSend = async () => {
     if (!message.trim() && attachments.length === 0) return
@@ -72,7 +74,8 @@ export function ChatInput({
   // Detect @ mentions and show autocomplete
   useEffect(() => {
     const textarea = textareaRef.current
-    if (!textarea) return
+    const container = inputContainerRef.current
+    if (!textarea || !container) return
 
     const cursorPos = textarea.selectionStart
     const textBeforeCursor = message.slice(0, cursorPos)
@@ -107,11 +110,29 @@ export function ChatInput({
       return
     }
 
-    // Calculate autocomplete position
-    const rect = textarea.getBoundingClientRect()
+    // Calculate autocomplete position relative to container
+    const textareaRect = textarea.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+
+    // Position relative to container
+    const relativeLeft = textareaRect.left - containerRect.left
+    const relativeTop = textareaRect.top - containerRect.top
+
+    // Estimate popup height (will be ~256px max with max-h-64)
+    const POPUP_ESTIMATED_HEIGHT = 256
+
+    // Calculate available space above and below textarea
+    const spaceAbove = relativeTop
+    const spaceBelow = containerRect.height - relativeTop - textareaRect.height
+
+    // Determine if we should flip below (default is above)
+    const shouldFlip = spaceAbove < POPUP_ESTIMATED_HEIGHT && spaceBelow > spaceAbove
+    setShouldFlipBelow(shouldFlip)
+
+    // Set position (MentionAutocomplete will handle the vertical offset based on shouldFlipBelow)
     setAutocompletePosition({
-      top: rect.top - 280, // Position above textarea
-      left: rect.left,
+      top: relativeTop,
+      left: relativeLeft,
     })
 
     setMentionQuery(queryText)
@@ -254,7 +275,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="border-t bg-background p-4">
+    <div ref={inputContainerRef} className="relative border-t bg-background p-4">
       {/* Mention Autocomplete */}
       {showMentionAutocomplete && (
         <MentionAutocomplete
@@ -263,6 +284,7 @@ export function ChatInput({
           onSelect={handleMentionSelect}
           onClose={() => setShowMentionAutocomplete(false)}
           position={autocompletePosition}
+          shouldFlipBelow={shouldFlipBelow}
         />
       )}
 
@@ -318,7 +340,7 @@ export function ChatInput({
           size="sm"
           onClick={handleTripThreadClick}
           disabled={disabled || isSending}
-          className="shrink-0"
+          className="h-11 shrink-0"
         >
           <BotIcon className="mr-2 h-4 w-4" />
           @TripThread

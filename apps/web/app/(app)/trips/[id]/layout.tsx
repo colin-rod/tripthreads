@@ -1,22 +1,24 @@
 /**
- * Trip Layout with Sidebar Navigation
+ * Trip Layout with Horizontal Navigation
  *
- * Provides navigation sidebar for trip pages:
- * - Home (overview)
+ * Provides navigation for trip pages:
+ * - Home (dashboard overview)
  * - Chat (group chat + AI)
+ * - Expenses (expense tracking & settlements)
  * - Plan (itinerary/timeline)
- * - Expenses (expense tracking)
+ * - Feed (photo/video sharing)
  * - Settings (trip settings)
  *
  * Features:
- * - Desktop: Fixed sidebar navigation
- * - Mobile: Hamburger menu with slide-out drawer
+ * - Desktop: Horizontal tab navigation with participants dropdown
+ * - Mobile: Bottom tab bar navigation with "More" menu
+ * - Hash-based navigation (#section) for smooth transitions
  */
 
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getTripById } from '@tripthreads/core'
-import { TripNavigation } from '@/components/features/trips/TripNavigation'
+import { BottomNav } from '@/components/navigation/BottomNav'
 
 interface TripLayoutProps {
   children: React.ReactNode
@@ -56,12 +58,18 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     notFound()
   }
 
-  return (
-    <div className="flex h-screen">
-      <TripNavigation tripId={id} tripName={trip.name} />
+  // TODO: Fetch unread message count for badge
+  const unreadCount = 0
 
+  return (
+    <div className="flex h-[calc(100vh-4rem)] flex-col">
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">{children}</main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden">
+        <BottomNav tripId={id} unreadChatCount={unreadCount} />
+      </div>
     </div>
   )
 }

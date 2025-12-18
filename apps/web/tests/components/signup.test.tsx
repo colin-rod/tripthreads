@@ -1,45 +1,40 @@
-import { describe, it, beforeEach, jest } from '@jest/globals'
+import { describe, it, beforeEach, jest, afterEach } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { useRouter } from 'next/navigation'
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import SignupPage from '../../app/(auth)/signup/page'
-import { useAuth } from '../../lib/auth/auth-context'
 
 type AuthResult = { error: Error | null }
 const createAuthMock = <Args extends unknown[] = []>() =>
   jest.fn<(...args: Args) => Promise<AuthResult>>()
 
+const mockPush = jest.fn()
+const mockSignUp = createAuthMock<[string, string, string]>()
+const mockSignInWithGoogle = createAuthMock()
+
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }))
 
 // Mock auth context
 jest.mock('../../lib/auth/auth-context', () => ({
-  useAuth: jest.fn(),
+  useAuth: () => ({
+    signUp: mockSignUp,
+    signInWithGoogle: mockSignInWithGoogle,
+    user: null,
+    session: null,
+    loading: false,
+    signIn: createAuthMock<[string, string]>(),
+    signOut: createAuthMock(),
+  }),
 }))
 
 describe('SignupPage', () => {
-  const mockPush = jest.fn()
-  const mockSignUp = createAuthMock<[string, string, string]>()
-  const mockSignInWithGoogle = createAuthMock()
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    jest.mocked(useRouter).mockReturnValue({
-      push: mockPush,
-    } as unknown as AppRouterInstance)
-    jest.mocked(useAuth).mockReturnValue({
-      signUp: mockSignUp,
-      signInWithGoogle: mockSignInWithGoogle,
-      user: null,
-      session: null,
-      loading: false,
-      signIn: createAuthMock<[string, string]>(),
-      signOut: createAuthMock(),
-    })
   })
 
   afterEach(() => {
@@ -170,6 +165,6 @@ describe('SignupPage', () => {
 
     const loginLink = screen.getByText('Sign in')
     expect(loginLink).toBeDefined()
-    expect(loginLink.closest('a')).toHaveProperty('href', '/login')
+    expect(loginLink.closest('a')).toHaveAttribute('href', '/login')
   })
 })

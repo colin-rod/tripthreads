@@ -35,14 +35,15 @@ import { DatePicker } from '../../../../../components/ui/date-picker'
 import { Button } from '../../../../../components/ui/button'
 import { Text } from '../../../../../components/ui/text'
 
-// Validation schema
+// Validation schema for form (extends core schema with string amount for input handling)
 const createExpenseSchema = z.object({
-  description: z.string().min(1, 'Description is required').max(200),
+  description: z.string().min(1, 'Description is required').max(255),
   amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
     message: 'Amount must be a positive number',
   }),
   currency: z.string().length(3, 'Currency must be 3 letters'),
   category: z.enum(['food', 'transport', 'accommodation', 'activity', 'other']),
+  payer_id: z.string().uuid('Invalid payer ID'),
   date: z.string().datetime('Invalid date'),
 })
 
@@ -77,6 +78,7 @@ export default function CreateExpenseScreen() {
       amount: '',
       currency: 'USD',
       category: 'other',
+      payer_id: user?.id || '',
       date: new Date().toISOString(),
     },
   })

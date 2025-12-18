@@ -97,7 +97,7 @@ describe('ParticipantPicker', () => {
       />
     )
 
-    const selectAllButton = screen.getByRole('button', { name: /select all/i })
+    const selectAllButton = screen.getByRole('button', { name: 'Select All' })
     fireEvent.click(selectAllButton)
 
     expect(mockOnChange).toHaveBeenCalledWith(['1', '2', '3'])
@@ -127,7 +127,7 @@ describe('ParticipantPicker', () => {
       />
     )
 
-    const selectAllButton = screen.getByRole('button', { name: /select all/i })
+    const selectAllButton = screen.getByRole('button', { name: 'Select All' })
     expect(selectAllButton).toBeDisabled()
   })
 

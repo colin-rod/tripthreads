@@ -15,7 +15,7 @@ jest.mock('@/app/actions/permissions', () => ({
 }))
 
 // Mock the toast hook
-jest.mock('@/components/ui/use-toast', () => ({
+jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: jest.fn(),
   }),
@@ -87,7 +87,7 @@ describe('PermissionDeniedModal', () => {
     )
 
     expect(screen.getByText(/currently a/i)).toBeInTheDocument()
-    expect(screen.getByText(/viewer/i)).toBeInTheDocument()
+    expect(screen.getByText(/You're currently a/i)).toBeInTheDocument()
     expect(screen.getByText(/cannot make changes/i)).toBeInTheDocument()
   })
 

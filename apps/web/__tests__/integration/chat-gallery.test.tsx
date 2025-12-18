@@ -10,7 +10,9 @@ import { getMediaFileByUrl } from '@tripthreads/core'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
-jest.mock('@/lib/supabase/client')
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: jest.fn(),
+}))
 jest.mock('@/app/actions/chat')
 jest.mock('@tripthreads/core')
 
@@ -18,13 +20,12 @@ const mockSupabase = {
   from: jest.fn(),
 }
 
-;(createClient as jest.Mock).mockReturnValue(mockSupabase)
-
 describe('Chat-Gallery Integration', () => {
   const mockTripId = 'trip-123'
 
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(createClient as jest.Mock).mockReturnValue(mockSupabase)
   })
 
   describe('ChatAttachmentDisplay', () => {
@@ -105,8 +106,7 @@ describe('Chat-Gallery Integration', () => {
       await waitFor(() => {
         expect(addAttachmentToGallery).toHaveBeenCalledWith(
           'https://example.com/chat-photo.jpg',
-          mockTripId,
-          undefined // caption
+          mockTripId
         )
       })
 

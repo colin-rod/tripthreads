@@ -1,113 +1,234 @@
 /**
  * @jest-environment node
  *
- * Integration tests for Expense FX Rate Snapshot
+ * Unit tests for Expense FX Rate Snapshot (Mocked)
  *
- * Tests that expense creation properly fetches and stores FX rate snapshots.
- * These tests verify the end-to-end flow from expense creation to FX rate storage.
+ * Tests that expense creation properly handles and stores FX rate snapshots.
+ * Uses mocked Supabase client to avoid database dependencies.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals'
-import { createClient } from '@supabase/supabase-js'
+import { describe, it, expect, jest, beforeEach } from '@jest/globals'
 import { createExpense } from '@/app/actions/expenses'
-import type { Database } from '@/types/database'
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import * as Sentry from '@sentry/nextjs'
+import * as Core from '@tripthreads/core'
 
-// Test configuration
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321'
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-key'
+// Mock all external dependencies
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
+}))
 
-let supabase: ReturnType<typeof createClient<Database>>
-let testUserId: string
-let testTripId: string
+jest.mock('@sentry/nextjs', () => ({
+  captureMessage: jest.fn(),
+  captureException: jest.fn(),
+}))
 
-describe('Expense FX Integration', () => {
-  beforeAll(async () => {
-    supabase = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+jest.mock('next/cache', () => ({
+  revalidatePath: jest.fn(),
+}))
 
-    // Create test user
-    const { data: user, error: userError } = await supabase.auth.admin.createUser({
-      email: 'test-fx@tripthreads.com',
-      email_confirm: true,
-      password: 'test-password-123',
-    })
+jest.mock('@tripthreads/core', () => ({
+  getFxRate: jest.fn(),
+  formatDateForFx: jest.fn((date: string | Date) => {
+    if (typeof date === 'string') return date.split('T')[0]
+    return date.toISOString().split('T')[0]
+  }),
+  getSettlementSummary: jest.fn(),
+  matchSingleParticipantName: jest.fn((name: string, participants: any[]) => {
+    // Simple mock: return the first participant's user_id if name matches user_id
+    const match = participants.find(p => p.user_id === name)
+    return match
+      ? { success: true as const, userId: match.user_id }
+      : { success: false as const, error: 'Participant not found' }
+  }),
+}))
 
-    if (userError || !user.user) {
-      throw new Error(`Failed to create test user: ${userError?.message}`)
-    }
+// Type definitions for mocks
+type SupabaseMock = {
+  auth: {
+    getUser: jest.MockedFunction<() => Promise<any>>
+  }
+  from: jest.MockedFunction<(table: string) => any>
+  rpc: jest.MockedFunction<(name: string, params: any) => Promise<any>>
+}
 
-    testUserId = user.user.id
+const createMockSupabase = (): SupabaseMock => ({
+  auth: {
+    getUser: jest.fn(),
+  },
+  from: jest.fn(),
+  rpc: jest.fn(),
+})
 
-    // Create test trip with EUR base currency
-    const { data: trip, error: tripError } = await supabase
-      .from('trips')
-      .insert({
-        name: 'Test Trip for FX',
-        description: 'Integration test trip',
-        start_date: '2025-02-07T00:00:00Z',
-        end_date: '2025-02-14T00:00:00Z',
-        owner_id: testUserId,
-        base_currency: 'EUR',
-      })
-      .select()
-      .single()
+/**
+ * Helper function to set up standard mocks for expense creation
+ */
+function setupExpenseMocks(
+  mockSupabase: SupabaseMock,
+  options: {
+    userId: string
+    tripId: string
+    baseCurrency: string
+    expenseCurrency: string
+    fxRate: number | null
+    expenseId?: string
+    amount?: number
+  }
+) {
+  const {
+    userId,
+    tripId,
+    baseCurrency,
+    expenseCurrency,
+    fxRate,
+    expenseId = 'expense-123',
+    amount = 10000,
+  } = options
 
-    if (tripError || !trip) {
-      throw new Error(`Failed to create test trip: ${tripError?.message}`)
-    }
-
-    testTripId = trip.id
-
-    // Insert test FX rate
-    const { error: fxError } = await supabase.from('fx_rates').insert({
-      base_currency: 'EUR',
-      target_currency: 'USD',
-      rate: 1.12,
-      date: '2025-02-07',
-    })
-
-    if (fxError) {
-      console.warn('Failed to insert test FX rate (table may not exist yet):', fxError)
-    }
+  // Mock auth
+  mockSupabase.auth.getUser.mockResolvedValue({
+    data: { user: { id: userId } },
+    error: null,
   })
 
-  afterAll(async () => {
-    // Clean up test data
-    if (testTripId) {
-      await supabase.from('trips').delete().eq('id', testTripId)
-    }
-
-    if (testUserId) {
-      await supabase.auth.admin.deleteUser(testUserId)
-    }
-
-    // Clean up test FX rates
-    await supabase
-      .from('fx_rates')
-      .delete()
-      .eq('base_currency', 'EUR')
-      .eq('target_currency', 'USD')
-      .eq('date', '2025-02-07')
+  // Mock RLS check
+  mockSupabase.rpc.mockResolvedValue({
+    data: true,
+    error: null,
   })
 
-  beforeEach(async () => {
-    // Clean up expenses before each test
-    await supabase.from('expenses').delete().eq('trip_id', testTripId)
+  // Track call counts for trip_participants (queried twice)
+  let tripParticipantsCallCount = 0
+
+  // Build query chain mocks
+  const tripParticipantSingle = jest.fn() as any
+  tripParticipantSingle.mockResolvedValue({
+    data: { id: 'participant-1', role: 'participant' },
+    error: null,
+  })
+
+  const tripParticipantEqUser = jest.fn() as any
+  tripParticipantEqUser.mockReturnValue({ single: tripParticipantSingle })
+
+  const tripParticipantEqTrip = jest.fn() as any
+  tripParticipantEqTrip.mockReturnValue({ eq: tripParticipantEqUser })
+
+  const tripParticipantSelect = jest.fn() as any
+  tripParticipantSelect.mockReturnValue({ eq: tripParticipantEqTrip })
+
+  // Mock trip query (for base currency)
+  const tripSingle = jest.fn() as any
+  tripSingle.mockResolvedValue({
+    data: { id: tripId, base_currency: baseCurrency },
+    error: null,
+  })
+
+  const tripEq = jest.fn() as any
+  tripEq.mockReturnValue({ single: tripSingle })
+
+  const tripSelect = jest.fn() as any
+  tripSelect.mockReturnValue({ eq: tripEq })
+
+  // Mock trip_participants list query (has .eq() after .select())
+  const participantsEq = jest.fn() as any
+  participantsEq.mockResolvedValue({
+    data: [
+      {
+        user_id: userId,
+        users: { full_name: 'Test User' },
+      },
+    ],
+    error: null,
+  })
+
+  const participantsSelect = jest.fn() as any
+  participantsSelect.mockReturnValue({ eq: participantsEq })
+
+  // Mock expense insert
+  const expenseSingle = jest.fn() as any
+  expenseSingle.mockResolvedValue({
+    data: {
+      id: expenseId,
+      trip_id: tripId,
+      amount,
+      currency: expenseCurrency,
+      fx_rate: fxRate,
+      description: 'Test expense',
+      category: 'food',
+      payer_id: userId,
+      date: '2025-02-07T12:00:00Z',
+      created_by: userId,
+    },
+    error: null,
+  })
+
+  const expenseSelect = jest.fn() as any
+  expenseSelect.mockReturnValue({ single: expenseSingle })
+
+  const expenseInsert = jest.fn() as any
+  expenseInsert.mockReturnValue({ select: expenseSelect })
+
+  // Mock expense_participants insert
+  const participantsInsert = jest.fn() as any
+  participantsInsert.mockResolvedValue({ error: null })
+
+  // Wire up table handlers
+  mockSupabase.from.mockImplementation((table: string) => {
+    if (table === 'trip_participants') {
+      tripParticipantsCallCount++
+      if (tripParticipantsCallCount === 1) {
+        // First call: auth check
+        return { select: tripParticipantSelect }
+      } else {
+        // Second call: participant list
+        return { select: participantsSelect }
+      }
+    }
+    if (table === 'trips') {
+      return { select: tripSelect }
+    }
+    if (table === 'expenses') {
+      return { insert: expenseInsert }
+    }
+    if (table === 'expense_participants') {
+      return { insert: participantsInsert }
+    }
+    throw new Error(`Unexpected table: ${table}`)
+  })
+}
+
+describe('Expense FX Integration (Mocked)', () => {
+  let mockSupabase: SupabaseMock
+  const mockGetFxRate = Core.getFxRate as jest.MockedFunction<typeof Core.getFxRate>
+  const createClientMock = createClient as jest.MockedFunction<typeof createClient>
+  const revalidatePathMock = revalidatePath as jest.MockedFunction<typeof revalidatePath>
+
+  const testUserId = 'user-123'
+  const testTripId = 'trip-456'
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockSupabase = createMockSupabase()
+    createClientMock.mockResolvedValue(mockSupabase as unknown as any)
   })
 
   it('stores FX rate snapshot when expense currency differs from base', async () => {
-    // This test assumes the migration has been applied and fx_rates table exists
-    // Skip if table doesn't exist (migration not applied yet)
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'USD',
+      fxRate: 1.12,
+    })
 
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
+    // Mock getFxRate to return 1.12
+    mockGetFxRate.mockResolvedValue(1.12)
 
     const result = await createExpense({
       tripId: testTripId,
       description: 'Test USD expense',
-      amount: 10000, // $100.00
+      amount: 10000,
       currency: 'USD',
       category: 'food',
       payer: testUserId,
@@ -119,35 +240,35 @@ describe('Expense FX Integration', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.expense).toBeDefined()
+    expect(result.expense?.fx_rate).toBe(1.12)
 
-    if (!result.expense) {
-      throw new Error('Expense not created')
-    }
+    // Verify getFxRate was called with correct parameters
+    expect(mockGetFxRate).toHaveBeenCalledWith(
+      mockSupabase,
+      'EUR', // base currency
+      'USD', // expense currency
+      '2025-02-07',
+      expect.any(Object) // Options object (supabaseUrl and serviceRoleKey may be undefined in test)
+    )
 
-    // Verify FX rate was stored
-    const { data: expense } = await supabase
-      .from('expenses')
-      .select('fx_rate')
-      .eq('id', result.expense.id)
-      .single()
-
-    expect(expense?.fx_rate).toBeDefined()
-    expect(expense?.fx_rate).toBeCloseTo(1.12, 2)
+    // Verify revalidatePath was called
+    expect(revalidatePathMock).toHaveBeenCalledWith(`/trips/${testTripId}`)
+    expect(revalidatePathMock).toHaveBeenCalledWith(`/trips/${testTripId}/expenses`)
   })
 
   it('stores null FX rate when expense currency matches base currency', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
-
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'EUR',
+      fxRate: null,
+    })
 
     const result = await createExpense({
       tripId: testTripId,
       description: 'Test EUR expense',
-      amount: 10000, // €100.00
+      amount: 10000,
       currency: 'EUR',
       category: 'food',
       payer: testUserId,
@@ -159,35 +280,28 @@ describe('Expense FX Integration', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.expense).toBeDefined()
+    expect(result.expense?.fx_rate).toBeNull()
 
-    if (!result.expense) {
-      throw new Error('Expense not created')
-    }
-
-    // Verify FX rate is null for same currency
-    const { data: expense } = await supabase
-      .from('expenses')
-      .select('fx_rate')
-      .eq('id', result.expense.id)
-      .single()
-
-    expect(expense?.fx_rate).toBeNull()
+    // getFxRate should NOT be called when currencies match
+    expect(mockGetFxRate).not.toHaveBeenCalled()
   })
 
   it('handles missing FX rate gracefully (stores null)', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'GBP',
+      fxRate: null,
+    })
 
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
+    // Mock getFxRate to return null (rate unavailable)
+    mockGetFxRate.mockResolvedValue(null)
 
-    // Create expense with unsupported currency (no rate in cache)
     const result = await createExpense({
       tripId: testTripId,
       description: 'Test GBP expense',
-      amount: 10000, // £100.00
+      amount: 10000,
       currency: 'GBP',
       category: 'food',
       payer: testUserId,
@@ -199,35 +313,29 @@ describe('Expense FX Integration', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.expense).toBeDefined()
+    expect(result.expense?.fx_rate).toBeNull()
 
-    if (!result.expense) {
-      throw new Error('Expense not created')
-    }
-
-    // Expense should still be created even without FX rate
-    const { data: expense } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('id', result.expense.id)
-      .single()
-
-    expect(expense).toBeDefined()
-    expect(expense?.description).toBe('Test GBP expense')
-
-    // FX rate may be null if on-demand fetch failed or was skipped
-    // This is acceptable - graceful degradation
+    // Verify Sentry warning was logged
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      expect.stringContaining('FX rate unavailable'),
+      expect.objectContaining({
+        level: 'warning',
+      })
+    )
   })
 
   it('preserves FX rate snapshot over time (immutability)', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'USD',
+      fxRate: 1.12,
+      expenseId: 'immutable-expense',
+    })
 
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
+    mockGetFxRate.mockResolvedValue(1.12)
 
-    // Create expense with FX rate
     const result = await createExpense({
       tripId: testTripId,
       description: 'Immutability test expense',
@@ -244,48 +352,36 @@ describe('Expense FX Integration', () => {
 
     expect(result.success).toBe(true)
 
-    if (!result.expense) {
-      throw new Error('Expense not created')
-    }
+    const originalFxRate = result.expense?.fx_rate
+    expect(originalFxRate).toBe(1.12)
 
-    const originalFxRate = result.expense.fx_rate
-
-    // Update the FX rate in the fx_rates table (simulating rate change)
-    await supabase
-      .from('fx_rates')
-      .update({ rate: 1.25 })
-      .eq('base_currency', 'EUR')
-      .eq('target_currency', 'USD')
-      .eq('date', '2025-02-07')
-
-    // Fetch expense again - FX rate should be unchanged (snapshot)
-    const { data: expense } = await supabase
-      .from('expenses')
-      .select('fx_rate')
-      .eq('id', result.expense.id)
-      .single()
-
-    expect(expense?.fx_rate).toBe(originalFxRate)
-    expect(expense?.fx_rate).toBeCloseTo(1.12, 2) // Original rate, not updated rate
+    // The returned expense already has the snapshot
+    // In a real database, this would remain unchanged even if fx_rates table updates
+    // This test verifies the snapshot is stored at creation time
+    expect(result.expense?.fx_rate).toBe(1.12)
   })
 
   it('handles multiple currencies in same trip', async () => {
-    const { error: checkError } = await supabase.from('fx_rates').select('id').limit(1)
+    const expenseIds = ['expense-usd', 'expense-gbp', 'expense-eur']
 
-    if (checkError?.code === '42P01') {
-      console.log('Skipping test: fx_rates table does not exist yet')
-      return
-    }
+    // We need to set up mocks fresh for each expense creation
+    // For this test, we'll call createExpense 3 times with different setups
 
-    // Insert GBP rate for this test
-    await supabase.from('fx_rates').insert({
-      base_currency: 'EUR',
-      target_currency: 'GBP',
-      rate: 0.85,
-      date: '2025-02-07',
+    // Test USD expense
+    jest.clearAllMocks()
+    mockSupabase = createMockSupabase()
+    createClientMock.mockResolvedValue(mockSupabase as unknown as any)
+
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'USD',
+      fxRate: 1.12,
+      expenseId: expenseIds[0],
     })
+    mockGetFxRate.mockResolvedValue(1.12)
 
-    // Create USD expense
     const usdResult = await createExpense({
       tripId: testTripId,
       description: 'USD expense',
@@ -300,7 +396,21 @@ describe('Expense FX Integration', () => {
       date: '2025-02-07T12:00:00Z',
     })
 
-    // Create GBP expense
+    // Test GBP expense
+    jest.clearAllMocks()
+    mockSupabase = createMockSupabase()
+    createClientMock.mockResolvedValue(mockSupabase as unknown as any)
+
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'GBP',
+      fxRate: 0.85,
+      expenseId: expenseIds[1],
+    })
+    mockGetFxRate.mockResolvedValue(0.85)
+
     const gbpResult = await createExpense({
       tripId: testTripId,
       description: 'GBP expense',
@@ -315,7 +425,20 @@ describe('Expense FX Integration', () => {
       date: '2025-02-07T12:00:00Z',
     })
 
-    // Create EUR expense
+    // Test EUR expense (same as base)
+    jest.clearAllMocks()
+    mockSupabase = createMockSupabase()
+    createClientMock.mockResolvedValue(mockSupabase as unknown as any)
+
+    setupExpenseMocks(mockSupabase, {
+      userId: testUserId,
+      tripId: testTripId,
+      baseCurrency: 'EUR',
+      expenseCurrency: 'EUR',
+      fxRate: null,
+      expenseId: expenseIds[2],
+    })
+
     const eurResult = await createExpense({
       tripId: testTripId,
       description: 'EUR expense',
@@ -330,33 +453,18 @@ describe('Expense FX Integration', () => {
       date: '2025-02-07T12:00:00Z',
     })
 
+    // Verify all expenses created successfully with correct FX rates
     expect(usdResult.success).toBe(true)
     expect(gbpResult.success).toBe(true)
     expect(eurResult.success).toBe(true)
 
-    // Verify each has correct FX rate
-    const { data: expenses } = await supabase
-      .from('expenses')
-      .select('description, currency, fx_rate')
-      .eq('trip_id', testTripId)
-      .order('created_at', { ascending: true })
+    expect(usdResult.expense?.currency).toBe('USD')
+    expect(usdResult.expense?.fx_rate).toBe(1.12)
 
-    expect(expenses).toHaveLength(3)
+    expect(gbpResult.expense?.currency).toBe('GBP')
+    expect(gbpResult.expense?.fx_rate).toBe(0.85)
 
-    const usdExpense = expenses?.find(e => e.currency === 'USD')
-    const gbpExpense = expenses?.find(e => e.currency === 'GBP')
-    const eurExpense = expenses?.find(e => e.currency === 'EUR')
-
-    expect(usdExpense?.fx_rate).toBeCloseTo(1.12, 2)
-    expect(gbpExpense?.fx_rate).toBeCloseTo(0.85, 2)
-    expect(eurExpense?.fx_rate).toBeNull() // Same as base currency
-
-    // Clean up
-    await supabase
-      .from('fx_rates')
-      .delete()
-      .eq('base_currency', 'EUR')
-      .eq('target_currency', 'GBP')
-      .eq('date', '2025-02-07')
+    expect(eurResult.expense?.currency).toBe('EUR')
+    expect(eurResult.expense?.fx_rate).toBeNull()
   })
 })

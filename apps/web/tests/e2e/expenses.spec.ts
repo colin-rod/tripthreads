@@ -42,7 +42,7 @@ async function createTestTrip(page: Page): Promise<string> {
  * Helper to clean up test trip
  */
 async function deleteTestTrip(page: Page, tripId: string) {
-  await page.goto(`/trips/${tripId}/settings`)
+  await page.goto(`/trips/${tripId}#settings`)
   await page.click('[data-testid="delete-trip-button"]')
   await page.fill('[data-testid="delete-confirmation-input"]', 'DELETE')
   await page.click('[data-testid="confirm-delete-button"]')
@@ -65,7 +65,7 @@ test.describe('Expense Management', () => {
 
     try {
       // Navigate to expenses page
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Click add expense button
       await page.click('[data-testid="add-expense-button"]')
@@ -94,7 +94,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Use natural language input
       await page.fill('[data-testid="expense-nl-input"]', 'Split 60€ dinner at Le Bistro 4 ways')
@@ -123,7 +123,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       await page.click('[data-testid="add-expense-button"]')
 
@@ -155,7 +155,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       await page.click('[data-testid="add-expense-button"]')
 
@@ -186,7 +186,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create initial expense
       await page.click('[data-testid="add-expense-button"]')
@@ -219,7 +219,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create expense
       await page.click('[data-testid="add-expense-button"]')
@@ -250,7 +250,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create first expense (user pays)
       await page.click('[data-testid="add-expense-button"]')
@@ -276,7 +276,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create expenses in different categories
       const categories = ['food', 'transport', 'accommodation']
@@ -309,7 +309,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create some expenses to generate settlements
       await page.click('[data-testid="add-expense-button"]')
@@ -334,7 +334,7 @@ test.describe('Expense Management', () => {
     const tripId = await createTestTrip(page)
 
     try {
-      await page.goto(`/trips/${tripId}/expenses`)
+      await page.goto(`/trips/${tripId}#expenses`)
 
       // Create expense
       await page.click('[data-testid="add-expense-button"]')
@@ -365,7 +365,7 @@ test.describe('Expense Management', () => {
       // Invite a viewer (requires implementation of invite flow)
       // For now, test that viewer UI shows read-only state
 
-      await page.goto(`/trips/${tripId}/settings`)
+      await page.goto(`/trips/${tripId}#settings`)
 
       // TODO: Add viewer to trip
       // await page.click('[data-testid="invite-user-button"]')

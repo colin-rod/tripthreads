@@ -16,7 +16,7 @@ const Label = React.forwardRef<React.ElementRef<typeof Text>, LabelProps>(
         {...props}
       >
         {children}
-        {required && <Text className="text-destructive ml-1">*</Text>}
+        {required ? ' *' : ''}
       </Text>
     )
   }

@@ -12,30 +12,10 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 import { InviteRole } from '@/types/invite'
+import { TEST_USERS } from '../__fixtures__/test-users'
 
-// Test user credentials (from seed.sql)
-export const TEST_USERS = {
-  alice: {
-    id: 'ea1854fb-b8f4-480f-899f-af1bcf0218b3',
-    email: 'temp@test.com',
-    password: 'test123456',
-  },
-  benji: {
-    id: '0af9094b-dedb-4472-8133-20577fbc8f98',
-    email: 'benji@temp.com',
-    password: 'test123456',
-  },
-  baylee: {
-    id: '29f0dac4-7629-45f8-8fa1-10e0df75ce1b',
-    email: 'baylee@temp.com',
-    password: 'test123456',
-  },
-  maya: {
-    id: 'aafa06ac-21e0-4d4e-bb0c-97e1ae2ae13e',
-    email: 'maya@test.com',
-    password: 'test123456',
-  },
-}
+// Re-export TEST_USERS for backwards compatibility
+export { TEST_USERS }
 
 export const TEST_TRIP_IDS = {
   paris: '10000000-0000-0000-0000-000000000001',
@@ -282,9 +262,7 @@ export async function verifyParticipantAccess(
 
   // Verify role
   if (participant.role !== expectedRole) {
-    throw new Error(
-      `Role mismatch: expected ${expectedRole}, got ${participant.role}`
-    )
+    throw new Error(`Role mismatch: expected ${expectedRole}, got ${participant.role}`)
   }
 
   // Verify date range if provided
@@ -314,10 +292,7 @@ export async function verifyParticipantAccess(
 /**
  * Revoke an invite
  */
-export async function revokeInvite(
-  client: SupabaseClient<Database>,
-  inviteId: string
-) {
+export async function revokeInvite(client: SupabaseClient<Database>, inviteId: string) {
   const { error } = await client
     .from('trip_invites')
     .update({ status: 'revoked' })
@@ -331,10 +306,7 @@ export async function revokeInvite(
 /**
  * Clean up test data: remove participant and invites for a trip
  */
-export async function cleanupTestInvites(
-  client: SupabaseClient<Database>,
-  tripId: string
-) {
+export async function cleanupTestInvites(client: SupabaseClient<Database>, tripId: string) {
   // Delete invites
   await client.from('trip_invites').delete().eq('trip_id', tripId)
 }
@@ -342,10 +314,7 @@ export async function cleanupTestInvites(
 /**
  * Clean up test trip and all associated data
  */
-export async function cleanupTestTrip(
-  client: SupabaseClient<Database>,
-  tripId: string
-) {
+export async function cleanupTestTrip(client: SupabaseClient<Database>, tripId: string) {
   // Delete in order due to FK constraints
   await client.from('trip_invites').delete().eq('trip_id', tripId)
   await client.from('trip_participants').delete().eq('trip_id', tripId)
@@ -376,12 +345,7 @@ export async function testInviteFlow(
   const invite = await generateInviteLink(organizerClient, trip.id, role)
 
   // Accept invite
-  const participant = await acceptInvite(
-    inviteeClient,
-    inviteeId,
-    invite.token,
-    dateRange
-  )
+  const participant = await acceptInvite(inviteeClient, inviteeId, invite.token, dateRange)
 
   // Verify access
   await verifyParticipantAccess(inviteeClient, inviteeId, trip.id, role, dateRange)

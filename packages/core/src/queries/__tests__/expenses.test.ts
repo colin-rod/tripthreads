@@ -1,7 +1,16 @@
 /**
- * Unit tests for expense query operations
+ * Integration tests for expense query operations
  *
- * Tests CRUD operations, RLS enforcement, participant resolution, and split calculations.
+ * NOTE: These are INTEGRATION tests that run against a real Supabase database.
+ * They test query LOGIC and data flow, not RLS enforcement.
+ *
+ * RLS policies are tested separately in:
+ * - apps/web/tests/integration/rls-security.test.ts (with real JWT auth)
+ * - supabase/tests/rls_security_tests.sql (direct SQL tests)
+ *
+ * These tests use the service role key to bypass RLS and focus on testing
+ * the query functions themselves (CRUD operations, participant resolution, splits).
+ *
  * Following TDD methodology - these tests are written BEFORE implementation.
  */
 
@@ -18,7 +27,7 @@ import {
 } from '../expenses'
 import { CreateExpenseInput } from '../../types/expense'
 
-// Test database setup
+// Test database setup - uses service role key to bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -46,18 +55,13 @@ afterAll(async () => {
 })
 
 /**
- * Helper to create authenticated client for a specific user
+ * Helper to create a client for testing query logic
+ * Uses service role key to bypass RLS and focus on query functionality
  */
-function getAuthenticatedClient(userId: string): SupabaseClient {
-  // In real implementation, this would use auth token
-  // For now, use RLS context setting
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    global: {
-      headers: {
-        'X-User-Id': userId, // Custom header for testing
-      },
-    },
-  })
+function getAuthenticatedClient(_userId: string): SupabaseClient {
+  // Uses service role key to test query logic without RLS interference
+  // RLS is tested separately in integration/rls-security.test.ts
+  return adminClient
 }
 
 describe('getUserExpensesForTrip', () => {

@@ -46,12 +46,10 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="container max-w-3xl py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2">Settings</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Manage your account settings and preferences
-        </p>
+    <div className="container max-w-3xl py-10 space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold">Settings</h1>
+        <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
       <Accordion type="single" collapsible defaultValue="profile" className="space-y-4">

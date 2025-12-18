@@ -45,7 +45,6 @@
   "exclude": [
     "node_modules",
     "components/features/expenses/settlements/__tests__/**",
-    "**/__tests__/**",
-    "tests/**"
+    "**/__tests__/**"
   ]
 }

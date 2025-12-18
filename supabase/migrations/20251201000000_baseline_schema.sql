@@ -1132,7 +1132,7 @@ BEGIN
         'record', jsonb_build_object(
           'id', NEW.id,
           'trip_id', NEW.trip_id,
-          'item_type', NEW.type,
+          'item_type', NEW.type,  -- Fixed: column name is 'type', not 'item_type'
           'title', NEW.title,
           'start_time', NEW.start_time,
           'end_time', NEW.end_time,

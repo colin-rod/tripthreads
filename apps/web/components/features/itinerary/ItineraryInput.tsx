@@ -18,8 +18,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Loader2, AlertCircle, CheckCircle2, Edit3, Calendar, Clock, X, Info } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { format } from 'date-fns'
 
 interface ItineraryInputProps {
@@ -41,6 +44,14 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedDate, setEditedDate] = useState<Date>(new Date())
+  const [editedEndDate, setEditedEndDate] = useState<Date | undefined>(undefined)
+  const [editedIsAllDay, setEditedIsAllDay] = useState(false)
+  const [editedIsRange, setEditedIsRange] = useState(false)
+  const [editedDescription, setEditedDescription] = useState('')
+
   const handleParse = async () => {
     if (!input.trim()) return
 
@@ -60,7 +71,13 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
       })
 
       if (result.success && result.dateResult) {
-        setParsedResult(result.dateResult)
+        // Convert date strings back to Date objects (they get serialized during API response)
+        const dateResult = {
+          ...result.dateResult,
+          date: new Date(result.dateResult.date),
+          endDate: result.dateResult.endDate ? new Date(result.dateResult.endDate) : undefined,
+        }
+        setParsedResult(dateResult)
       } else {
         setError(result.error || 'Failed to parse itinerary item')
       }
@@ -73,27 +90,89 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
   }
 
   const handleSubmit = async () => {
-    if (!parsedResult) return
+    if (!parsedResult && !isEditing) return
 
     setSubmitting(true)
     setError(null)
 
     try {
-      // Extract item details from original text
-      const itemDetails = extractItemDetails(input)
+      let itemData
 
-      await onSubmit({
-        type: itemDetails.type,
-        title: itemDetails.title,
-        description: itemDetails.description,
-        startTime: parsedResult.date.toISOString(),
-        endTime: parsedResult.endDate?.toISOString(),
-        location: itemDetails.location,
-      })
+      if (isEditing) {
+        // Validate edited fields
+        if (!editedDescription.trim()) {
+          setError('Description is required')
+          setSubmitting(false)
+          return
+        }
+
+        if (!editedDate || isNaN(editedDate.getTime())) {
+          setError('Valid start date is required')
+          setSubmitting(false)
+          return
+        }
+
+        if (editedIsRange) {
+          if (!editedEndDate || isNaN(editedEndDate.getTime())) {
+            setError('Valid end date is required for date ranges')
+            setSubmitting(false)
+            return
+          }
+
+          if (editedEndDate < editedDate) {
+            setError('End date must be after start date')
+            setSubmitting(false)
+            return
+          }
+        }
+
+        // Extract item details from edited description
+        const itemDetails = extractItemDetails(editedDescription)
+
+        // If all-day mode, set time to start of day
+        const startDate = editedIsAllDay
+          ? new Date(editedDate.getFullYear(), editedDate.getMonth(), editedDate.getDate())
+          : editedDate
+
+        const endDate =
+          editedIsRange && editedEndDate
+            ? editedIsAllDay
+              ? new Date(
+                  editedEndDate.getFullYear(),
+                  editedEndDate.getMonth(),
+                  editedEndDate.getDate()
+                )
+              : editedEndDate
+            : undefined
+
+        itemData = {
+          type: itemDetails.type,
+          title: itemDetails.title,
+          description: itemDetails.description,
+          startTime: startDate.toISOString(),
+          endTime: endDate?.toISOString(),
+          location: itemDetails.location,
+        }
+      } else {
+        // Use parsed result
+        const itemDetails = extractItemDetails(input)
+
+        itemData = {
+          type: itemDetails.type,
+          title: itemDetails.title,
+          description: itemDetails.description,
+          startTime: parsedResult!.date.toISOString(),
+          endTime: parsedResult!.endDate?.toISOString(),
+          location: itemDetails.location,
+        }
+      }
+
+      await onSubmit(itemData)
 
       // Reset form on success
       setInput('')
       setParsedResult(null)
+      setIsEditing(false)
     } catch (err) {
       console.error('Itinerary submission error:', err)
       setError(err instanceof Error ? err.message : 'Failed to save itinerary item')
@@ -123,7 +202,9 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
 
     // Extract location (look for "to", "in", "at" patterns)
     let location: string | undefined
-    const locationMatch = text.match(/(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+on|\s+at|\s+from|$)/)
+    const locationMatch = text.match(
+      /(?:to|in|at)\s+([A-Z][a-zA-Z\s]+?)(?:\s+\d|\s+on|\s+at|\s+from|$)/
+    )
     if (locationMatch) {
       location = locationMatch[1].trim()
     }
@@ -131,9 +212,26 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
     return { type, title, description: text, location }
   }
 
+  const handleEdit = () => {
+    if (!parsedResult) return
+
+    // Initialize edited values from parsed result
+    setIsEditing(true)
+    setEditedDate(parsedResult.date)
+    setEditedEndDate(parsedResult.endDate)
+    setEditedIsAllDay(!parsedResult.hasTime)
+    setEditedIsRange(parsedResult.isRange)
+    setEditedDescription(input) // Use original input as description
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
   const handleReset = () => {
     setParsedResult(null)
     setError(null)
+    setIsEditing(false)
   }
 
   return (
@@ -142,8 +240,26 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Add Itinerary Item</CardTitle>
-          <CardDescription>
-            Describe your activity in plain language (e.g., "Flight to Paris Monday 9am")
+          <CardDescription className="flex items-center gap-2">
+            <span>Describe your activity in plain language</span>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs bg-white">
+                  <div className="space-y-1">
+                    <p className="font-medium text-xs">Examples:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs">
+                      <li>Flight to Paris Monday 9am</li>
+                      <li>Hotel check-in Dec 15 3pm</li>
+                      <li>Museum visit tomorrow afternoon</li>
+                      <li>Dinner reservation next Friday 7pm</li>
+                    </ul>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -165,10 +281,10 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Parsing...
+                    Adding...
                   </>
                 ) : (
-                  'Parse'
+                  'Add'
                 )}
               </Button>
             ) : (
@@ -200,7 +316,16 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Description</p>
-                  <p className="text-sm">{input}</p>
+                  {isEditing ? (
+                    <Input
+                      value={editedDescription}
+                      onChange={e => setEditedDescription(e.target.value)}
+                      placeholder="Enter description"
+                      className="text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{input}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -209,28 +334,118 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                       <Calendar className="h-3 w-3" />
                       Start Date/Time
                     </p>
-                    <p className="text-sm font-mono">{format(parsedResult.date, 'PPp')}</p>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Input
+                          type="date"
+                          value={format(editedDate, 'yyyy-MM-dd')}
+                          onChange={e => setEditedDate(new Date(e.target.value))}
+                          className="text-sm"
+                        />
+                        {!editedIsAllDay && (
+                          <Input
+                            type="time"
+                            value={format(editedDate, 'HH:mm')}
+                            onChange={e => {
+                              const [hours, minutes] = e.target.value.split(':')
+                              const newDate = new Date(editedDate)
+                              newDate.setHours(parseInt(hours), parseInt(minutes))
+                              setEditedDate(newDate)
+                            }}
+                            className="text-sm"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm font-mono">{format(parsedResult.date, 'PPp')}</p>
+                    )}
                   </div>
-                  {parsedResult.endDate && (
+                  {((isEditing && editedIsRange && editedEndDate) ||
+                    (!isEditing && parsedResult.endDate)) && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         End Date/Time
                       </p>
-                      <p className="text-sm font-mono">{format(parsedResult.endDate, 'PPp')}</p>
+                      {isEditing && editedEndDate ? (
+                        <div className="space-y-2">
+                          <Input
+                            type="date"
+                            value={format(editedEndDate, 'yyyy-MM-dd')}
+                            onChange={e => setEditedEndDate(new Date(e.target.value))}
+                            className="text-sm"
+                          />
+                          {!editedIsAllDay && (
+                            <Input
+                              type="time"
+                              value={format(editedEndDate, 'HH:mm')}
+                              onChange={e => {
+                                const [hours, minutes] = e.target.value.split(':')
+                                const newDate = new Date(editedEndDate)
+                                newDate.setHours(parseInt(hours), parseInt(minutes))
+                                setEditedEndDate(newDate)
+                              }}
+                              className="text-sm"
+                            />
+                          )}
+                        </div>
+                      ) : parsedResult.endDate ? (
+                        <p className="text-sm font-mono">{format(parsedResult.endDate, 'PPp')}</p>
+                      ) : null}
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Badge variant={parsedResult.hasTime ? 'default' : 'outline'} className="text-xs">
-                    <Clock className="mr-1 h-3 w-3" />
-                    {parsedResult.hasTime ? 'Has specific time' : 'All day'}
-                  </Badge>
-                  <Badge variant={parsedResult.isRange ? 'default' : 'outline'} className="text-xs">
-                    <Calendar className="mr-1 h-3 w-3" />
-                    {parsedResult.isRange ? 'Date range' : 'Single date'}
-                  </Badge>
+                <div className="space-y-2">
+                  {isEditing ? (
+                    <>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="all-day"
+                          aria-label="All day"
+                          checked={editedIsAllDay}
+                          onCheckedChange={setEditedIsAllDay}
+                        />
+                        <Label htmlFor="all-day" className="text-sm cursor-pointer">
+                          All day
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="date-range"
+                          aria-label="Date range"
+                          checked={editedIsRange}
+                          onCheckedChange={checked => {
+                            setEditedIsRange(checked)
+                            if (checked && !editedEndDate) {
+                              // Initialize end date to same as start date
+                              setEditedEndDate(new Date(editedDate))
+                            }
+                          }}
+                        />
+                        <Label htmlFor="date-range" className="text-sm cursor-pointer">
+                          Date range
+                        </Label>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Badge
+                        variant={parsedResult.hasTime ? 'default' : 'outline'}
+                        className="text-xs"
+                      >
+                        <Clock className="mr-1 h-3 w-3" />
+                        {parsedResult.hasTime ? 'Has specific time' : 'All day'}
+                      </Badge>
+                      <Badge
+                        variant={parsedResult.isRange ? 'default' : 'outline'}
+                        className="text-xs"
+                      >
+                        <Calendar className="mr-1 h-3 w-3" />
+                        {parsedResult.isRange ? 'Date range' : 'Single date'}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -259,27 +474,23 @@ export function ItineraryInput({ tripId: _tripId, onSubmit }: ItineraryInputProp
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" onClick={handleReset} disabled={submitting}>
-                    <Edit3 className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
+                  {isEditing ? (
+                    <Button variant="outline" onClick={handleCancelEdit} disabled={submitting}>
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                  ) : (
+                    <Button variant="outline" onClick={handleEdit} disabled={submitting}>
+                      <Edit3 className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
         </CardContent>
       </Card>
-
-      {/* Help Text */}
-      <div className="text-xs text-muted-foreground space-y-1">
-        <p className="font-medium">Examples:</p>
-        <ul className="list-disc list-inside space-y-0.5 ml-2">
-          <li>Flight to Paris Monday 9am</li>
-          <li>Hotel check-in Dec 15 3pm</li>
-          <li>Museum visit tomorrow afternoon</li>
-          <li>Dinner reservation next Friday 7pm</li>
-        </ul>
-      </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-/* eslint-disable no-undef, @typescript-eslint/no-require-imports */
+/* eslint-env node */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [

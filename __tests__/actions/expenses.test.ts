@@ -384,6 +384,13 @@ describe('createExpense integration', () => {
           error: null,
         }),
       },
+      rpc: jest.fn((funcName: string, _params?: any) => {
+        if (funcName === 'is_trip_participant_with_role') {
+          // Return true to indicate user has permission
+          return Promise.resolve({ data: true, error: null })
+        }
+        throw new Error(`Unexpected RPC function: ${funcName}`)
+      }),
       from: jest.fn((table: string) => {
         if (table === 'trip_participants') {
           return {

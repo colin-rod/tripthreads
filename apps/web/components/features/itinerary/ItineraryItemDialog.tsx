@@ -14,6 +14,12 @@ import type {
   ItineraryItemWithParticipants,
   ItineraryItemLink,
   ItineraryItemType,
+  ItineraryItemMetadata,
+  TransportMetadata,
+  AccommodationMetadata,
+  DiningMetadata,
+  ActivityMetadata,
+  SightseeingMetadata,
 } from '@tripthreads/core'
 import { ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import {
@@ -29,17 +35,33 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChipSelector, type ChipOption } from '@/components/ui/chip-selector'
 import { Link as LinkIcon, X, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import * as LucideIcons from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { createItineraryItem, updateItineraryItem } from '@/app/actions/itinerary'
 import { useToast } from '@/hooks/use-toast'
+import { TransportMetadataFields } from './metadata/TransportMetadataFields'
+import { AccommodationMetadataFields } from './metadata/AccommodationMetadataFields'
+import { DiningMetadataFields } from './metadata/DiningMetadataFields'
+import { ActivityMetadataFields } from './metadata/ActivityMetadataFields'
+import { SightseeingMetadataFields } from './metadata/SightseeingMetadataFields'
+
+// Build chip options from ITINERARY_ITEM_TYPE_CONFIG
+const itineraryTypeOptions: ChipOption<ItineraryItemType>[] = Object.entries(
+  ITINERARY_ITEM_TYPE_CONFIG
+).map(([key, config]) => {
+  // Resolve icon dynamically (pattern from CalendarEventCard.tsx)
+  const iconName = config.icon as keyof typeof LucideIcons
+  const IconComponent = (LucideIcons[iconName] as LucideIcon) || LucideIcons.Calendar
+
+  return {
+    value: key as ItineraryItemType,
+    label: config.label,
+    icon: IconComponent,
+    description: config.description,
+  }
+})
 
 interface ItineraryItemDialogProps {
   open: boolean
@@ -75,6 +97,7 @@ export function ItineraryItemDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [links, setLinks] = useState<ItineraryItemLink[]>([])
   const [newLink, setNewLink] = useState({ title: '', url: '' })
+  const [metadata, setMetadata] = useState<ItineraryItemMetadata | undefined>(undefined)
 
   const {
     register,
@@ -96,12 +119,18 @@ export function ItineraryItemDialog({
     },
   })
 
-  // Load links from item
+  // Load links and metadata from item
   useEffect(() => {
     if (item?.links && Array.isArray(item.links)) {
       setLinks(item.links as ItineraryItemLink[])
     } else {
       setLinks([])
+    }
+
+    if (item?.metadata) {
+      setMetadata(item.metadata)
+    } else {
+      setMetadata(undefined)
     }
   }, [item])
 
@@ -130,8 +159,18 @@ export function ItineraryItemDialog({
         isAllDay: false,
       })
       setLinks([])
+      setMetadata(undefined)
     }
   }, [open, item, mode, reset])
+
+  // Watch for type changes and clear metadata when type changes
+  const currentType = watch('type')
+  useEffect(() => {
+    if (open && mode === 'create') {
+      // Clear metadata when type changes in create mode
+      setMetadata(undefined)
+    }
+  }, [currentType, open, mode])
 
   const isAllDay = watch('isAllDay')
   const isViewMode = mode === 'view'
@@ -162,6 +201,7 @@ export function ItineraryItemDialog({
           endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
           isAllDay: data.isAllDay,
           links: links.length > 0 ? links : undefined,
+          metadata: metadata || undefined,
         })
 
         if (result.success) {
@@ -190,6 +230,7 @@ export function ItineraryItemDialog({
           endTime: data.endTime ? new Date(data.endTime).toISOString() : null,
           isAllDay: data.isAllDay,
           links: links.length > 0 ? links : [],
+          metadata: metadata || undefined,
         })
 
         if (result.success) {
@@ -221,7 +262,7 @@ export function ItineraryItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' && 'Add Itinerary Item'}
@@ -236,171 +277,233 @@ export function ItineraryItemDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Type Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select
-              value={watch('type')}
-              onValueChange={value => setValue('type', value)}
-              disabled={isViewMode}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(ITINERARY_ITEM_TYPE_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <span className={cn('font-medium', config.color)}>{config.label}</span>
+          {/* Two-column grid layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column - Generic Fields */}
+            <div className="space-y-4">
+              {/* Type Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <ChipSelector
+                  options={itineraryTypeOptions}
+                  value={watch('type')}
+                  onValueChange={value => setValue('type', value)}
+                  aria-label="Select itinerary item type"
+                  disabled={isViewMode}
+                />
+              </div>
+
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  {...register('title', { required: 'Title is required' })}
+                  id="title"
+                  disabled={isViewMode}
+                  placeholder="e.g., Flight to Paris"
+                />
+                {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  {...register('description')}
+                  id="description"
+                  disabled={isViewMode}
+                  placeholder="Add details about this item..."
+                  rows={3}
+                />
+              </div>
+
+              {/* All-day toggle */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="isAllDay">All-day event</Label>
+                <Switch
+                  id="isAllDay"
+                  checked={isAllDay}
+                  onCheckedChange={checked => setValue('isAllDay', checked)}
+                  disabled={isViewMode}
+                  aria-label="All-day event"
+                />
+              </div>
+
+              {/* Start Time */}
+              <div className="space-y-2">
+                <Label htmlFor="startTime">{isAllDay ? 'Start Date' : 'Start Date & Time'} *</Label>
+                <Input
+                  {...register('startTime', { required: 'Start time is required' })}
+                  id="startTime"
+                  type={isAllDay ? 'date' : 'datetime-local'}
+                  disabled={isViewMode}
+                />
+                {errors.startTime && (
+                  <p className="text-sm text-destructive">{errors.startTime.message}</p>
+                )}
+              </div>
+
+              {/* End Time */}
+              <div className="space-y-2">
+                <Label htmlFor="endTime">{isAllDay ? 'End Date' : 'End Date & Time'}</Label>
+                <Input
+                  {...register('endTime')}
+                  id="endTime"
+                  type={isAllDay ? 'date' : 'datetime-local'}
+                  disabled={isViewMode}
+                />
+              </div>
+
+              {/* Location */}
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  {...register('location')}
+                  id="location"
+                  disabled={isViewMode}
+                  placeholder="e.g., Charles de Gaulle Airport"
+                />
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  {...register('notes')}
+                  id="notes"
+                  disabled={isViewMode}
+                  placeholder="Additional notes, reminders, or important information..."
+                  rows={4}
+                />
+              </div>
+
+              {/* Links */}
+              <div className="space-y-2">
+                <Label>Links & Bookings</Label>
+                <div className="space-y-2">
+                  {links.map((link, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 border rounded-lg">
+                      <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{link.title}</p>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline truncate block"
+                        >
+                          {link.url}
+                        </a>
+                      </div>
+                      {!isViewMode && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeLink(index)}
+                          className="flex-shrink-0"
+                          aria-label="Remove link"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                  ))}
 
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              {...register('title', { required: 'Title is required' })}
-              disabled={isViewMode}
-              placeholder="e.g., Flight to Paris"
-            />
-            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              disabled={isViewMode}
-              placeholder="Add details about this item..."
-              rows={3}
-            />
-          </div>
-
-          {/* All-day toggle */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isAllDay">All-day event</Label>
-            <Switch
-              id="isAllDay"
-              checked={isAllDay}
-              onCheckedChange={checked => setValue('isAllDay', checked)}
-              disabled={isViewMode}
-            />
-          </div>
-
-          {/* Start Time */}
-          <div className="space-y-2">
-            <Label htmlFor="startTime">{isAllDay ? 'Start Date' : 'Start Date & Time'} *</Label>
-            <Input
-              id="startTime"
-              type={isAllDay ? 'date' : 'datetime-local'}
-              {...register('startTime', { required: 'Start time is required' })}
-              disabled={isViewMode}
-            />
-            {errors.startTime && (
-              <p className="text-sm text-destructive">{errors.startTime.message}</p>
-            )}
-          </div>
-
-          {/* End Time */}
-          <div className="space-y-2">
-            <Label htmlFor="endTime">{isAllDay ? 'End Date' : 'End Date & Time'}</Label>
-            <Input
-              id="endTime"
-              type={isAllDay ? 'date' : 'datetime-local'}
-              {...register('endTime')}
-              disabled={isViewMode}
-            />
-          </div>
-
-          {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              {...register('location')}
-              disabled={isViewMode}
-              placeholder="e.g., Charles de Gaulle Airport"
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              {...register('notes')}
-              disabled={isViewMode}
-              placeholder="Additional notes, reminders, or important information..."
-              rows={4}
-            />
-          </div>
-
-          {/* Links */}
-          <div className="space-y-2">
-            <Label>Links & Bookings</Label>
-            <div className="space-y-2">
-              {links.map((link, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 border rounded-lg">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{link.title}</p>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline truncate block"
-                    >
-                      {link.url}
-                    </a>
-                  </div>
                   {!isViewMode && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeLink(index)}
-                      className="flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Link title"
+                        value={newLink.title}
+                        onChange={e => setNewLink({ ...newLink, title: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Input
+                        placeholder="URL"
+                        value={newLink.url}
+                        onChange={e => setNewLink({ ...newLink, url: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={addLink}
+                        disabled={!newLink.title || !newLink.url}
+                        aria-label="Add link"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
-              ))}
-
-              {!isViewMode && (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Link title"
-                    value={newLink.title}
-                    onChange={e => setNewLink({ ...newLink, title: e.target.value })}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="URL"
-                    value={newLink.url}
-                    onChange={e => setNewLink({ ...newLink, url: e.target.value })}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={addLink}
-                    disabled={!newLink.title || !newLink.url}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              </div>
             </div>
+            {/* End Left Column */}
+
+            {/* Right Column - Type-Specific Metadata */}
+            {!isViewMode && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-4">
+                    {currentType === 'transport' && 'Transport Details'}
+                    {currentType === 'accommodation' && 'Accommodation Details'}
+                    {currentType === 'dining' && 'Dining Details'}
+                    {currentType === 'activity' && 'Activity Details'}
+                    {currentType === 'sightseeing' && 'Sightseeing Details'}
+                    {currentType === 'general' && 'Additional Details'}
+                  </h3>
+                </div>
+
+                {currentType === 'transport' && (
+                  <TransportMetadataFields
+                    metadata={(metadata as Partial<TransportMetadata>) || {}}
+                    onChange={updatedMetadata =>
+                      setMetadata(updatedMetadata as ItineraryItemMetadata)
+                    }
+                  />
+                )}
+                {currentType === 'accommodation' && (
+                  <AccommodationMetadataFields
+                    metadata={(metadata as Partial<AccommodationMetadata>) || {}}
+                    onChange={updatedMetadata =>
+                      setMetadata(updatedMetadata as ItineraryItemMetadata)
+                    }
+                  />
+                )}
+                {currentType === 'dining' && (
+                  <DiningMetadataFields
+                    metadata={(metadata as Partial<DiningMetadata>) || {}}
+                    onChange={updatedMetadata =>
+                      setMetadata(updatedMetadata as ItineraryItemMetadata)
+                    }
+                  />
+                )}
+                {currentType === 'activity' && (
+                  <ActivityMetadataFields
+                    metadata={(metadata as Partial<ActivityMetadata>) || {}}
+                    onChange={updatedMetadata =>
+                      setMetadata(updatedMetadata as ItineraryItemMetadata)
+                    }
+                  />
+                )}
+                {currentType === 'sightseeing' && (
+                  <SightseeingMetadataFields
+                    metadata={(metadata as Partial<SightseeingMetadata>) || {}}
+                    onChange={updatedMetadata =>
+                      setMetadata(updatedMetadata as ItineraryItemMetadata)
+                    }
+                  />
+                )}
+                {currentType === 'general' && (
+                  <p className="text-sm text-muted-foreground">
+                    No type-specific fields for general items.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+          {/* End Two-column grid */}
 
           {/* Footer */}
           <DialogFooter>

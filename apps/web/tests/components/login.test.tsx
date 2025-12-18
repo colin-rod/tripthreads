@@ -1,44 +1,39 @@
 import { describe, it, beforeEach, jest } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { useRouter } from 'next/navigation'
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import LoginPage from '../../app/(auth)/login/page'
-import { useAuth } from '../../lib/auth/auth-context'
 
 type AuthResult = { error: Error | null }
 const createAuthMock = <Args extends unknown[] = []>() =>
   jest.fn<(...args: Args) => Promise<AuthResult>>()
 
+const mockPush = jest.fn()
+const mockSignIn = createAuthMock<[string, string]>()
+const mockSignInWithGoogle = createAuthMock()
+
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }))
 
 // Mock auth context
 jest.mock('../../lib/auth/auth-context', () => ({
-  useAuth: jest.fn(),
+  useAuth: () => ({
+    signIn: mockSignIn,
+    signInWithGoogle: mockSignInWithGoogle,
+    user: null,
+    session: null,
+    loading: false,
+    signUp: createAuthMock<[string, string, string]>(),
+    signOut: createAuthMock(),
+  }),
 }))
 
 describe('LoginPage', () => {
-  const mockPush = jest.fn()
-  const mockSignIn = createAuthMock<[string, string]>()
-  const mockSignInWithGoogle = createAuthMock()
-
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(useRouter).mockReturnValue({
-      push: mockPush,
-    } as unknown as AppRouterInstance)
-    jest.mocked(useAuth).mockReturnValue({
-      signIn: mockSignIn,
-      signInWithGoogle: mockSignInWithGoogle,
-      user: null,
-      session: null,
-      loading: false,
-      signUp: createAuthMock<[string, string, string]>(),
-      signOut: createAuthMock(),
-    })
   })
 
   it('should render login form', () => {
@@ -131,6 +126,6 @@ describe('LoginPage', () => {
 
     const signupLink = screen.getByText('Sign up')
     expect(signupLink).toBeDefined()
-    expect(signupLink.closest('a')).toHaveProperty('href', '/signup')
+    expect(signupLink.closest('a')).toHaveAttribute('href', '/signup')
   })
 })

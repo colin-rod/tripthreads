@@ -1,33 +1,28 @@
 /**
- * Trip Detail Page with AI Parser Integration
+ * Trip Detail Page with Dashboard Hub Navigation
  *
- * Enhanced version with natural language input for expenses and itinerary.
+ * Refactored to use hash-based navigation with a dashboard hub.
  * Features:
- * - Trip header with name, dates, description
- * - Owner and participants list
- * - AI-powered expense input (OpenAI GPT-4o-mini)
- * - AI-powered itinerary input (OpenAI GPT-4o-mini)
- * - Edit/Delete buttons (owner only)
- * - Tabs for Timeline, Expenses, Feed, Settings (future)
+ * - Dashboard view with preview cards for all sections
+ * - Hash-based section routing (#chat, #expenses, #plan, #feed, #settings)
+ * - Horizontal navigation (desktop) and bottom navigation (mobile)
+ * - Single-page architecture for smoother UX
  */
 
 import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
-import { Calendar, MapPin, Users, DollarSign, Route } from 'lucide-react'
-
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { getTripById, isTripOwner } from '@tripthreads/core'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { TripActions } from '@/components/features/trips/TripActions'
-import { InviteButton } from '@/components/features/trips/InviteButton'
-import { PendingInvitesList } from '@/components/features/invites/PendingInvitesList'
-import { ExpenseInputWrapper } from '@/components/features/expenses/ExpenseInputWrapper'
-import { ItineraryInputWrapper } from '@/components/features/itinerary/ItineraryInputWrapper'
-import { ParticipantsList } from '@/components/features/trips/ParticipantsList'
-import PhotoUpload from '@/components/features/feed/PhotoUpload'
-import PhotoFeed from '@/components/features/feed/PhotoFeed'
+import {
+  getTripById,
+  isTripOwner,
+  getTripItineraryItems,
+  getUserExpensesForTrip,
+  getSettlementSummary,
+} from '@tripthreads/core'
+import { TripPageClient } from '@/components/features/trips/TripPageClient'
+import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
+import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
+import { getChatMessages } from '@/app/actions/chat'
 
 interface TripDetailPageProps {
   params: Promise<{
@@ -35,204 +30,136 @@ interface TripDetailPageProps {
   }>
 }
 
-type TripWithRelations = NonNullable<Awaited<ReturnType<typeof getTripById>>>
 type TripRole = 'owner' | 'participant' | 'viewer'
-type TripParticipant = TripWithRelations['trip_participants'] extends (infer P)[]
-  ? Omit<P, 'role'> & { role: TripRole }
-  : never
 
 export default async function TripDetailPage({ params }: TripDetailPageProps) {
   const supabase = await createClient()
   const { id } = await params
 
-  let trip!: TripWithRelations
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    notFound()
+  }
+
+  // Fetch all trip data in parallel
+  let trip
   let isOwner = false
+  let itineraryItems: Awaited<ReturnType<typeof getTripItineraryItems>> = []
+  let expenses: Awaited<ReturnType<typeof getUserExpensesForTrip>> = []
+  let settlementSummary: Awaited<ReturnType<typeof getSettlementSummary>> | null = null
 
   try {
-    trip = await getTripById(supabase, id)
-    isOwner = await isTripOwner(supabase, id)
+    ;[trip, isOwner, itineraryItems, expenses, settlementSummary] = await Promise.all([
+      getTripById(supabase, id),
+      isTripOwner(supabase, id),
+      getTripItineraryItems(supabase, id),
+      getUserExpensesForTrip(supabase, id),
+      getSettlementSummary(supabase, id),
+    ])
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
   }
 
-  const startDate = new Date(trip.start_date)
-  const endDate = new Date(trip.end_date)
-
   // Get user's role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   const tripParticipants = (trip.trip_participants ?? []).map(p => ({
     ...p,
     role: p.role as TripRole,
-  })) as TripParticipant[]
+  }))
+
   const userParticipant = tripParticipants.find(participant => participant.user?.id === user?.id)
   const canEdit = userParticipant?.role !== 'viewer'
 
+  // Prepare trip participants for sections
+  const participants = tripParticipants.map(p => ({
+    id: p.user?.id || '',
+    name: p.user?.full_name || 'Unknown',
+    full_name: p.user?.full_name || null,
+  }))
+
+  // Format itinerary items for dashboard
+  const formattedItineraryItems = itineraryItems.map(item => ({
+    id: item.id,
+    type: item.type || 'general',
+    title: item.title,
+    start_time: item.start_time,
+    location: item.location,
+  }))
+
+  // Format expenses for dashboard
+  const recentExpenses = expenses.slice(0, 3).map(expense => ({
+    id: expense.id,
+    description: expense.description,
+    amount: expense.amount,
+    currency: expense.currency,
+    created_at: expense.created_at,
+  }))
+
+  // Fetch recent chat messages for dashboard preview (last 3 messages)
+  const chatMessagesResult = await getChatMessages(id, 3)
+  const recentMessages = chatMessagesResult.success
+    ? (chatMessagesResult.data || []).map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_name: msg.user?.full_name || 'Unknown',
+        created_at: msg.created_at,
+      }))
+    : []
+
+  // TODO: Fetch unread message count (future enhancement)
+  const unreadMessageCount = 0
+
+  // TODO: Fetch media files for dashboard
+  const mediaFiles: Array<{
+    id: string
+    file_url: string
+    thumbnail_url?: string | null
+    caption?: string | null
+  }> = []
+
+  // Fetch notification preferences for settings section
+  const { data: currentParticipant } = await supabase
+    .from('trip_participants')
+    .select('notification_preferences')
+    .eq('trip_id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  const tripNotificationPreferences =
+    (currentParticipant?.notification_preferences as TripNotificationPreferences) || null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('notification_preferences')
+    .eq('id', user.id)
+    .single()
+
+  const globalNotificationPreferences =
+    (profile?.notification_preferences as GlobalNotificationPreferences) || {}
+
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      {/* Trip Header */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">{trip.name}</h1>
-                {isOwner && <Badge variant="outline">Owner</Badge>}
-                {userParticipant?.role === 'viewer' && <Badge variant="secondary">Viewer</Badge>}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {trip.trip_participants.length}{' '}
-                    {trip.trip_participants.length === 1 ? 'person' : 'people'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <InviteButton tripId={trip.id} isOwner={isOwner} />
-              {isOwner && <TripActions trip={trip} />}
-            </div>
-          </div>
-        </CardHeader>
-
-        {trip.description && (
-          <CardContent>
-            <p className="text-muted-foreground">{trip.description}</p>
-          </CardContent>
-        )}
-      </Card>
-
-      {/* Cover Image (if exists) */}
-      {trip.cover_image_url && (
-        <Card className="mb-6 overflow-hidden">
-          <div className="relative aspect-video">
-            <img
-              src={trip.cover_image_url}
-              alt={trip.name}
-              className="object-cover w-full h-full"
-            />
-          </div>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Participants Sidebar */}
-        <div className="lg:col-span-1">
-          <ParticipantsList participants={tripParticipants} />
-        </div>
-
-        {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Invitations List (owners only) */}
-          <PendingInvitesList tripId={trip.id} isOwner={isOwner} />
-
-          {/* Tabs for Timeline, Expenses, etc. */}
-          <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="timeline">
-                <Route className="h-4 w-4 mr-2" />
-                Timeline
-              </TabsTrigger>
-              <TabsTrigger value="expenses">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Expenses
-              </TabsTrigger>
-              <TabsTrigger value="feed">
-                <MapPin className="h-4 w-4 mr-2" />
-                Feed
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Timeline Tab */}
-            <TabsContent value="timeline" className="space-y-6 mt-6">
-              {/* AI Itinerary Input (Participants only) */}
-              {canEdit && <ItineraryInputWrapper tripId={trip.id} />}
-
-              {/* Itinerary List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Itinerary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No itinerary items yet</p>
-                    <p className="text-sm mt-1">
-                      {canEdit
-                        ? 'Add activities, flights, and accommodations using natural language above'
-                        : 'Only participants can add itinerary items'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Expenses Tab */}
-            <TabsContent value="expenses" className="space-y-6 mt-6">
-              {/* AI Expense Input (Participants only, hidden from viewers) */}
-              {canEdit && <ExpenseInputWrapper tripId={trip.id} />}
-
-              {/* Expenses List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No expenses yet</p>
-                    <p className="text-sm mt-1">
-                      {canEdit
-                        ? 'Add expenses using natural language above'
-                        : userParticipant?.role === 'viewer'
-                          ? 'Viewers cannot see expenses'
-                          : 'Start tracking expenses for this trip'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Feed Tab */}
-            <TabsContent value="feed" className="space-y-6 mt-6">
-              {/* Photo Upload (Participants only) */}
-              {canEdit && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Upload Photos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PhotoUpload tripId={trip.id} />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Photo Feed (Gallery + Lightbox) */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Trip Photos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PhotoFeed tripId={trip.id} userId={user?.id || ''} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <TripPageClient
+        trip={trip}
+        isOwner={isOwner}
+        canEdit={canEdit}
+        currentUserId={user.id}
+        participants={tripParticipants}
+        itineraryItems={formattedItineraryItems}
+        recentExpenses={recentExpenses}
+        allExpenses={expenses}
+        settlementSummary={settlementSummary}
+        recentMessages={recentMessages}
+        unreadMessageCount={unreadMessageCount}
+        mediaFiles={mediaFiles}
+        tripParticipantsForSections={participants}
+        tripNotificationPreferences={tripNotificationPreferences}
+        globalNotificationPreferences={globalNotificationPreferences}
+      />
+    </Suspense>
   )
 }

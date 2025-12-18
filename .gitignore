@@ -76,3 +76,8 @@ supabase.ts
 *.bak
 *.backup
 *~
+
+# Debug SQL files
+debug_expenses.sql
+get_ids.sql
+simple_debug.sql

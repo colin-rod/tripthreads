@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
 
   // Transpile monorepo packages
   transpilePackages: ['@tripthreads/core'],
+
+  // Allow images from Supabase Storage
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'tbwbaydyyjokrsjtgerh.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 }
 
 // Sentry configuration

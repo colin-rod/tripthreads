@@ -13,6 +13,8 @@ import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { DurationBadge } from './DurationBadge'
+import { ItineraryItemTooltip } from './ItineraryItemTooltip'
 
 interface CalendarEventCardProps {
   item: ItineraryItemWithParticipants
@@ -32,26 +34,36 @@ export function CalendarEventCard({ item, isAllDay, onClick }: CalendarEventCard
   const timeString = isAllDay ? 'All day' : format(startTime, 'h:mm a')
 
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'w-full h-full rounded-md p-2 text-left transition-all hover:shadow-md',
-        'border-l-4 cursor-pointer',
-        config.bgColor,
-        config.borderColor,
-        isAllDay ? 'min-h-[40px]' : 'overflow-hidden'
-      )}
-    >
-      <div className="flex items-start gap-2">
-        <IconComponent className={cn('h-4 w-4 flex-shrink-0 mt-0.5', config.color)} />
-        <div className="flex-1 min-w-0">
-          <div className={cn('font-medium text-sm truncate', config.color)}>{item.title}</div>
-          {!isAllDay && <div className="text-xs text-muted-foreground">{timeString}</div>}
-          {item.location && (
-            <div className="text-xs text-muted-foreground truncate">{item.location}</div>
-          )}
+    <ItineraryItemTooltip item={item}>
+      <button
+        onClick={onClick}
+        className={cn(
+          'w-full h-full rounded-md p-2 text-left transition-all hover:shadow-md',
+          'border-l-4 cursor-pointer',
+          config.bgColor,
+          config.borderColor,
+          isAllDay ? 'min-h-[40px]' : 'overflow-hidden'
+        )}
+      >
+        <div className="flex items-start gap-2">
+          <IconComponent className={cn('h-4 w-4 flex-shrink-0 mt-0.5', config.color)} />
+          <div className="flex-1 min-w-0">
+            <div className={cn('font-medium text-sm truncate', config.color)}>{item.title}</div>
+            <div className="flex items-center gap-2">
+              {!isAllDay && <div className="text-xs text-muted-foreground">{timeString}</div>}
+              <DurationBadge
+                startTime={item.start_time}
+                endTime={item.end_time}
+                isAllDay={isAllDay}
+                size="sm"
+              />
+            </div>
+            {item.location && (
+              <div className="text-xs text-muted-foreground truncate">{item.location}</div>
+            )}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </ItineraryItemTooltip>
   )
 }

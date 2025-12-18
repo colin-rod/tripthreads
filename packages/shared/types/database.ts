@@ -1092,6 +1092,10 @@ export type Database = {
         Args: { p_participant_id: string }
         Returns: number
       }
+      can_user_create_trip: {
+        Args: { trip_owner_id: string }
+        Returns: boolean
+      }
       can_user_read_trip_participant: {
         Args: { p_trip_id: string; p_user_id: string }
         Returns: boolean
@@ -1103,6 +1107,14 @@ export type Database = {
       can_user_see_item: {
         Args: { p_item_date: string; p_trip_id: string; p_user_id: string }
         Returns: boolean
+      }
+      debug_auth_context: {
+        Args: never
+        Returns: {
+          auth_role: string
+          auth_uid: string
+          jwt_claims: Json
+        }[]
       }
       generate_invite_token: { Args: never; Returns: string }
       get_invite_with_trip_details: { Args: { p_token: string }; Returns: Json }
@@ -1117,6 +1129,8 @@ export type Database = {
           trip_name: string
         }[]
       }
+      get_service_role_key: { Args: never; Returns: string }
+      get_supabase_url: { Args: never; Returns: string }
       get_user_trip_join_date: {
         Args: { p_trip_id: string; p_user_id: string }
         Returns: string
@@ -1141,6 +1155,15 @@ export type Database = {
       is_trip_participant_with_role: {
         Args: { p_roles: string[]; p_trip_id: string; p_user_id: string }
         Returns: boolean
+      }
+      test_jwt_access: {
+        Args: never
+        Returns: {
+          auth_uid_function: string
+          jwt_claims_raw: string
+          jwt_sub: string
+          they_match: boolean
+        }[]
       }
     }
     Enums: {
