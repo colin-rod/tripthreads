@@ -401,7 +401,9 @@ describe('PhotoLightbox', () => {
       const deleteButton = screen.getByLabelText(/delete/i)
       await user.click(deleteButton)
 
-      expect(screen.getByText(/are you sure you want to delete this photo/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/this action cannot be undone.*permanently removed/i)
+      ).toBeInTheDocument()
     })
 
     it('should delete photo on confirmation', async () => {

@@ -228,6 +228,7 @@ export default function PhotoLightbox({
                     variant="ghost"
                     size="sm"
                     onClick={handleEditClick}
+                    aria-label="Edit photo"
                     className="text-white hover:bg-white/20"
                   >
                     <Pencil className="h-4 w-4 mr-2" />
@@ -237,6 +238,7 @@ export default function PhotoLightbox({
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowDeleteDialog(true)}
+                    aria-label="Delete photo"
                     className="text-white hover:bg-white/20"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
@@ -248,6 +250,7 @@ export default function PhotoLightbox({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
+                aria-label="Close lightbox"
                 className="text-white hover:bg-white/20"
               >
                 <X className="h-5 w-5" />
@@ -270,6 +273,7 @@ export default function PhotoLightbox({
                   variant="ghost"
                   size="icon"
                   onClick={handlePrevious}
+                  aria-label="Previous photo"
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
                 >
                   <ChevronLeft className="h-8 w-8" />
@@ -278,6 +282,7 @@ export default function PhotoLightbox({
                   variant="ghost"
                   size="icon"
                   onClick={handleNext}
+                  aria-label="Next photo"
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
                 >
                   <ChevronRight className="h-8 w-8" />
