@@ -9,7 +9,9 @@ import { updateMediaFile, deleteMediaFile, deleteMediaFileFromStorage } from '@t
 import { createClient } from '@/lib/supabase/client'
 
 // Mock dependencies
-jest.mock('@/lib/supabase/client')
+jest.mock('@/lib/supabase/client', () => ({
+  createClient: jest.fn(),
+}))
 jest.mock('@tripthreads/core')
 jest.mock('date-fns', () => ({
   format: jest.fn((date: Date | string, formatStr: string) => {
@@ -29,8 +31,6 @@ const mockSupabase = {
     from: jest.fn(),
   },
 }
-
-;(createClient as jest.Mock).mockReturnValue(mockSupabase)
 
 describe('PhotoLightbox', () => {
   const mockPhotos = [
@@ -78,6 +78,7 @@ describe('PhotoLightbox', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(createClient as jest.Mock).mockReturnValue(mockSupabase)
   })
 
   describe('Rendering', () => {
