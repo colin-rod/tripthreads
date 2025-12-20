@@ -2,8 +2,9 @@ import { describe, it, beforeEach, jest, afterEach } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import SignupPage from '../../app/(auth)/signup/page'
+import * as analytics from '../../lib/analytics'
 
-type AuthResult = { error: Error | null }
+type AuthResult = { error: Error | null; data?: { user?: { id: string } } }
 const createAuthMock = <Args extends unknown[] = []>() =>
   jest.fn<(...args: Args) => Promise<AuthResult>>()
 
@@ -16,6 +17,11 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+}))
+
+// Mock analytics
+jest.mock('../../lib/analytics', () => ({
+  trackSignup: jest.fn(),
 }))
 
 // Mock auth context
@@ -54,7 +60,10 @@ describe('SignupPage', () => {
   })
 
   it('should handle successful sign up', async () => {
-    mockSignUp.mockResolvedValue({ error: null })
+    mockSignUp.mockResolvedValue({
+      error: null,
+      data: { user: { id: 'test-user-id' } },
+    })
 
     render(<SignupPage />)
 
@@ -70,6 +79,7 @@ describe('SignupPage', () => {
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith('test@example.com', 'password123', 'Test User')
+      expect(analytics.trackSignup).toHaveBeenCalledWith('email', 'test-user-id')
       expect(screen.getByText('Account created!')).toBeDefined()
     })
 
@@ -136,7 +146,17 @@ describe('SignupPage', () => {
 
   it('should disable form during submission', async () => {
     mockSignUp.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve({ error: null }), 100))
+      () =>
+        new Promise(resolve =>
+          setTimeout(
+            () =>
+              resolve({
+                error: null,
+                data: { user: { id: 'test-user-id' } },
+              }),
+            100
+          )
+        )
     )
 
     render(<SignupPage />)
