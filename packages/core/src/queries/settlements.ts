@@ -21,6 +21,20 @@ import {
 } from '../utils/settlements'
 import { getUserExpensesForTrip } from './expenses'
 
+// Track settlement creation callback (set by web/mobile app)
+let trackSettlementCreatedCallback:
+  | ((params: {
+      tripId: string
+      settlementCount: number
+      totalDebts: number
+      currency: string
+    }) => void)
+  | null = null
+
+export function setSettlementCreatedTracker(tracker: typeof trackSettlementCreatedCallback) {
+  trackSettlementCreatedCallback = tracker
+}
+
 /**
  * Get trip base currency
  */
@@ -92,6 +106,16 @@ export async function getSettlementSummary(
 
   // Optimize settlements to minimize transactions
   const settlements = optimizeSettlements(balances)
+
+  // Track settlement creation (if tracker is set)
+  if (trackSettlementCreatedCallback && settlements.length > 0) {
+    trackSettlementCreatedCallback({
+      tripId,
+      settlementCount: settlements.length,
+      totalDebts: balances.filter(b => b.net_balance < 0).length,
+      currency: baseCurrency,
+    })
+  }
 
   // Upsert pending settlements to database (creates/updates based on optimization)
   await upsertSettlements(supabase, tripId, settlements, baseCurrency)

@@ -10,6 +10,7 @@ import { AppNavBar } from '@/components/layouts/AppNavBar'
 import { ProfileCompletionProvider } from '@/components/features/profile/ProfileCompletionProvider'
 import { LazyOnboarding } from '@/components/features/onboarding/LazyOnboarding'
 import { TripContextProvider } from '@/lib/contexts/trip-context'
+import { Footer } from '@/components/features/legal/Footer'
 
 export default function AppLayout({
   children,
@@ -18,14 +19,17 @@ export default function AppLayout({
 }>) {
   return (
     <TripContextProvider>
-      <AppNavBar />
-      <ProfileCompletionProvider />
-      <LazyOnboarding autoStart={true} />
-      {/*
-        Padding: pt-24 (96px) accounts for two-row navbar on trip pages
-        Non-trip pages have single-row (48px) but extra padding is acceptable
-      */}
-      <div className="pt-24">{children}</div>
+      <div className="flex flex-col min-h-screen">
+        <AppNavBar />
+        <ProfileCompletionProvider />
+        <LazyOnboarding autoStart={true} />
+        {/*
+          Padding: pt-24 (96px) accounts for two-row navbar on trip pages
+          Non-trip pages have single-row (48px) but extra padding is acceptable
+        */}
+        <main className="flex-1 pt-24">{children}</main>
+        <Footer />
+      </div>
     </TripContextProvider>
   )
 }

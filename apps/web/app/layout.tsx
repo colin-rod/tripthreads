@@ -5,6 +5,11 @@ import { PostHogProvider } from '@/lib/analytics/posthog-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import { FloatingFeedbackButton } from '@/components/features/feedback/FloatingFeedbackButton'
+import { CookieConsentBanner } from '@/components/features/legal/CookieConsentBanner'
+import { initializeAnalytics } from '@/lib/analytics'
+
+// Initialize analytics trackers on app load
+initializeAnalytics()
 
 export const metadata: Metadata = {
   title: 'TripThreads - Collaborative Trip Planning',
@@ -25,6 +30,7 @@ export default function RootLayout({
         <Toaster />
         <SonnerToaster position="top-right" />
         <FloatingFeedbackButton />
+        <CookieConsentBanner />
       </body>
     </html>
   )

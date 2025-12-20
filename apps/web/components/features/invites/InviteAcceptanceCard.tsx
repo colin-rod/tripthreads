@@ -27,6 +27,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker'
 
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvite, type InviteWithDetails } from '@tripthreads/core'
+import { trackInviteAccepted } from '@/lib/analytics'
 
 interface InviteAcceptanceCardProps {
   inviteDetails: InviteWithDetails
@@ -69,6 +70,14 @@ export function InviteAcceptanceCard({ inviteDetails, token }: InviteAcceptanceC
             }
           : undefined
       )
+
+      // Track successful invite acceptance
+      trackInviteAccepted({
+        tripId: result.trip_id,
+        role: invite.role,
+        inviteMethod: 'email', // Invites are currently email-only
+        isPartialJoiner: isPartialJoiner,
+      })
 
       toast({
         title: 'Welcome to the trip!',

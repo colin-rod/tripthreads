@@ -5,6 +5,7 @@ export * from './types/invite'
 export * from './types/itinerary'
 export * from './types/expense'
 export * from './types/feedback'
+export * from './types/analytics'
 
 // Convenience type exports from Database
 import type { Database } from './types/database'

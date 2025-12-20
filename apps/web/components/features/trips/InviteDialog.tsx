@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 import { createInviteLink, createBatchEmailInvites, type InviteLinkResult } from '@tripthreads/core'
 import { Textarea } from '@/components/ui/textarea'
+import { trackInviteSent } from '@/lib/analytics'
 
 interface InviteDialogProps {
   open: boolean
@@ -55,6 +56,13 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
     try {
       const supabase = createClient()
       const result = await createInviteLink(supabase, tripId, selectedRole)
+
+      // Track successful invite link creation
+      trackInviteSent({
+        tripId: tripId,
+        inviteMethod: 'link',
+        role: selectedRole,
+      })
 
       setInviteLink(result)
       toast({

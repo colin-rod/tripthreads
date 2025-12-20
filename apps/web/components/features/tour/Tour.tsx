@@ -125,7 +125,7 @@ export function Tour({ config, onComplete, onDismiss, autoStart = true }: TourPr
     setIsActive(false)
 
     // Track dismiss
-    console.log('[Tour Analytics] tour_dismissed:', {
+    posthog.capture('tour_dismissed', {
       tour_id: config.id,
       step: currentStepIndex,
     })

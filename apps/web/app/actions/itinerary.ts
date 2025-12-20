@@ -14,6 +14,12 @@ import type {
   ItineraryItemMetadata,
   Database,
 } from '@tripthreads/core'
+import {
+  trackItemAddedNl,
+  trackItemAddedManual,
+  trackItemEdited,
+  trackItemDeleted,
+} from '@/lib/analytics'
 
 export interface CreateItineraryItemInput {
   tripId: string
@@ -28,6 +34,7 @@ export interface CreateItineraryItemInput {
   location?: string
   metadata?: ItineraryItemMetadata
   participantIds?: string[] // If empty/null, defaults to all trip participants
+  source?: 'nl' | 'manual' // Tracking: natural language vs manual form
 }
 
 export interface UpdateItineraryItemInput {
@@ -136,6 +143,22 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
     }
     // If no participant_ids provided, item is for all trip participants (default behavior)
 
+    // Track analytics event
+    if (input.source === 'nl') {
+      trackItemAddedNl({
+        tripId: input.tripId,
+        itemType: input.type,
+        parseSuccess: true,
+        hasTime: !input.isAllDay,
+        hasLocation: !!input.location,
+      })
+    } else {
+      trackItemAddedManual({
+        tripId: input.tripId,
+        itemType: input.type,
+      })
+    }
+
     // Revalidate trip page
     revalidatePath(`/trips/${input.tripId}`)
 
@@ -175,10 +198,10 @@ export async function updateItineraryItem(input: UpdateItineraryItemInput) {
       }
     }
 
-    // Get the item to find the trip_id for revalidation
+    // Get the item to find the trip_id and type for revalidation and tracking
     const { data: existingItem, error: fetchError } = await supabase
       .from('itinerary_items')
-      .select('trip_id')
+      .select('trip_id, type')
       .eq('id', input.id)
       .single()
 
@@ -245,6 +268,14 @@ export async function updateItineraryItem(input: UpdateItineraryItemInput) {
       }
     }
 
+    // Track analytics event
+    const itemType = (input.type || existingItem.type) as ItineraryItemType
+    trackItemEdited({
+      tripId: existingItem.trip_id,
+      itemId: input.id,
+      itemType,
+    })
+
     // Revalidate trip page
     revalidatePath(`/trips/${existingItem.trip_id}`)
 
@@ -284,10 +315,10 @@ export async function deleteItineraryItem(itemId: string) {
       }
     }
 
-    // Get the item to find the trip_id for revalidation
+    // Get the item to find the trip_id and type for revalidation and tracking
     const { data: existingItem, error: fetchError } = await supabase
       .from('itinerary_items')
-      .select('trip_id, created_by')
+      .select('trip_id, type, created_by')
       .eq('id', itemId)
       .single()
 
@@ -313,6 +344,13 @@ export async function deleteItineraryItem(itemId: string) {
             : 'Failed to delete itinerary item',
       }
     }
+
+    // Track analytics event
+    trackItemDeleted({
+      tripId: existingItem.trip_id,
+      itemId,
+      itemType: existingItem.type as ItineraryItemType,
+    })
 
     // Revalidate trip page
     revalidatePath(`/trips/${existingItem.trip_id}`)

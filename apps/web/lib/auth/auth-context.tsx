@@ -8,8 +8,15 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ error: Error | null; data?: { user: User } }>
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: Error | null; data?: { user: User } }>
   signInWithGoogle: () => Promise<{ error: Error | null }>
   signOut: () => Promise<{ error: Error | null }>
 }
@@ -44,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -58,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Note: User profile in public.profiles is automatically created by database trigger
 
-      return { error: null }
+      return { error: null, data: data as { user: User } }
     } catch (error) {
       return { error: error as Error }
     }
@@ -66,14 +73,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
 
-      return { error: null }
+      return { error: null, data: data as { user: User } }
     } catch (error) {
       return { error: error as Error }
     }
@@ -98,6 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Import trackLogout dynamically to avoid circular dependencies
+      const { trackLogout } = await import('@/lib/analytics')
+
+      // Track logout BEFORE signing out (so PostHog still has user context)
+      trackLogout()
+
       const { error } = await supabase.auth.signOut()
 
       if (error) throw error

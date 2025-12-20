@@ -23,6 +23,7 @@ import { TripPageClient } from '@/components/features/trips/TripPageClient'
 import type { TripNotificationPreferences } from '@tripthreads/core/validation/trip'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 import { getChatMessages } from '@/app/actions/chat'
+import { trackTripViewed } from '@/lib/analytics'
 
 interface TripDetailPageProps {
   params: Promise<{
@@ -60,6 +61,9 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
       getUserExpensesForTrip(supabase, id),
       getSettlementSummary(supabase, id),
     ])
+
+    // Track trip view (after successful load)
+    trackTripViewed(id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()

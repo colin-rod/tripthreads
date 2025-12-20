@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getFxRate, formatDateForFx, getSettlementSummary } from '@tripthreads/core'
 import type { SettlementSummary } from '@tripthreads/core'
 import { resolvePayer, buildExpenseParticipants } from '@/lib/expenses-utils'
+import { trackExpenseAddedNl, trackExpenseAddedManual } from '@/lib/analytics'
 
 export { resolvePayer, buildExpenseParticipants }
 
@@ -29,6 +30,7 @@ export interface CreateExpenseInput {
   customSplits: { name: string; amount: number }[] | null
   percentageSplits?: { name: string; percentage: number }[] | null
   date?: string // ISO 8601, defaults to now
+  source?: 'nl' | 'manual' // Tracking: natural language vs manual form
 }
 
 interface TripParticipant {
@@ -374,6 +376,22 @@ export async function createExpense(input: CreateExpenseInput) {
           error: 'Failed to create expense participants',
         }
       }
+    }
+
+    // Track successful expense creation
+    const trackingParams = {
+      tripId: input.tripId,
+      amountCents: input.amount,
+      currency: input.currency,
+      splitType: input.splitType,
+      participantCount: expenseParticipantsResult.participants.length || input.splitCount || 0,
+      hasReceipt: false, // Phase 3 feature
+    }
+
+    if (input.source === 'nl') {
+      trackExpenseAddedNl({ ...trackingParams, parseSuccess: true })
+    } else {
+      trackExpenseAddedManual(trackingParams)
     }
 
     // Revalidate trip page

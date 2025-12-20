@@ -295,3 +295,48 @@ export async function changePassword(
 
   return { success: true }
 }
+
+/**
+ * Generic profile update function
+ *
+ * Used for updating any profile fields (e.g., cookie consent, legal acceptance)
+ *
+ * @param updates - Object containing fields to update
+ * @returns Updated user profile
+ */
+export async function updateProfile(
+  updates: Partial<Omit<User, 'id' | 'created_at' | 'email'>>
+): Promise<User> {
+  const supabase = await createClient()
+
+  // Get authenticated user
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !authUser) {
+    throw new Error('Not authenticated')
+  }
+
+  // Update profile
+  const { data: updatedUser, error } = await supabase
+    .from('profiles')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', authUser.id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating profile:', error)
+    throw new Error('Failed to update profile')
+  }
+
+  // Revalidate settings page
+  revalidatePath('/settings')
+
+  return updatedUser
+}
