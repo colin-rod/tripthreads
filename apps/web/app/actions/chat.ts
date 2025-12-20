@@ -15,6 +15,7 @@ import {
   moveAttachmentToGallery as moveToGallery,
   removeFromGallery as removeGalleryItem,
 } from '../../../../packages/core/src/queries/media'
+import { trackChatMessageSent, trackMessageReactionAdded } from '@/lib/analytics'
 
 export interface ChatAttachment {
   url: string
@@ -128,6 +129,13 @@ export async function createMessage(input: CreateMessageInput) {
       }
     }
 
+    // Track analytics event
+    trackChatMessageSent({
+      tripId: input.tripId,
+      isAiResponse: false,
+      hasMentions: (input.mentionedUserIds?.length ?? 0) > 0,
+    })
+
     // Revalidate the chat page
     revalidatePath(`/trips/${input.tripId}/chat`)
 
@@ -209,6 +217,13 @@ export async function createBotMessage(input: CreateBotMessageInput) {
         error: 'Failed to send bot message',
       }
     }
+
+    // Track analytics event
+    trackChatMessageSent({
+      tripId: input.tripId,
+      isAiResponse: true,
+      hasMentions: false,
+    })
 
     // Revalidate the chat page
     revalidatePath(`/trips/${input.tripId}/chat`)
@@ -515,6 +530,13 @@ export async function addReaction(messageId: string, emoji: string) {
         action: 'removed' as const,
       }
     } else {
+      // Get message to retrieve trip_id for analytics tracking
+      const { data: message } = await supabase
+        .from('chat_messages')
+        .select('trip_id')
+        .eq('id', messageId)
+        .single()
+
       // Add new reaction
       const { error: insertError } = await supabase.from('message_reactions').insert({
         message_id: messageId,
@@ -536,6 +558,14 @@ export async function addReaction(messageId: string, emoji: string) {
           success: false,
           error: 'Failed to add reaction',
         }
+      }
+
+      // Track analytics event (only on addition, not removal)
+      if (message?.trip_id) {
+        trackMessageReactionAdded({
+          tripId: message.trip_id,
+          emoji,
+        })
       }
 
       return {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/auth/auth-context'
+import { trackSignup } from '@/lib/analytics'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -28,12 +29,15 @@ export default function SignupPage() {
       return
     }
 
-    const { error: signUpError } = await signUp(email, password, fullName)
+    const { error: signUpError, data } = await signUp(email, password, fullName)
 
     if (signUpError) {
       setError(signUpError.message)
       setLoading(false)
-    } else {
+    } else if (data?.user) {
+      // Track successful signup
+      trackSignup('email', data.user.id)
+
       setSuccess(true)
       // Redirect to trips after successful signup
       setTimeout(() => {

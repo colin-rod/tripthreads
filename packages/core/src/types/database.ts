@@ -795,6 +795,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cookie_consent: Json | null
+          cookie_consent_updated_at: string | null
           created_at: string
           deleted_at: string | null
           email: string
@@ -804,12 +806,16 @@ export type Database = {
           notification_preferences: Json | null
           plan: string
           plan_expires_at: string | null
+          privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          tos_accepted_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cookie_consent?: Json | null
+          cookie_consent_updated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
@@ -819,12 +825,16 @@ export type Database = {
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
+          privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          tos_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cookie_consent?: Json | null
+          cookie_consent_updated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
@@ -834,8 +844,10 @@ export type Database = {
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
+          privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          tos_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []

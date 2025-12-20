@@ -2,8 +2,9 @@ import { describe, it, beforeEach, jest } from '@jest/globals'
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import LoginPage from '../../app/(auth)/login/page'
+import * as analytics from '../../lib/analytics'
 
-type AuthResult = { error: Error | null }
+type AuthResult = { error: Error | null; data?: { user?: { id: string } } }
 const createAuthMock = <Args extends unknown[] = []>() =>
   jest.fn<(...args: Args) => Promise<AuthResult>>()
 
@@ -16,6 +17,11 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+}))
+
+// Mock analytics
+jest.mock('../../lib/analytics', () => ({
+  trackLogin: jest.fn(),
 }))
 
 // Mock auth context
@@ -48,7 +54,10 @@ describe('LoginPage', () => {
   })
 
   it('should handle email/password sign in', async () => {
-    mockSignIn.mockResolvedValue({ error: null })
+    mockSignIn.mockResolvedValue({
+      error: null,
+      data: { user: { id: 'test-user-id' } },
+    })
 
     render(<LoginPage />)
 
@@ -62,6 +71,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith('test@example.com', 'password123')
+      expect(analytics.trackLogin).toHaveBeenCalledWith('email', 'test-user-id')
       expect(mockPush).toHaveBeenCalledWith('/trips')
     })
   })
@@ -100,7 +110,17 @@ describe('LoginPage', () => {
 
   it('should disable form during submission', async () => {
     mockSignIn.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve({ error: null }), 100))
+      () =>
+        new Promise(resolve =>
+          setTimeout(
+            () =>
+              resolve({
+                error: null,
+                data: { user: { id: 'test-user-id' } },
+              }),
+            100
+          )
+        )
     )
 
     render(<LoginPage />)

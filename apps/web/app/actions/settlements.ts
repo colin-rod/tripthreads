@@ -11,6 +11,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { markSettlementAsPaid } from '@tripthreads/core'
 import type { MarkSettlementPaidInput } from '@tripthreads/core'
+import { trackSettlementMarkedPaid } from '@/lib/analytics'
 
 interface MarkSettlementPaidResult {
   success: boolean
@@ -29,13 +30,10 @@ export async function markSettlementAsPaidAction(
   try {
     const supabase = await createClient()
 
-    // Mark settlement as paid (RLS will enforce that user is from_user or to_user)
-    await markSettlementAsPaid(supabase, input)
-
-    // Get the settlement to determine which trip to revalidate
+    // Get the settlement details BEFORE marking as paid (for analytics)
     const { data: settlement, error: fetchError } = await supabase
       .from('settlements')
-      .select('trip_id')
+      .select('trip_id, amount, currency')
       .eq('id', input.settlementId)
       .single()
 
@@ -44,6 +42,17 @@ export async function markSettlementAsPaidAction(
         `Failed to fetch settlement: ${fetchError?.message || 'Settlement not found'}`
       )
     }
+
+    // Mark settlement as paid (RLS will enforce that user is from_user or to_user)
+    await markSettlementAsPaid(supabase, input)
+
+    // Track analytics event
+    trackSettlementMarkedPaid({
+      tripId: settlement.trip_id,
+      settlementId: input.settlementId,
+      amountCents: settlement.amount,
+      currency: settlement.currency,
+    })
 
     // Revalidate trip page to refresh settlement summary
     revalidatePath(`/trips/${settlement.trip_id}`)

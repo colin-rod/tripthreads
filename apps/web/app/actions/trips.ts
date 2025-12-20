@@ -10,6 +10,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createTrip as createTripQuery, type CreateTripInput } from '@tripthreads/core'
+import { trackTripCreated } from '@/lib/analytics'
 
 /**
  * Create a new trip
@@ -52,6 +53,14 @@ export async function createTrip(input: Omit<CreateTripInput, 'owner_id'>) {
     // This is safe because we've already validated the user above
     const serviceClient = createServiceClient()
     const trip = await createTripQuery(serviceClient, tripData)
+
+    // Track successful trip creation
+    trackTripCreated({
+      tripId: trip.id,
+      hasDates: !!trip.start_date && !!trip.end_date,
+      hasDescription: !!trip.description,
+      source: 'manual',
+    })
 
     // Revalidate trips list
     revalidatePath('/trips')

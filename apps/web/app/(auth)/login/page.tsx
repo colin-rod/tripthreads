@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/auth/auth-context'
+import { trackLogin } from '@/lib/analytics'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,12 +20,15 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error: signInError } = await signIn(email, password)
+    const { error: signInError, data } = await signIn(email, password)
 
     if (signInError) {
       setError(signInError.message)
       setLoading(false)
-    } else {
+    } else if (data?.user) {
+      // Track successful login
+      trackLogin('email', data.user.id)
+
       router.push('/trips')
     }
   }

@@ -51,7 +51,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
 
   // Verify user is a participant
   const isParticipant = trip.trip_participants?.some(
-    participant => participant.user?.id === user.id
+    (participant: any) => participant.user?.id === user.id
   )
 
   if (!isParticipant) {

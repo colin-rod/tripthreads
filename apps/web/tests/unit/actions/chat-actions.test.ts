@@ -30,6 +30,11 @@ jest.mock('../../../../../packages/core/src/queries/media', () => ({
   removeFromGallery: jest.fn(),
 }))
 
+jest.mock('@/lib/analytics', () => ({
+  trackChatMessageSent: jest.fn(),
+  trackMessageReactionAdded: jest.fn(),
+}))
+
 type SupabaseAuthResponse = {
   data: { user: { id: string } | null }
   error: { message: string } | null
@@ -425,14 +430,19 @@ describe('chat server actions', () => {
 
       const insert = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
 
-      const reactionTable = {
-        select,
-        insert,
-      }
+      // Mock the chat_messages query to get trip_id for analytics
+      const messageSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: { trip_id: 'trip-1' }, error: null })
+      const messageEq = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
+      const messageSelect = jest.fn<() => any>().mockReturnValue({ eq: messageEq })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'message_reactions') {
-          return reactionTable
+          return { select, insert }
+        }
+        if (table === 'chat_messages') {
+          return { select: messageSelect }
         }
         throw new Error(`Unexpected table ${table}`)
       })

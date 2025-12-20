@@ -184,4 +184,23 @@ describe('Tour analytics', () => {
       expect(posthogCapture).toHaveBeenCalledWith('tour_skipped', { tour_id: config.id, step: 0 })
     )
   })
+
+  it('captures dismiss event with current step index', async () => {
+    render(<Tour config={config} />)
+
+    await waitFor(() => expect(screen.getByTestId('tour-dismiss')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_started', { tour_id: config.id })
+    )
+
+    posthogCapture.mockClear()
+    updateTourStepMock.mockClear()
+
+    fireEvent.click(screen.getByTestId('tour-dismiss'))
+
+    await waitFor(() => expect(updateTourStepMock).toHaveBeenCalledWith(config.id, 0))
+    await waitFor(() =>
+      expect(posthogCapture).toHaveBeenCalledWith('tour_dismissed', { tour_id: config.id, step: 0 })
+    )
+  })
 })
