@@ -51,7 +51,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
   let isOwner = false
   let itineraryItems: Awaited<ReturnType<typeof getTripItineraryItems>> = []
   let expenses: Awaited<ReturnType<typeof getUserExpensesForTrip>> = []
-  let settlementSummary: Awaited<ReturnType<typeof getSettlementSummary>> | null = null
+  let settlementSummary: Awaited<ReturnType<typeof getSettlementSummary>> | undefined = undefined
 
   try {
     ;[trip, isOwner, itineraryItems, expenses, settlementSummary] = await Promise.all([
@@ -70,16 +70,18 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
   }
 
   // Get user's role
-  const tripParticipants = (trip.trip_participants ?? []).map(p => ({
+  const tripParticipants = (trip.trip_participants ?? []).map((p: any) => ({
     ...p,
     role: p.role as TripRole,
   }))
 
-  const userParticipant = tripParticipants.find(participant => participant.user?.id === user?.id)
+  const userParticipant = tripParticipants.find(
+    (participant: any) => participant.user?.id === user?.id
+  )
   const canEdit = userParticipant?.role !== 'viewer'
 
   // Prepare trip participants for sections
-  const participants = tripParticipants.map(p => ({
+  const participants = tripParticipants.map((p: any) => ({
     id: p.user?.id || '',
     name: p.user?.full_name || 'Unknown',
     full_name: p.user?.full_name || null,

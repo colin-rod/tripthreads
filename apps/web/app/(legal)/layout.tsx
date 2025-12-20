@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
@@ -56,18 +58,22 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </footer>
 
       {/* Print styles */}
-      <style jsx global>{`
-        @media print {
-          header,
-          footer {
-            display: none;
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          @media print {
+            header,
+            footer {
+              display: none;
+            }
+            main {
+              color: black;
+              background: white;
+            }
           }
-          main {
-            color: black;
-            background: white;
-          }
-        }
-      `}</style>
+        `,
+        }}
+      />
     </div>
   )
 }

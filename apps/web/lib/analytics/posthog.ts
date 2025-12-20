@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 
 export type PosthogCapture = (event: string, properties?: Record<string, unknown>) => void
