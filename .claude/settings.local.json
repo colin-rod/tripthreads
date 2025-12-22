@@ -82,7 +82,8 @@
       "Bash(NODE_ENV=test node:*)",
       "Bash(timeout 15 npm test:*)",
       "Bash(timeout 20 npx jest:*)",
-      "Bash(timeout 90 npm test:*)"
+      "Bash(timeout 90 npm test:*)",
+      "Bash(tail:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Cookie Policy | TripThreads',
@@ -372,20 +371,6 @@ export default function CookiesPage() {
           </ul>
         </section>
       </div>
-
-      <footer className="border-t pt-8 mt-12">
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Related documents:</p>
-          <div className="flex gap-4">
-            <Link href="/terms" className="text-primary hover:underline text-sm">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" className="text-primary hover:underline text-sm">
-              Privacy Policy
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -364,18 +364,6 @@ export default function TermsPage() {
           </ul>
         </section>
       </div>
-
-      <footer className="border-t pt-8 mt-12">
-        <p className="text-sm text-muted-foreground">
-          For questions about these terms, contact us at{' '}
-          <a
-            href="mailto:support@tripthreads.com"
-            className="text-primary hover:underline font-medium"
-          >
-            support@tripthreads.com
-          </a>
-        </p>
-      </footer>
     </div>
   )
 }
