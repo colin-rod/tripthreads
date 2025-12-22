@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@tripthreads/core/types/database'
 
 /**
  * Test Data Factory for E2E Tests
@@ -8,8 +7,8 @@ import type { Database } from '@tripthreads/core/types/database'
  * Uses Supabase client to insert data into the test database.
  */
 
-// Initialize Supabase client for test data creation
-const supabase = createClient<Database>(
+// Initialize Supabase client for test data creation (untyped for E2E)
+const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
 )

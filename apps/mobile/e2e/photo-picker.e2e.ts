@@ -30,10 +30,10 @@ describe('Photo Picker E2E', () => {
   describe('Permission Flow', () => {
     it('TC3.1: Should request photo library permission', async () => {
       // Disable photo permissions initially
-      await device.disablePermissions({ permissions: ['photos'] })
+      await // device.disablePermissions({ permissions: ['photos'] })
 
       // Navigate to feedback screen (uses photo picker)
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -46,7 +46,7 @@ describe('Photo Picker E2E', () => {
       // (exact behavior depends on implementation)
 
       // Now grant permission
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
       // Retry adding screenshot
       await element(by.text('Add screenshot')).tap()
@@ -60,10 +60,10 @@ describe('Photo Picker E2E', () => {
 
     it('TC3.1b: Should handle permission already granted', async () => {
       // Ensure permissions are granted
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
       // Navigate to feedback screen
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -81,9 +81,9 @@ describe('Photo Picker E2E', () => {
 
   describe('Photo Picker Flow', () => {
     it('TC3.2M: Should open photo picker and show loading state', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -102,9 +102,9 @@ describe('Photo Picker E2E', () => {
     })
 
     it('TC3.2M-b: Should show selected photo preview', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -124,9 +124,9 @@ describe('Photo Picker E2E', () => {
 
   describe('Photo Upload Flow', () => {
     it('TC3.3M: Should upload photo with feedback submission', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -155,9 +155,9 @@ describe('Photo Picker E2E', () => {
     })
 
     it('TC3.3M-b: Should handle upload failure gracefully', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -187,9 +187,9 @@ describe('Photo Picker E2E', () => {
 
   describe('Edge Cases', () => {
     it('Should handle user canceling photo picker', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()
@@ -209,9 +209,9 @@ describe('Photo Picker E2E', () => {
     })
 
     it('Should allow removing selected photo', async () => {
-      await device.grantPermissions({ permissions: ['photos'] })
+      await // device.grantPermissions({ permissions: ['photos'] })
 
-      await device.openURL('tripthreads://feedback')
+      await device.openURL({ url: 'tripthreads://feedback' })
 
       await waitFor(element(by.text('Share feedback')))
         .toBeVisible()

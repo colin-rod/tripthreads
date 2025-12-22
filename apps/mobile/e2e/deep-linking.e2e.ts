@@ -30,7 +30,7 @@ describe('Deep Linking E2E', () => {
   describe('Invite Links', () => {
     it('TC1.1: Should open invite screen from deep link (custom scheme)', async () => {
       // Open deep link with custom scheme
-      await device.openURL(`tripthreads://invite/${testInviteToken}`)
+      await device.openURL({ url: { url: `tripthreads://invite/${testInviteToken}` } })
 
       // Should navigate to invite screen
       await waitFor(element(by.text('Trip Invitation')))
@@ -45,7 +45,7 @@ describe('Deep Linking E2E', () => {
 
     it('TC1.1b: Should open invite screen from universal link', async () => {
       // Open deep link with universal link (https)
-      await device.openURL(`https://tripthreads.com/invite/${testInviteToken}`)
+      await device.openURL({ url: `https://tripthreads.com/invite/${testInviteToken}` })
 
       // Should navigate to invite screen
       await waitFor(element(by.text('Trip Invitation')))
@@ -61,7 +61,7 @@ describe('Deep Linking E2E', () => {
   describe('Trip Links', () => {
     it('TC1.3: Should navigate to trip detail from deep link', async () => {
       // Open trip deep link
-      await device.openURL(`tripthreads://trips/${testTripId}`)
+      await device.openURL({ url: `tripthreads://trips/${testTripId}` })
 
       // Should navigate to trip detail screen
       await waitFor(element(by.id('trip-detail-screen')))
@@ -76,7 +76,7 @@ describe('Deep Linking E2E', () => {
 
     it('TC1.3b: Should navigate to trip from universal link', async () => {
       // Open trip universal link
-      await device.openURL(`https://tripthreads.com/trips/${testTripId}`)
+      await device.openURL({ url: `https://tripthreads.com/trips/${testTripId}` })
 
       // Should navigate to trip detail screen
       await waitFor(element(by.id('trip-detail-screen')))
@@ -94,7 +94,7 @@ describe('Deep Linking E2E', () => {
       })
 
       // Try to open invite link while logged out
-      await device.openURL(`tripthreads://invite/${testInviteToken}`)
+      await device.openURL({ url: `tripthreads://invite/${testInviteToken}` })
 
       // Should redirect to login screen
       await waitFor(element(by.id('login-screen')))
@@ -115,7 +115,7 @@ describe('Deep Linking E2E', () => {
       })
 
       // Try to open trip link while logged out
-      await device.openURL(`tripthreads://trips/${testTripId}`)
+      await device.openURL({ url: `tripthreads://trips/${testTripId}` })
 
       // Should redirect to login screen
       await waitFor(element(by.id('login-screen')))
@@ -125,7 +125,7 @@ describe('Deep Linking E2E', () => {
 
     it('TC1.4c: Should navigate to target after login', async () => {
       // Assume logged out from previous test
-      await device.openURL(`tripthreads://invite/${testInviteToken}`)
+      await device.openURL({ url: `tripthreads://invite/${testInviteToken}` })
 
       // Should be on login screen
       await waitFor(element(by.id('login-screen')))
@@ -148,7 +148,7 @@ describe('Deep Linking E2E', () => {
 
   describe('Edge Cases', () => {
     it('Should handle invalid invite token gracefully', async () => {
-      await device.openURL('tripthreads://invite/invalid-token-999')
+      await device.openURL({ url: 'tripthreads://invite/invalid-token-999' })
 
       // Should show error state or redirect to home
       await waitFor(element(by.text(/not found|expired|invalid/i)))
@@ -157,7 +157,7 @@ describe('Deep Linking E2E', () => {
     })
 
     it('Should handle malformed deep links', async () => {
-      await device.openURL('tripthreads://invalid-path')
+      await device.openURL({ url: 'tripthreads://invalid-path' })
 
       // Should redirect to home or show error
       // App should not crash

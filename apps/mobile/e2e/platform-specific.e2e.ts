@@ -37,7 +37,7 @@ describe('Platform-Specific Behaviors E2E', () => {
       }
 
       // Navigate to a trip detail screen
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
@@ -74,7 +74,7 @@ describe('Platform-Specific Behaviors E2E', () => {
       }
 
       // Navigate through multiple screens
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
         .withTimeout(5000)
@@ -105,7 +105,7 @@ describe('Platform-Specific Behaviors E2E', () => {
       }
 
       // Navigate to trip detail
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
@@ -144,7 +144,7 @@ describe('Platform-Specific Behaviors E2E', () => {
         return
       }
 
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
         .withTimeout(5000)
@@ -188,7 +188,7 @@ describe('Platform-Specific Behaviors E2E', () => {
 
     it('TC5.3b: Status bar across different screens', async () => {
       // Login first
-      await device.openURL('tripthreads://trips')
+      await device.openURL({ url: 'tripthreads://trips' })
 
       await waitFor(element(by.id('trips-screen')))
         .toBeVisible()
@@ -198,7 +198,7 @@ describe('Platform-Specific Behaviors E2E', () => {
       await device.takeScreenshot(`status-bar-${platform}-trips`)
 
       // Navigate to trip detail
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
@@ -213,7 +213,7 @@ describe('Platform-Specific Behaviors E2E', () => {
 
     it('TC5.4: Safe area insets should be respected', async () => {
       // Navigate to trip detail
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
@@ -257,7 +257,7 @@ describe('Platform-Specific Behaviors E2E', () => {
       try {
         await device.setOrientation('landscape')
 
-        await device.openURL('tripthreads://trips/test-trip-deep-link')
+        await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
         await waitFor(element(by.id('trip-detail-screen')))
           .toBeVisible()
@@ -280,7 +280,7 @@ describe('Platform-Specific Behaviors E2E', () => {
 
   describe('Platform-Specific UI', () => {
     it('Should render platform-appropriate navigation', async () => {
-      await device.openURL('tripthreads://trips/test-trip-deep-link')
+      await device.openURL({ url: 'tripthreads://trips/test-trip-deep-link' })
 
       await waitFor(element(by.id('trip-detail-screen')))
         .toBeVisible()
@@ -312,7 +312,7 @@ describe('Platform-Specific Behaviors E2E', () => {
 
     it('Should handle platform-specific keyboard behavior', async () => {
       // Navigate to a screen with text input
-      await device.openURL('tripthreads://trips')
+      await device.openURL({ url: 'tripthreads://trips' })
 
       await waitFor(element(by.id('trips-screen')))
         .toBeVisible()
