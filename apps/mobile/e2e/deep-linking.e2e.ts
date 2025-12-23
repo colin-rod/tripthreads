@@ -30,7 +30,7 @@ describe('Deep Linking E2E', () => {
   describe('Invite Links', () => {
     it('TC1.1: Should open invite screen from deep link (custom scheme)', async () => {
       // Open deep link with custom scheme
-      await device.openURL({ url: { url: `tripthreads://invite/${testInviteToken}` } })
+      await device.openURL({ url: `tripthreads://invite/${testInviteToken}` })
 
       // Should navigate to invite screen
       await waitFor(element(by.text('Trip Invitation')))
