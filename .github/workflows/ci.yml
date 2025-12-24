@@ -194,7 +194,7 @@ jobs:
 
       - name: AVD cache
         if: matrix.platform == 'Android'
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
             ~/.android/avd/*
