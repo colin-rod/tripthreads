@@ -12,7 +12,7 @@
  * - API calls: 100 per minute per user
  */
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 export type RateLimitResource =
   | 'expense'
@@ -66,7 +66,7 @@ export async function checkRateLimit(
   resourceKey: string
 ): Promise<RateLimitResult> {
   const config = RATE_LIMITS[resourceType]
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   // Calculate window start time
   const now = new Date()
@@ -134,7 +134,7 @@ export async function getRateLimitStatus(
   resourceKey: string
 ): Promise<{ current: number; limit: number; resetAt: Date }> {
   const config = RATE_LIMITS[resourceType]
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const now = new Date()
   const windowStart = new Date(now)

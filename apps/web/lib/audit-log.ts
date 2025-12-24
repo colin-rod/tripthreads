@@ -17,7 +17,7 @@
  * - Security events (failed auth, suspicious activity)
  */
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 export type AuditAction =
   | 'create'
@@ -73,7 +73,7 @@ export interface AuditLogResult {
  */
 export async function createAuditLog(entry: AuditLogEntry): Promise<AuditLogResult | null> {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createClient()
 
     const { data, error } = await supabase.rpc('create_audit_log', {
       p_trip_id: entry.tripId || null,
@@ -134,7 +134,7 @@ export async function getAuditLogs(
   }>
 > {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createClient()
 
     let query = supabase
       .from('audit_logs')
@@ -193,7 +193,7 @@ export async function getUserAuditLogs(
   }>
 > {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createClient()
 
     let query = supabase
       .from('audit_logs')
