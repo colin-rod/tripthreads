@@ -9,6 +9,7 @@ import {
   type LLMParseRequest,
   type LLMParserResult,
 } from '@tripthreads/core'
+import { checkRateLimit, createRateLimitResponse } from '@/lib/rate-limit'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const DEFAULT_MODEL = 'gpt-4o-mini'
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Rate limiting check (100 API calls per minute per user)
+    const rateLimitResult = await checkRateLimit(user.id, 'api_call', 'parse-with-openai')
+    if (!rateLimitResult.allowed) {
+      console.log('[OpenAI API] Rate limit exceeded for user:', user.id)
+      return createRateLimitResponse(rateLimitResult)
     }
 
     // Check for API key
@@ -91,7 +99,10 @@ export async function POST(request: NextRequest) {
       }
 
       if (!participant) {
-        return NextResponse.json({ error: 'You are not a participant in this trip' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'You are not a participant in this trip' },
+          { status: 403 }
+        )
       }
     }
 

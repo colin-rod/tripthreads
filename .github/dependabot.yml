@@ -1,0 +1,173 @@
+# Dependabot Configuration
+# Automated dependency updates for security vulnerabilities and package updates
+# Documentation: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Root workspace (turbo, shared configs)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Group minor and patch updates together
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Web app dependencies
+  - package-ecosystem: "npm"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "web"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Mobile app dependencies
+  - package-ecosystem: "npm"
+    directory: "/apps/mobile"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "mobile"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Core package dependencies
+  - package-ecosystem: "npm"
+    directory: "/packages/core"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "core"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Shared package dependencies
+  - package-ecosystem: "npm"
+    directory: "/packages/shared"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "shared"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "colin-rod"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "security"
+    commit-message:
+      prefix: "chore(ci)"
