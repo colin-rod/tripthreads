@@ -114,6 +114,53 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown
+          resource_id: string | null
+          resource_type: string
+          trip_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type: string
+          trip_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type?: string
+          trip_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'audit_logs_trip_id_fkey'
+            columns: ['trip_id']
+            isOneToOne: false
+            referencedRelation: 'trips'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           attachments: Json | null
@@ -795,6 +842,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cookie_consent: Json | null
+          cookie_consent_updated_at: string | null
           created_at: string
           deleted_at: string | null
           email: string
@@ -804,12 +853,16 @@ export type Database = {
           notification_preferences: Json | null
           plan: string
           plan_expires_at: string | null
+          privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          tos_accepted_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cookie_consent?: Json | null
+          cookie_consent_updated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
@@ -819,12 +872,16 @@ export type Database = {
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
+          privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          tos_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cookie_consent?: Json | null
+          cookie_consent_updated_at?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
@@ -834,9 +891,44 @@ export type Database = {
           notification_preferences?: Json | null
           plan?: string
           plan_expires_at?: string | null
+          privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          tos_accepted_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          request_count: number | null
+          resource_key: string
+          resource_type: string
+          updated_at: string | null
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          resource_key: string
+          resource_type: string
+          updated_at?: string | null
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          resource_key?: string
+          resource_type?: string
+          updated_at?: string | null
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -1107,6 +1199,33 @@ export type Database = {
       can_user_see_item: {
         Args: { p_item_date: string; p_trip_id: string; p_user_id: string }
         Returns: boolean
+      }
+      check_and_increment_rate_limit: {
+        Args: {
+          p_limit: number
+          p_resource_key: string
+          p_resource_type: string
+          p_user_id: string
+          p_window_start: string
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+        }[]
+      }
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      create_audit_log: {
+        Args: {
+          p_action: string
+          p_details: Json
+          p_ip_address?: unknown
+          p_resource_id: string
+          p_resource_type: string
+          p_trip_id: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       debug_auth_context: {
         Args: never
