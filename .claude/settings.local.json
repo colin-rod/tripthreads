@@ -83,7 +83,9 @@
       "Bash(timeout 15 npm test:*)",
       "Bash(timeout 20 npx jest:*)",
       "Bash(timeout 90 npm test:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(npm audit:*)",
+      "Bash(timeout 90 npm run build:*)"
     ],
     "deny": [],
     "ask": []
