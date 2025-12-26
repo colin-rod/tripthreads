@@ -30,6 +30,11 @@ export async function markSettlementAsPaidAction(
   try {
     const supabase = await createClient()
 
+    // Get authenticated user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
     // Get the settlement details BEFORE marking as paid (for analytics)
     const { data: settlement, error: fetchError } = await supabase
       .from('settlements')
@@ -52,6 +57,7 @@ export async function markSettlementAsPaidAction(
       settlementId: input.settlementId,
       amountCents: settlement.amount,
       currency: settlement.currency,
+      userId: user?.id,
     })
 
     // Revalidate trip page to refresh settlement summary
