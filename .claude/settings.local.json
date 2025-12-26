@@ -89,7 +89,8 @@
       "Bash(npm ci:*)",
       "Bash(env)",
       "Bash(export SUPABASE_PROJECT_ID=tbwbaydyyjokrsjtgerh)",
-      "Bash(npm run generate-types:remote:*)"
+      "Bash(npm run generate-types:remote:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

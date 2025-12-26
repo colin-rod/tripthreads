@@ -63,7 +63,7 @@ export default async function TripDetailPage({ params }: TripDetailPageProps) {
     ])
 
     // Track trip view (after successful load)
-    trackTripViewed(id)
+    await trackTripViewed(id, user?.id)
   } catch (error) {
     console.error('Error loading trip:', error)
     notFound()
