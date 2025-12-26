@@ -31,10 +31,11 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
-              "connect-src 'self' https://*.supabase.co https://api.openai.com https://vitals.vercel-insights.com",
-              "img-src 'self' data: https://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://vitals.vercel-insights.com",
+              "img-src 'self' data: https://*.supabase.co https://lh3.googleusercontent.com",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",
+              "frame-src 'self' https://vercel.live",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
