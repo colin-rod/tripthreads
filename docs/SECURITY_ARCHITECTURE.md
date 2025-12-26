@@ -490,11 +490,15 @@ CREATE POLICY "Users can read trips they are part of"
 ```http
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live;
-  connect-src 'self' https://*.supabase.co https://api.openai.com;
-  img-src 'self' data: https://*.supabase.co;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://vitals.vercel-insights.com;
+  img-src 'self' data: https://*.supabase.co https://lh3.googleusercontent.com;
   style-src 'self' 'unsafe-inline';
+  font-src 'self' data:;
+  frame-src 'self' https://vercel.live;
   frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
 ```
 
 **React Automatic Escaping:**
@@ -585,7 +589,18 @@ async headers() {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; ..."
+          value: [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
+            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://vitals.vercel-insights.com",
+            "img-src 'self' data: https://*.supabase.co https://lh3.googleusercontent.com",
+            "style-src 'self' 'unsafe-inline'",
+            "font-src 'self' data:",
+            "frame-src 'self' https://vercel.live",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+          ].join('; ')
         },
         {
           key: 'Strict-Transport-Security',
