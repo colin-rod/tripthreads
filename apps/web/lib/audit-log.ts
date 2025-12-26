@@ -76,13 +76,13 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<AuditLogResu
     const supabase = await createClient()
 
     const { data, error } = await supabase.rpc('create_audit_log', {
-      p_trip_id: entry.tripId || null,
+      p_trip_id: (entry.tripId || null) as any,
       p_action: entry.action,
       p_resource_type: entry.resourceType,
-      p_resource_id: entry.resourceId || null,
-      p_details: entry.details || {},
-      p_ip_address: entry.ipAddress || null,
-      p_user_agent: entry.userAgent || null,
+      p_resource_id: (entry.resourceId || null) as any,
+      p_details: (entry.details || {}) as any,
+      p_ip_address: entry.ipAddress || undefined,
+      p_user_agent: entry.userAgent || undefined,
     })
 
     if (error) {
@@ -161,7 +161,7 @@ export async function getAuditLogs(
       return []
     }
 
-    return data || []
+    return (data || []) as any
   } catch (error) {
     console.error('[Audit Log] Unexpected error:', error)
     return []
@@ -216,7 +216,7 @@ export async function getUserAuditLogs(
       return []
     }
 
-    return data || []
+    return (data || []) as any
   } catch (error) {
     console.error('[Audit Log] Unexpected error:', error)
     return []

@@ -86,7 +86,7 @@ export const changePasswordSchema = z
  */
 export const dataExportSchema = z.object({
   format: z.enum(['json', 'csv'], {
-    errorMap: () => ({ message: 'Format must be either JSON or CSV' }),
+    message: 'Format must be either JSON or CSV',
   }),
 })
 
@@ -105,7 +105,7 @@ export const deleteAccountSchema = z.object({
   }),
   tripDeletionStrategy: z
     .enum(['transfer', 'delete'], {
-      errorMap: () => ({ message: 'Invalid trip deletion strategy' }),
+      message: 'Invalid trip deletion strategy',
     })
     .optional(),
 })

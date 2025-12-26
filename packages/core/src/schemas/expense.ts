@@ -42,7 +42,7 @@ export const createExpenseSchema = z.object({
     .finite('Amount must be a valid number'),
   currency: z.string().length(3, 'Currency must be a 3-letter code').toUpperCase(),
   category: z.enum(['food', 'transport', 'accommodation', 'activity', 'other'], {
-    errorMap: () => ({ message: 'Invalid expense category' }),
+    message: 'Invalid expense category',
   }),
   payer_id: z.string().uuid('Invalid payer ID'),
   date: z.string().datetime('Invalid date format'),

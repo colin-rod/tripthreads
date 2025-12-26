@@ -162,7 +162,7 @@ export async function getRateLimitStatus(
     }
 
     return {
-      current: data.request_count,
+      current: data.request_count || 0,
       limit: config.limit,
       resetAt,
     }
