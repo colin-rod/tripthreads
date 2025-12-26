@@ -151,15 +151,7 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'audit_logs_trip_id_fkey'
-            columns: ['trip_id']
-            isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       chat_messages: {
         Row: {
