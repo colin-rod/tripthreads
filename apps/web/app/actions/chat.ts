@@ -312,7 +312,7 @@ export async function getChatMessages(tripId: string, limit = 50) {
       `
       )
       .eq('trip_id', tripId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit)
 
     if (messagesError) {

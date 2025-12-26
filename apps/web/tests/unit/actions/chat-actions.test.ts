@@ -319,6 +319,56 @@ describe('chat server actions', () => {
       expect(result.error).toBe('Failed to fetch messages')
       expect(captureExceptionMock).toHaveBeenCalledWith(queryError, expect.any(Object))
     })
+
+    it('orders messages by created_at descending (newest first)', async () => {
+      const mockSupabase = createMockSupabase()
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      })
+
+      const limit = jest.fn<(count: number) => Promise<any>>().mockResolvedValue({
+        data: [
+          {
+            id: 'msg-3',
+            created_at: '2025-12-27T10:00:00Z',
+            content: 'Newest message',
+          },
+          {
+            id: 'msg-2',
+            created_at: '2025-12-27T09:00:00Z',
+            content: 'Middle message',
+          },
+          {
+            id: 'msg-1',
+            created_at: '2025-12-27T08:00:00Z',
+            content: 'Oldest message',
+          },
+        ],
+        error: null,
+      })
+
+      const order = jest
+        .fn<(field: string, options: { ascending: boolean }) => any>()
+        .mockReturnValue({ limit })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'chat_messages') {
+          return { select }
+        }
+        throw new Error(`Unexpected table ${table}`)
+      })
+
+      createClientMock.mockResolvedValue(mockSupabase as unknown as any)
+
+      const result = await getChatMessages('trip-1')
+
+      expect(result.success).toBe(true)
+      // Verify descending order was requested
+      expect(order).toHaveBeenCalledWith('created_at', { ascending: false })
+    })
   })
 
   describe('uploadAttachment', () => {
