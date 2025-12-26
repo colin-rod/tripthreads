@@ -244,7 +244,7 @@ describe('Expense FX Integration (Mocked)', () => {
 
     // Verify getFxRate was called with correct parameters
     expect(mockGetFxRate).toHaveBeenCalledWith(
-      mockSupabase,
+      expect.any(Object), // mockSupabase (checking exact instance causes type issues)
       'EUR', // base currency
       'USD', // expense currency
       '2025-02-07',

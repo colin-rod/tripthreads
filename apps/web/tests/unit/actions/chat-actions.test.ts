@@ -104,7 +104,7 @@ describe('chat server actions', () => {
         error: null,
       })
       const messageSelect = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
-      const messageInsert = jest.fn<() => any>().mockReturnValue({ select: messageSelect })
+      const messageInsert = jest.fn<(data: any) => any>().mockReturnValue({ select: messageSelect })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -244,7 +244,7 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const limit = jest.fn<() => Promise<any>>().mockResolvedValue({
+      const limit = jest.fn<(count: number) => Promise<any>>().mockResolvedValue({
         data: [
           {
             id: 'message-1',
@@ -393,7 +393,9 @@ describe('chat server actions', () => {
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
 
       // Mock the delete query chain: .delete().eq('id')
-      const deleteEq = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
+      const deleteEq = jest
+        .fn<(column: string, value: any) => Promise<any>>()
+        .mockResolvedValue({ error: null })
       const deleteFn = jest.fn<() => any>().mockReturnValue({ eq: deleteEq })
 
       const reactionTable = { select, delete: deleteFn }
@@ -428,7 +430,7 @@ describe('chat server actions', () => {
       const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
 
-      const insert = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
+      const insert = jest.fn<(data: any) => Promise<any>>().mockResolvedValue({ error: null })
 
       // Mock the chat_messages query to get trip_id for analytics
       const messageSingle = jest

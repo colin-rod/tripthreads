@@ -12,8 +12,7 @@ import {
 } from '@/app/actions/itinerary'
 
 // Mock Supabase client
-const createMock = <Fn extends (...args: any[]) => any = (...args: any[]) => any>() =>
-  jest.fn<Fn>()
+const createMock = <Fn extends (...args: any[]) => any = (...args: any[]) => any>() => jest.fn<Fn>()
 const createAsyncMock = <Return = unknown>() =>
   jest.fn<() => Promise<Return>>(() => Promise.resolve(undefined as Return))
 
@@ -215,7 +214,9 @@ describe('createItineraryItem', () => {
       error: null,
     })
 
-    const mockParticipantInsert = createAsyncMock().mockResolvedValue({ error: null })
+    const mockParticipantInsert = jest
+      .fn<(data: any) => Promise<any>>()
+      .mockResolvedValue({ error: null })
 
     mockSupabaseClient.from.mockImplementation((table: string) => {
       if (table === 'trip_participants') {
