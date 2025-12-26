@@ -66,7 +66,7 @@ export function DatePicker({
 
       <ReactDatePicker
         selected={selected}
-        onChange={date => {
+        onChange={(date: Date | null) => {
           onChange(date)
           setIsOpen(false)
         }}

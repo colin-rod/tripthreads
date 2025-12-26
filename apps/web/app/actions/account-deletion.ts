@@ -91,7 +91,7 @@ export async function deleteAccount(
   })
 
   if (!validation.success) {
-    throw new Error(validation.error.errors[0].message)
+    throw new Error(validation.error.issues[0].message)
   }
 
   const supabase = await createClient()
