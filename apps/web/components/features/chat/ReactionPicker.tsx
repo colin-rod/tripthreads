@@ -12,9 +12,15 @@ interface ReactionPickerProps {
   messageId: string
   onClose: () => void
   onReactionAdded?: () => void
+  align?: 'left' | 'right'
 }
 
-export function ReactionPicker({ messageId, onClose, onReactionAdded }: ReactionPickerProps) {
+export function ReactionPicker({
+  messageId,
+  onClose,
+  onReactionAdded,
+  align = 'left',
+}: ReactionPickerProps) {
   const [isAdding, setIsAdding] = useState(false)
 
   const handleEmojiClick = async (emoji: string) => {
@@ -40,7 +46,12 @@ export function ReactionPicker({ messageId, onClose, onReactionAdded }: Reaction
   }
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 rounded-lg border bg-white p-2 shadow-lg">
+    <div
+      className={cn(
+        'absolute bottom-full mb-2 rounded-lg border bg-white p-2 shadow-lg',
+        align === 'right' ? 'right-0' : 'left-0'
+      )}
+    >
       <div className="grid grid-cols-6 gap-1">
         {COMMON_EMOJIS.map(emoji => (
           <button
