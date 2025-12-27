@@ -78,10 +78,10 @@ Select the following 4 events (required for Phase 3.3):
 
 After creating the endpoint, Stripe will show you a **signing secret** that starts with `whsec_`.
 
-**Example:**
+**Example (placeholder, not a real secret):**
 
 ```
-whsec_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
+whsec_example_signing_secret
 ```
 
 ### 5. Update Environment Variables
@@ -90,7 +90,7 @@ Add the signing secret to your `.env.local` file:
 
 ```bash
 # Replace the placeholder with the actual signing secret
-STRIPE_WEBHOOK_SECRET=whsec_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
+STRIPE_WEBHOOK_SECRET=whsec_example_signing_secret
 ```
 
 **⚠️ IMPORTANT:**
