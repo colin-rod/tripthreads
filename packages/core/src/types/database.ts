@@ -151,15 +151,7 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'audit_logs_trip_id_fkey'
-            columns: ['trip_id']
-            isOneToOne: false
-            referencedRelation: 'trips'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       chat_messages: {
         Row: {
@@ -856,6 +848,8 @@ export type Database = {
           privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          subscription_currency: string | null
+          subscription_price_id: string | null
           tos_accepted_at: string | null
           updated_at: string
         }
@@ -875,6 +869,8 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          subscription_currency?: string | null
+          subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
         }
@@ -894,6 +890,8 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          subscription_currency?: string | null
+          subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
         }

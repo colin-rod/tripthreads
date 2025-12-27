@@ -90,7 +90,12 @@
       "Bash(env)",
       "Bash(export SUPABASE_PROJECT_ID=tbwbaydyyjokrsjtgerh)",
       "Bash(npm run generate-types:remote:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(supabase db diff:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(npx supabase gen types:*)",
+      "Bash(timeout 5 npm run dev:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

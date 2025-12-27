@@ -326,10 +326,12 @@ git push origin main       # Deploy to production
 
 ### Payments - 🚧 In Progress (Phase 3)
 
-- ✅ **Stripe SDK** - Server & client-side integration (Phase 3.1)
-- ✅ **Multi-Currency Pricing** - EUR, USD, GBP with Adaptive Pricing (Phase 3.1)
-- ✅ **Products & Prices Configured** - Monthly (€7/$8/£6), Yearly (€70/$80/£60), One-off (€9/$10/£8) (Phase 3.1)
-- ✅ **Subscription Database Fields** - `subscription_currency`, `subscription_price_id` (Phase 3.1)
+- ✅ **Stripe SDK** - Server & client-side integration (Phase 3.1) ✅ **COMPLETE**
+- ✅ **Multi-Currency Adaptive Pricing** - EUR, USD, GBP (Phase 3.1) ✅ **COMPLETE**
+- ✅ **Products & Prices in Stripe** - 3 products, 3 prices created (Phase 3.1) ✅ **COMPLETE**
+- ✅ **Config Refactored for Adaptive Pricing** - Single price ID per product (Phase 3.1) ✅ **COMPLETE**
+- ✅ **Subscription Database Fields** - Migration applied (Phase 3.1) ✅ **COMPLETE**
+- ✅ **Validation Endpoint** - `/api/stripe/validate-config` with 6 tests (Phase 3.1) ✅ **COMPLETE**
 - 📋 **Stripe Checkout** - Subscription management (Phase 3.2)
 - 📋 **Stripe Webhooks** - Lifecycle events (Phase 3.3)
 - 📋 **Stripe Customer Portal** - Self-service billing (Phase 3.4)
