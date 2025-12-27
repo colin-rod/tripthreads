@@ -332,7 +332,9 @@ git push origin main       # Deploy to production
 - ✅ **Config Refactored for Adaptive Pricing** - Single price ID per product (Phase 3.1) ✅ **COMPLETE**
 - ✅ **Subscription Database Fields** - Migration applied (Phase 3.1) ✅ **COMPLETE**
 - ✅ **Validation Endpoint** - `/api/stripe/validate-config` with 6 tests (Phase 3.1) ✅ **COMPLETE**
-- 📋 **Stripe Checkout** - Subscription management (Phase 3.2)
+- ✅ **Stripe Checkout Endpoint** - `/api/create-checkout` with 15 tests (Phase 3.2) ✅ **COMPLETE**
+- ✅ **Subscription UI** - Settings page subscription section with plan selection (Phase 3.2) ✅ **COMPLETE**
+- ✅ **Client-Side Currency Detection** - Automatic locale-based currency display (Phase 3.2) ✅ **COMPLETE**
 - 📋 **Stripe Webhooks** - Lifecycle events (Phase 3.3)
 - 📋 **Stripe Customer Portal** - Self-service billing (Phase 3.4)
 

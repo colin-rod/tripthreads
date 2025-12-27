@@ -7,7 +7,6 @@
  */
 
 import { GET } from './route'
-import { NextRequest } from 'next/server'
 
 describe('GET /api/stripe/validate-config', () => {
   const originalEnv = process.env
@@ -34,8 +33,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -58,8 +56,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -78,8 +75,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -99,8 +95,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -123,8 +118,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(400)
@@ -143,8 +137,7 @@ describe('GET /api/stripe/validate-config', () => {
     process.env.STRIPE_PRICE_YEARLY = 'price_yearly123'
     process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff123'
 
-    const request = new NextRequest('http://localhost:3000/api/stripe/validate-config')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(200)

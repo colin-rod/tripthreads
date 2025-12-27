@@ -21,6 +21,7 @@ import {
 import { ProfileSection } from '@/components/features/profile/ProfileSection'
 import { NotificationPreferencesSection } from '@/components/features/profile/NotificationPreferencesSection'
 import { SecuritySection } from '@/components/features/profile/SecuritySection'
+import { SubscriptionSection } from '@/components/features/profile/SubscriptionSection'
 
 export const metadata = {
   title: 'Settings | TripThreads',
@@ -132,6 +133,39 @@ export default async function SettingsPage() {
             </AccordionTrigger>
             <AccordionContent className="pt-6 pb-4">
               <NotificationPreferencesSection user={user} />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Subscription Section */}
+          <AccordionItem value="subscription" className="border rounded-lg px-6">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/20">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5 text-purple-600 dark:text-purple-500"
+                  >
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium">Subscription</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Manage your Pro subscription and billing
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-6 pb-4">
+              <SubscriptionSection user={user} />
             </AccordionContent>
           </AccordionItem>
 
