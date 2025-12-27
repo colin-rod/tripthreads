@@ -38,7 +38,7 @@ describe('TripActions', () => {
     expect(button).toBeInTheDocument()
   })
 
-  it('shows Invite, Edit Trip and Delete Trip menu items', async () => {
+  it('shows Invite menu item for owner', async () => {
     const user = userEvent.setup()
     render(<TripActions trip={mockTrip} tripId="trip-1" />)
 
@@ -48,8 +48,32 @@ describe('TripActions', () => {
 
     // Wait for menu items to appear
     expect(await screen.findByText('Invite')).toBeInTheDocument()
-    expect(await screen.findByText('Edit Trip')).toBeInTheDocument()
-    expect(await screen.findByText('Delete Trip')).toBeInTheDocument()
+  })
+
+  it('does not render Edit Trip menu item', async () => {
+    const user = userEvent.setup()
+    render(<TripActions trip={mockTrip} tripId="trip-1" />)
+
+    // Open dropdown
+    const button = screen.getByRole('button', { name: /trip settings/i })
+    await user.click(button)
+
+    // Wait for Invite to appear, then verify Edit Trip is not present
+    await screen.findByText('Invite')
+    expect(screen.queryByText('Edit Trip')).not.toBeInTheDocument()
+  })
+
+  it('does not render Delete Trip menu item', async () => {
+    const user = userEvent.setup()
+    render(<TripActions trip={mockTrip} tripId="trip-1" />)
+
+    // Open dropdown
+    const button = screen.getByRole('button', { name: /trip settings/i })
+    await user.click(button)
+
+    // Wait for Invite to appear, then verify Delete Trip is not present
+    await screen.findByText('Invite')
+    expect(screen.queryByText('Delete Trip')).not.toBeInTheDocument()
   })
 
   it('renders Settings menu item when onNavigate is provided', async () => {
@@ -73,8 +97,8 @@ describe('TripActions', () => {
     const button = screen.getByRole('button', { name: /trip settings/i })
     await user.click(button)
 
-    // Wait for Edit Trip to appear, then verify Settings is not present
-    await screen.findByText('Edit Trip')
+    // Wait for Invite to appear, then verify Settings is not present
+    await screen.findByText('Invite')
     expect(screen.queryByText('Settings')).not.toBeInTheDocument()
   })
 
@@ -110,7 +134,7 @@ describe('TripActions', () => {
     expect(inviteIndex).toBe(0)
   })
 
-  it('Menu order is Invite, Settings, Edit Trip, Delete Trip when Settings is present', async () => {
+  it('Menu order is Invite, Settings when Settings is present', async () => {
     const user = userEvent.setup()
     const onNavigate = jest.fn()
     render(<TripActions trip={mockTrip} tripId="trip-1" onNavigate={onNavigate} />)
@@ -124,11 +148,9 @@ describe('TripActions', () => {
     const menuItems = screen.getAllByRole('menuitem')
     const inviteIndex = menuItems.findIndex(item => item.textContent?.includes('Invite'))
     const settingsIndex = menuItems.findIndex(item => item.textContent?.includes('Settings'))
-    const editIndex = menuItems.findIndex(item => item.textContent?.includes('Edit Trip'))
-    const deleteIndex = menuItems.findIndex(item => item.textContent?.includes('Delete Trip'))
 
     expect(inviteIndex).toBe(0)
-    expect(settingsIndex).toBeLessThan(editIndex)
-    expect(editIndex).toBeLessThan(deleteIndex)
+    expect(settingsIndex).toBe(1)
+    expect(menuItems).toHaveLength(2)
   })
 })

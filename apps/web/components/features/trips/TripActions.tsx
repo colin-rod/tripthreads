@@ -8,8 +8,7 @@
  */
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Settings, Pencil, Trash2, UserPlus, LogOut } from 'lucide-react'
+import { Settings, UserPlus, LogOut } from 'lucide-react'
 import type { TripSection } from '@/hooks/useHashNavigation'
 
 import { Button } from '@/components/ui/button'
@@ -20,8 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { EditTripDialog } from './EditTripDialog'
-import { DeleteTripDialog } from './DeleteTripDialog'
 import { InviteDialog } from './InviteDialog'
 import { LeaveTripDialog } from './LeaveTripDialog'
 
@@ -42,15 +39,8 @@ interface TripActionsProps {
 }
 
 export function TripActions({ trip, tripId, isOwner = true, onNavigate }: TripActionsProps) {
-  const router = useRouter()
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
-
-  function handleEditSuccess() {
-    router.refresh()
-  }
 
   return (
     <>
@@ -77,18 +67,6 @@ export function TripActions({ trip, tripId, isOwner = true, onNavigate }: TripAc
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Trip
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteOpen(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Trip
-              </DropdownMenuItem>
             </>
           ) : (
             <>
@@ -111,25 +89,7 @@ export function TripActions({ trip, tripId, isOwner = true, onNavigate }: TripAc
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {isOwner && (
-        <>
-          <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} tripId={tripId} />
-
-          <EditTripDialog
-            trip={trip}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-            onSuccess={handleEditSuccess}
-          />
-
-          <DeleteTripDialog
-            tripId={trip.id}
-            tripName={trip.name}
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
-          />
-        </>
-      )}
+      {isOwner && <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} tripId={tripId} />}
 
       {!isOwner && (
         <LeaveTripDialog
