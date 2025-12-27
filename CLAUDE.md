@@ -336,7 +336,7 @@ git push origin main       # Deploy to production
 - ✅ **Subscription UI** - Settings page subscription section with plan selection (Phase 3.2) ✅ **COMPLETE**
 - ✅ **Client-Side Currency Detection** - Automatic locale-based currency display (Phase 3.2) ✅ **COMPLETE**
 - ✅ **Stripe Webhooks** - `/api/webhooks/stripe` with 10 tests handling lifecycle events (Phase 3.3) ✅ **COMPLETE**
-- 📋 **Stripe Customer Portal** - Self-service billing (Phase 3.4)
+- ✅ **Stripe Customer Portal** - `/api/create-portal-session` with 7 tests for self-service billing (Phase 3.4) ✅ **COMPLETE**
 
 ### Testing - ✅ Implemented
 

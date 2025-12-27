@@ -53,6 +53,7 @@ const PLAN_FEATURES = {
 export function SubscriptionSection({ user }: SubscriptionSectionProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = React.useState(false)
+  const [isPortalLoading, setIsPortalLoading] = React.useState(false)
   const [selectedPlan, setSelectedPlan] = React.useState<PlanInterval>('monthly')
 
   // Detect user's currency based on locale
@@ -115,6 +116,35 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
       oneoff: process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF || '',
     }
     return priceIds[plan]
+  }
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsPortalLoading(true)
+
+      // Call API to create portal session
+      const response = await fetch('/api/create-portal-session', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to open billing portal')
+      }
+
+      // Redirect to Stripe Customer Portal
+      window.location.href = data.url
+    } catch (error) {
+      console.error('Portal error:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to open billing portal',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsPortalLoading(false)
+    }
   }
 
   return (
@@ -248,11 +278,16 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
             <CardDescription>View billing history and update payment methods</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              Manage Subscription (Coming Soon)
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleManageSubscription}
+              disabled={isPortalLoading}
+            >
+              {isPortalLoading ? 'Loading...' : 'Manage Subscription'}
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">
-              Customer portal will be available in Phase 3.4
+              Securely manage your subscription through Stripe
             </p>
           </CardContent>
         </Card>
