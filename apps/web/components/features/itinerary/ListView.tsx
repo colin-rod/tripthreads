@@ -16,7 +16,7 @@ import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { groupItineraryItemsByDate, ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
-import { MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import {
   DropdownMenu,
@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { DurationBadge } from './DurationBadge'
 import { ItineraryItemTooltip } from './ItineraryItemTooltip'
 import { MetadataSection } from './MetadataSection'
+import { CollapsedMetadataPreview } from './CollapsedMetadataPreview'
 import { useState } from 'react'
 
 interface ListViewProps {
@@ -124,10 +125,24 @@ function ItineraryListItem({
     <ItineraryItemTooltip item={item}>
       <div
         className={cn(
-          'group relative rounded-lg border bg-card p-4 transition-all hover:shadow-md cursor-pointer',
-          config.bgColor
+          'group relative rounded-lg border bg-card p-4 transition-all cursor-pointer',
+          config.bgColor,
+          // Visual indicators for expandable/expanded state
+          !isExpanded && hasExpandableContent && 'hover:shadow-md hover:border-primary/50',
+          isExpanded && 'shadow-md ring-2 ring-primary/20'
         )}
-        onClick={onClick}
+        onClick={e => {
+          // Prevent if clicking on interactive elements (links, buttons, menu)
+          if ((e.target as HTMLElement).closest('a, button')) return
+
+          if (!isExpanded && hasExpandableContent) {
+            // First click: expand
+            setIsExpanded(true)
+          } else {
+            // Second click on expanded card (or first click if no expandable content): open modal
+            onClick?.()
+          }
+        }}
       >
         <div className="flex items-start justify-between gap-4">
           {/* Icon and content */}
@@ -142,7 +157,12 @@ function ItineraryListItem({
               <div className="flex items-baseline gap-3">
                 <span className="font-medium text-base truncate">{item.title}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className="text-sm text-muted-foreground">{timeString}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {timeString}
+                    {!item.is_all_day &&
+                      item.end_time &&
+                      ` - ${format(parseISO(item.end_time), 'h:mm a')}`}
+                  </span>
                   <DurationBadge
                     startTime={item.start_time}
                     endTime={item.end_time}
@@ -169,6 +189,31 @@ function ItineraryListItem({
                   <span className="truncate">{item.location}</span>
                 </div>
               )}
+
+              {/* Booking Reference (collapsed state only, for transport & accommodation) */}
+              {!isExpanded &&
+                (() => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const metadata = item.metadata as any
+                  const reference =
+                    item.type === 'transport'
+                      ? metadata?.booking_reference
+                      : item.type === 'accommodation'
+                        ? metadata?.confirmation_number
+                        : null
+
+                  return (
+                    reference && (
+                      <div className="flex items-center gap-1 mt-2 text-sm">
+                        <LucideIcons.Ticket className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-muted-foreground truncate">{reference}</span>
+                      </div>
+                    )
+                  )
+                })()}
+
+              {/* Key Metadata Preview (collapsed state only) */}
+              {!isExpanded && <CollapsedMetadataPreview item={item} />}
 
               {/* Participants */}
               {item.participants && item.participants.length > 0 && (
@@ -221,7 +266,7 @@ function ItineraryListItem({
           </div>
         </div>
 
-        {/* Type badge, expand button, and actions */}
+        {/* Type badge and actions */}
         <div className="flex items-start gap-2 flex-shrink-0">
           {/* Type label */}
           <div
@@ -229,22 +274,6 @@ function ItineraryListItem({
           >
             {config.label}
           </div>
-
-          {/* Expand/collapse button */}
-          {hasExpandableContent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={e => {
-                e.stopPropagation()
-                setIsExpanded(!isExpanded)
-              }}
-              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-            >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          )}
 
           {/* Actions menu */}
           {canEdit && (

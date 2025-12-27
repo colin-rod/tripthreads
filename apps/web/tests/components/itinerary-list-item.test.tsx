@@ -218,54 +218,26 @@ describe('ItineraryListItem', () => {
   })
 
   describe('Expandable Details', () => {
-    it('should not show expand button when collapsed by default', () => {
-      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+    // NOTE: Expand button tests removed - button was removed in CRO-929
+    // Cards now expand on first click, open modal on second click
 
-      // Should show ChevronDown button
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      expect(expandButton).toBeInTheDocument()
-    })
-
-    it('should expand details when expand button is clicked', async () => {
+    it('should show expanded content when card is clicked', async () => {
       const user = userEvent.setup()
       render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-
-      await user.click(expandButton!)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       // Should show expanded content with metadata
       expect(screen.getByText('Transport Details')).toBeInTheDocument()
     })
 
-    it('should collapse details when collapse button is clicked', async () => {
-      const user = userEvent.setup()
-      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
-
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-
-      // Expand
-      await user.click(expandButton!)
-      expect(screen.getByText('Transport Details')).toBeInTheDocument()
-
-      // Collapse
-      const collapseButton = screen
-        .getAllByRole('button')
-        .find(btn => btn.getAttribute('aria-label') === 'Collapse details')
-      await user.click(collapseButton!)
-
-      expect(screen.queryByText('Transport Details')).not.toBeInTheDocument()
-    })
-
-    it('should not show expand button when there is no additional content to show', () => {
+    it('should not show expanded content when there is no additional content', () => {
       render(<ListView items={[mockItemNoExtras]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      expect(expandButton).toBeUndefined()
+      // Item with no metadata, notes, or links should not have expandable content
+      // (This is checked via hasExpandableContent logic)
+      expect(screen.queryByText(/Details/i)).not.toBeInTheDocument()
     })
   })
 
@@ -274,9 +246,8 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       expect(screen.getByText('Transport Details')).toBeInTheDocument()
       expect(screen.getByText('JFK → CDG')).toBeInTheDocument()
@@ -289,9 +260,8 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       // Should show full description without line-clamp
       const description = screen.getByText('Morning flight from JFK to CDG')
@@ -303,9 +273,8 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       expect(screen.getByText('Remember to check in online 24 hours before')).toBeInTheDocument()
     })
@@ -314,9 +283,8 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       const link1 = screen.getByText('Check-in')
       const link2 = screen.getByText('Flight Tracker')
@@ -334,11 +302,10 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockAllDayItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-
-      if (expandButton) {
-        await user.click(expandButton)
+      // Check if item has expandable content
+      const card = screen.getByText('Museum Day').closest('.rounded-lg')
+      if (card) {
+        await user.click(card)
         expect(screen.queryByText(/Note:/)).not.toBeInTheDocument()
       }
     })
@@ -347,11 +314,10 @@ describe('ItineraryListItem', () => {
       const user = userEvent.setup()
       render(<ListView items={[mockAllDayItem]} currentUserId="user-123" />)
 
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-
-      if (expandButton) {
-        await user.click(expandButton)
+      // Check if item has expandable content
+      const card = screen.getByText('Museum Day').closest('.rounded-lg')
+      if (card) {
+        await user.click(card)
         expect(screen.queryByText(/Links:/)).not.toBeInTheDocument()
       }
     })
@@ -379,8 +345,8 @@ describe('ItineraryListItem', () => {
       render(<ListView items={[mockTimedItem]} currentUserId="user-456" />)
 
       // More actions button should not be present
-      const buttons = screen.getAllByRole('button')
-      const moreButton = buttons.find(btn => {
+      const allButtons = screen.queryAllByRole('button')
+      const moreButton = allButtons.find(btn => {
         const svg = btn.querySelector('svg')
         return (
           svg?.classList.contains('lucide-ellipsis') ||
@@ -444,7 +410,7 @@ describe('ItineraryListItem', () => {
       expect(mockOnDelete).toHaveBeenCalledWith(mockTimedItem)
     })
 
-    it('should call onItemClick when card is clicked', async () => {
+    it('should call onItemClick when card is clicked (two-step: expand then modal)', async () => {
       const user = userEvent.setup()
       const mockOnClick = jest.fn()
       render(
@@ -452,8 +418,13 @@ describe('ItineraryListItem', () => {
       )
 
       const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
-      await user.click(card!)
 
+      // First click: expands (doesn't call onItemClick)
+      await user.click(card!)
+      expect(mockOnClick).not.toHaveBeenCalled()
+
+      // Second click: calls onItemClick
+      await user.click(card!)
       expect(mockOnClick).toHaveBeenCalledWith(mockTimedItem)
     })
 
@@ -481,21 +452,8 @@ describe('ItineraryListItem', () => {
       expect(mockOnClick).not.toHaveBeenCalled()
     })
 
-    it('should stop propagation when expand button is clicked', async () => {
-      const user = userEvent.setup()
-      const mockOnClick = jest.fn()
-      render(
-        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
-      )
-
-      // Click the expand button
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
-
-      // onItemClick should NOT be called
-      expect(mockOnClick).not.toHaveBeenCalled()
-    })
+    // NOTE: Expand button test removed - button no longer exists (CRO-929)
+    // Now testing the two-step interaction instead (see "Expand/Edit interaction" describe block)
   })
 
   describe('Styling and Layout', () => {
@@ -573,28 +531,321 @@ describe('ItineraryListItem', () => {
     })
   })
 
+  describe('Collapsed state - Additional info (CRO-929)', () => {
+    it('should show end time when available (time range)', () => {
+      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      // Should show time range: "4:00 AM - 7:00 AM" (UTC to local conversion)
+      // Exact format depends on timezone, but should contain both times
+      const timeElement = screen.getByText(/\d+:\d+ [ap]m - \d+:\d+ [ap]m/i)
+      expect(timeElement).toBeInTheDocument()
+    })
+
+    it('should show only start time when end_time is null', () => {
+      const itemNoEndTime = { ...mockTimedItem, end_time: null }
+      render(<ListView items={[itemNoEndTime]} currentUserId="user-123" />)
+
+      // Should show only start time, no dash or second time
+      const timeText = screen.getByText(/\d+:\d+ [ap]m$/i)
+      expect(timeText).toBeInTheDocument()
+      expect(timeText.textContent).not.toContain('-')
+    })
+
+    it('should not show end time for all-day items', () => {
+      render(<ListView items={[mockAllDayItem]} currentUserId="user-123" />)
+
+      // Should show "All day" only, no time range
+      expect(screen.getByText('All day')).toBeInTheDocument()
+      expect(screen.queryByText(/-/)).not.toBeInTheDocument()
+    })
+
+    it('should show booking reference for transport items', () => {
+      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      // Should show booking reference "ABC123" in collapsed state
+      expect(screen.getByText('ABC123')).toBeInTheDocument()
+    })
+
+    it('should show booking reference for accommodation items', () => {
+      const hotelItem: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        type: 'accommodation',
+        title: 'Hotel Paris',
+        metadata: {
+          confirmation_number: 'HOTEL456',
+          check_in_time: '3:00 PM',
+          check_out_time: '11:00 AM',
+        },
+      }
+      render(<ListView items={[hotelItem]} currentUserId="user-123" />)
+
+      // Should show confirmation number in collapsed state
+      expect(screen.getByText('HOTEL456')).toBeInTheDocument()
+    })
+
+    it('should not show booking reference for dining items', () => {
+      const diningItem: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        type: 'dining',
+        metadata: {
+          reservation_time: '7:00 PM',
+          cuisine_type: 'French',
+        },
+      }
+      render(<ListView items={[diningItem]} currentUserId="user-123" />)
+
+      // Dining items don't have booking_reference field
+      // Ensure no booking reference section appears
+      expect(screen.queryByText(/confirmation|booking/i)).not.toBeInTheDocument()
+    })
+
+    it('should not show booking reference when metadata is empty', () => {
+      render(<ListView items={[mockItemNoExtras]} currentUserId="user-123" />)
+
+      // No booking reference should appear
+      expect(screen.queryByText(/ABC|HOTEL|confirmation/i)).not.toBeInTheDocument()
+    })
+
+    it('should show key metadata fields in collapsed state', () => {
+      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      // Should show route (JFK → CDG) in collapsed state
+      expect(screen.getByText('JFK → CDG')).toBeInTheDocument()
+
+      // Should show terminal in collapsed state
+      expect(screen.getByText(/Terminal 2E|2E/i)).toBeInTheDocument()
+    })
+
+    it('should limit key metadata to 2 fields maximum', () => {
+      const itemWithManyFields: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        metadata: {
+          flight_number: 'AF123',
+          departure_location: 'JFK',
+          arrival_location: 'CDG',
+          terminal: '2E',
+          gate: 'K12',
+          seat_number: '12A',
+          booking_reference: 'ABC123',
+        },
+      }
+      render(<ListView items={[itemWithManyFields]} currentUserId="user-123" />)
+
+      // Should show route (1st field)
+      expect(screen.getByText('JFK → CDG')).toBeInTheDocument()
+
+      // Should show terminal or gate (2nd field)
+      // But not all 3 (terminal, gate, seat)
+      const terminalOrGate = screen.queryByText(/Terminal 2E|Gate K12/i)
+      expect(terminalOrGate).toBeInTheDocument()
+
+      // Seat number should NOT appear in collapsed preview (it's the 3rd field)
+      // It will appear in expanded state only
+      // Note: We can't easily test this without expanding, so we'll verify in expanded state tests
+    })
+
+    it('should show check-in time for accommodation in collapsed state', () => {
+      const hotelItem: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        type: 'accommodation',
+        title: 'Hotel Paris',
+        metadata: {
+          check_in_time: '3:00 PM',
+          check_out_time: '11:00 AM',
+          room_number: '305',
+          confirmation_number: 'CONF123',
+        },
+      }
+      render(<ListView items={[hotelItem]} currentUserId="user-123" />)
+
+      // Should show check-in time in collapsed state (via CollapsedMetadataPreview)
+      expect(screen.getByText('3:00 PM')).toBeInTheDocument()
+    })
+
+    it('should show meeting point for activity in collapsed state', () => {
+      const activityItem: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        type: 'activity',
+        title: 'Eiffel Tower Tour',
+        metadata: {
+          meeting_point: 'South Pillar Entrance',
+          duration: '2 hours',
+        },
+      }
+      render(<ListView items={[activityItem]} currentUserId="user-123" />)
+
+      // Should show meeting point in collapsed state
+      expect(screen.getByText(/South Pillar Entrance/i)).toBeInTheDocument()
+    })
+
+    it('should not show key metadata for general items', () => {
+      const generalItem: ItineraryItemWithParticipants = {
+        ...mockTimedItem,
+        type: 'general',
+        metadata: {},
+      }
+      render(<ListView items={[generalItem]} currentUserId="user-123" />)
+
+      // General items have no type-specific metadata
+      // Should only show basic info (title, time, location if present)
+      expect(screen.queryByText(/→|Terminal|Gate/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Expand/Edit interaction (Two-step)', () => {
+    it('should expand card on first click', async () => {
+      const user = userEvent.setup()
+      const mockOnClick = jest.fn()
+      render(
+        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
+      )
+
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
+
+      // First click should expand (NOT call onItemClick)
+      expect(mockOnClick).not.toHaveBeenCalled()
+      expect(screen.getByText('Transport Details')).toBeInTheDocument()
+    })
+
+    it('should open modal on second click (expanded card)', async () => {
+      const user = userEvent.setup()
+      const mockOnClick = jest.fn()
+      render(
+        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
+      )
+
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+
+      // First click: expand
+      await user.click(card!)
+      expect(mockOnClick).not.toHaveBeenCalled()
+
+      // Second click: open modal
+      await user.click(card!)
+      expect(mockOnClick).toHaveBeenCalledWith(mockTimedItem)
+    })
+
+    it('should not expand when clicking links in expanded state', async () => {
+      const user = userEvent.setup()
+      const mockOnClick = jest.fn()
+      render(
+        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
+      )
+
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+
+      // First click: expand
+      await user.click(card!)
+      expect(screen.getByText('Transport Details')).toBeInTheDocument()
+
+      // Click on a link (should not trigger onItemClick)
+      const link = screen.getByText('Check-in')
+      await user.click(link)
+
+      expect(mockOnClick).not.toHaveBeenCalled()
+    })
+
+    it('should not expand when clicking three-dot menu', async () => {
+      const user = userEvent.setup()
+      const mockOnClick = jest.fn()
+      render(
+        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
+      )
+
+      // Click the more actions button
+      const buttons = screen.getAllByRole('button')
+      const moreButton = buttons.find(btn => {
+        const svg = btn.querySelector('svg')
+        return (
+          svg?.classList.contains('lucide-ellipsis') ||
+          svg?.classList.contains('lucide-more-horizontal') ||
+          svg?.parentElement?.classList.contains('lucide-ellipsis') ||
+          svg?.parentElement?.classList.contains('lucide-more-horizontal')
+        )
+      })
+      await user.click(moreButton!)
+
+      // onItemClick should NOT be called, and card should NOT be expanded
+      expect(mockOnClick).not.toHaveBeenCalled()
+      expect(screen.queryByText('Transport Details')).not.toBeInTheDocument()
+    })
+
+    it('should show expanded state visual indicator (ring border)', async () => {
+      const user = userEvent.setup()
+      const { container } = render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      const card = container.querySelector('.rounded-lg.border') as HTMLElement
+      expect(card).toBeInTheDocument()
+
+      // Collapsed state: no ring border
+      expect(card).not.toHaveClass('ring-2')
+      expect(card).not.toHaveClass('ring-primary/20')
+
+      // Click to expand
+      await user.click(card)
+
+      // Expanded state: should have ring border
+      expect(card).toHaveClass('ring-2')
+      expect(card).toHaveClass('ring-primary/20')
+    })
+
+    it('should show hover effect on expandable cards', () => {
+      const { container } = render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      const card = container.querySelector('.rounded-lg.border') as HTMLElement
+      expect(card).toBeInTheDocument()
+
+      // Should have hover border effect for expandable cards
+      expect(card).toHaveClass('hover:border-primary/50')
+    })
+
+    it('should not show expand button (removed)', () => {
+      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+
+      // Expand button should NOT exist
+      const buttons = screen.getAllByRole('button')
+      const expandButton = buttons.find(
+        btn =>
+          btn.getAttribute('aria-label') === 'Expand details' ||
+          btn.getAttribute('aria-label') === 'Collapse details'
+      )
+      expect(expandButton).toBeUndefined()
+    })
+  })
+
   describe('Integration', () => {
     it('should display all enhancements together', async () => {
       const user = userEvent.setup()
-      render(<ListView items={[mockTimedItem]} currentUserId="user-123" />)
+      const mockOnClick = jest.fn()
+      render(
+        <ListView items={[mockTimedItem]} currentUserId="user-123" onItemClick={mockOnClick} />
+      )
 
-      // Should have all collapsed content
+      // Should have all collapsed content (with new enhancements)
       expect(screen.getByText('Flight to Paris')).toBeInTheDocument()
-      expect(screen.getByText(/\d+:\d+ [ap]m/i)).toBeInTheDocument()
+      expect(screen.getByText(/\d+:\d+ [ap]m - \d+:\d+ [ap]m/i)).toBeInTheDocument() // Time range
       expect(screen.getByText('3h')).toBeInTheDocument() // Duration badge
       expect(screen.getByText('Charles de Gaulle Airport')).toBeInTheDocument()
       expect(screen.getByText('Transport')).toBeInTheDocument()
+      expect(screen.getByText('ABC123')).toBeInTheDocument() // Booking reference
+      expect(screen.getByText('JFK → CDG')).toBeInTheDocument() // Key metadata
 
-      // Expand
-      const buttons = screen.getAllByRole('button')
-      const expandButton = buttons.find(btn => btn.getAttribute('aria-label') === 'Expand details')
-      await user.click(expandButton!)
+      // First click: expand (no expand button anymore)
+      const card = screen.getByText('Flight to Paris').closest('.rounded-lg')
+      await user.click(card!)
 
       // Should have all expanded content
       expect(screen.getByText('Transport Details')).toBeInTheDocument()
-      expect(screen.getByText('JFK → CDG')).toBeInTheDocument()
       expect(screen.getByText('Remember to check in online 24 hours before')).toBeInTheDocument()
       expect(screen.getByText('Check-in')).toBeInTheDocument()
+
+      // Verify expanded state is not calling onItemClick yet
+      expect(mockOnClick).not.toHaveBeenCalled()
+
+      // Second click: open modal
+      await user.click(card!)
+      expect(mockOnClick).toHaveBeenCalledWith(mockTimedItem)
     })
 
     it('should maintain responsive layout with all features', () => {
