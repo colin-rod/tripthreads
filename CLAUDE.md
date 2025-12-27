@@ -335,7 +335,7 @@ git push origin main       # Deploy to production
 - ✅ **Stripe Checkout Endpoint** - `/api/create-checkout` with 15 tests (Phase 3.2) ✅ **COMPLETE**
 - ✅ **Subscription UI** - Settings page subscription section with plan selection (Phase 3.2) ✅ **COMPLETE**
 - ✅ **Client-Side Currency Detection** - Automatic locale-based currency display (Phase 3.2) ✅ **COMPLETE**
-- 📋 **Stripe Webhooks** - Lifecycle events (Phase 3.3)
+- ✅ **Stripe Webhooks** - `/api/webhooks/stripe` with 10 tests handling lifecycle events (Phase 3.3) ✅ **COMPLETE**
 - 📋 **Stripe Customer Portal** - Self-service billing (Phase 3.4)
 
 ### Testing - ✅ Implemented
