@@ -22,11 +22,23 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { toast } from 'sonner'
 import { createExpense } from '@/app/actions/expenses'
 import { createItineraryItem } from '@/app/actions/itinerary'
-import { Loader2 } from 'lucide-react'
-import type { ItineraryItemType } from '@tripthreads/core'
+import { Loader2, Plus, X, LinkIcon } from 'lucide-react'
+import type { ItineraryItemType, ItineraryItemMetadata, ItineraryItemLink } from '@tripthreads/core'
+
+// Import metadata field components
+import { TransportMetadataFields } from '@/components/features/itinerary/metadata/TransportMetadataFields'
+import { AccommodationMetadataFields } from '@/components/features/itinerary/metadata/AccommodationMetadataFields'
+import { ActivityMetadataFields } from '@/components/features/itinerary/metadata/ActivityMetadataFields'
 
 type UiItineraryType = 'flight' | 'stay' | 'activity'
 
@@ -139,12 +151,33 @@ export function ParsedItemModal({
   )
   const [itineraryLocation, setItineraryLocation] = useState(parsedData.itinerary?.location || '')
 
+  // New state variables for optional fields
+  const [itineraryNotes, setItineraryNotes] = useState('')
+  const [itineraryLinks, setItineraryLinks] = useState<ItineraryItemLink[]>([])
+  const [itineraryIsAllDay, setItineraryIsAllDay] = useState(false)
+
+  // Type-specific metadata
+  const [itineraryMetadata, setItineraryMetadata] = useState<ItineraryItemMetadata | undefined>(
+    undefined
+  )
+
+  // Link input UI state
+  const [newLinkTitle, setNewLinkTitle] = useState('')
+  const [newLinkUrl, setNewLinkUrl] = useState('')
+
   // Update payer amount when expense amount changes
   useEffect(() => {
     if (payers.length === 1) {
       setPayers([{ ...payers[0], amount: expenseAmount }])
     }
   }, [expenseAmount])
+
+  // Clear metadata when itinerary type changes
+  useEffect(() => {
+    if (createItineraryChecked) {
+      setItineraryMetadata(undefined)
+    }
+  }, [itineraryType])
 
   const handleAddPayer = () => {
     setPayers([...payers, { name: '', amount: 0 }])
@@ -225,9 +258,14 @@ export function ParsedItemModal({
           type: UI_TO_ITEM_TYPE_MAP[itineraryType],
           title: itineraryTitle,
           description: itineraryDescription || undefined,
+          notes: itineraryNotes || undefined,
+          links: itineraryLinks.length > 0 ? itineraryLinks : undefined,
           startTime: new Date(itineraryStartDate).toISOString(),
           endTime: itineraryEndDate ? new Date(itineraryEndDate).toISOString() : undefined,
+          isAllDay: itineraryIsAllDay,
           location: itineraryLocation || undefined,
+          metadata: itineraryMetadata,
+          source: 'nl',
         })
 
         if (!result.success) {
@@ -498,12 +536,25 @@ export function ParsedItemModal({
                     />
                   </div>
 
+                  {/* All-Day Toggle */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="is-all-day"
+                      checked={itineraryIsAllDay}
+                      onCheckedChange={checked => setItineraryIsAllDay(!!checked)}
+                      disabled={!createItineraryChecked}
+                    />
+                    <Label htmlFor="is-all-day" className="text-sm font-normal cursor-pointer">
+                      All-day event
+                    </Label>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="itinerary-start">Start Date/Time</Label>
                       <Input
                         id="itinerary-start"
-                        type="datetime-local"
+                        type={itineraryIsAllDay ? 'date' : 'datetime-local'}
                         value={itineraryStartDate}
                         onChange={e => setItineraryStartDate(e.target.value)}
                         disabled={!createItineraryChecked}
@@ -513,7 +564,7 @@ export function ParsedItemModal({
                       <Label htmlFor="itinerary-end">End Date/Time (Optional)</Label>
                       <Input
                         id="itinerary-end"
-                        type="datetime-local"
+                        type={itineraryIsAllDay ? 'date' : 'datetime-local'}
                         value={itineraryEndDate}
                         onChange={e => setItineraryEndDate(e.target.value)}
                         disabled={!createItineraryChecked}
@@ -530,6 +581,134 @@ export function ParsedItemModal({
                       disabled={!createItineraryChecked}
                     />
                   </div>
+
+                  {/* Accordion for Optional Fields */}
+                  <Accordion type="multiple" className="w-full">
+                    {/* General Optional Fields */}
+                    <AccordionItem value="optional-fields">
+                      <AccordionTrigger>Additional Details (Optional)</AccordionTrigger>
+                      <AccordionContent className="space-y-4">
+                        {/* Notes */}
+                        <div className="space-y-2">
+                          <Label htmlFor="itinerary-notes">Notes</Label>
+                          <Textarea
+                            id="itinerary-notes"
+                            value={itineraryNotes}
+                            onChange={e => setItineraryNotes(e.target.value)}
+                            disabled={!createItineraryChecked}
+                            placeholder="Additional notes or reminders..."
+                            rows={3}
+                          />
+                        </div>
+
+                        {/* Links */}
+                        <div className="space-y-2">
+                          <Label>Links & Bookings</Label>
+                          {/* Display existing links */}
+                          {itineraryLinks.length > 0 && (
+                            <div className="space-y-2">
+                              {itineraryLinks.map((link, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-2 p-2 border rounded-lg"
+                                >
+                                  <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{link.title}</p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {link.url}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      setItineraryLinks(links =>
+                                        links.filter((_, i) => i !== index)
+                                      )
+                                    }
+                                    disabled={!createItineraryChecked}
+                                    aria-label="Delete link"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Add new link UI */}
+                          <div className="grid grid-cols-[1fr,1fr,auto] gap-2">
+                            <Input
+                              placeholder="Link title"
+                              value={newLinkTitle}
+                              onChange={e => setNewLinkTitle(e.target.value)}
+                              disabled={!createItineraryChecked}
+                            />
+                            <Input
+                              placeholder="URL"
+                              value={newLinkUrl}
+                              onChange={e => setNewLinkUrl(e.target.value)}
+                              disabled={!createItineraryChecked}
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                if (newLinkTitle && newLinkUrl) {
+                                  setItineraryLinks(links => [
+                                    ...links,
+                                    { title: newLinkTitle, url: newLinkUrl },
+                                  ])
+                                  setNewLinkTitle('')
+                                  setNewLinkUrl('')
+                                }
+                              }}
+                              disabled={!createItineraryChecked || !newLinkTitle || !newLinkUrl}
+                              aria-label="Add link"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Type-Specific Metadata */}
+                    <AccordionItem value="type-specific">
+                      <AccordionTrigger>
+                        {itineraryType === 'flight' && 'Flight Details (Optional)'}
+                        {itineraryType === 'stay' && 'Accommodation Details (Optional)'}
+                        {itineraryType === 'activity' && 'Activity Details (Optional)'}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {itineraryType === 'flight' && (
+                          <TransportMetadataFields
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            metadata={(itineraryMetadata as any) || {}}
+                            onChange={setItineraryMetadata}
+                            disabled={!createItineraryChecked}
+                          />
+                        )}
+                        {itineraryType === 'stay' && (
+                          <AccommodationMetadataFields
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            metadata={(itineraryMetadata as any) || {}}
+                            onChange={setItineraryMetadata}
+                            disabled={!createItineraryChecked}
+                          />
+                        )}
+                        {itineraryType === 'activity' && (
+                          <ActivityMetadataFields
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            metadata={(itineraryMetadata as any) || {}}
+                            onChange={setItineraryMetadata}
+                            disabled={!createItineraryChecked}
+                          />
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </>
             )}
