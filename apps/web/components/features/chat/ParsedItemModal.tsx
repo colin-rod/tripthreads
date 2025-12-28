@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -153,17 +153,24 @@ export function ParsedItemModal({
 
   // New state variables for optional fields
   const [itineraryNotes, setItineraryNotes] = useState('')
-  const [itineraryLinks, setItineraryLinks] = useState<ItineraryItemLink[]>([])
-  const [itineraryIsAllDay, setItineraryIsAllDay] = useState(false)
+  const [itineraryLinks, setItineraryLinks] = useState<ItineraryItemLink[]>(
+    parsedData.itinerary?.links ?? []
+  )
+  const [itineraryIsAllDay, setItineraryIsAllDay] = useState(
+    parsedData.itinerary?.isAllDay ?? false
+  )
 
   // Type-specific metadata
   const [itineraryMetadata, setItineraryMetadata] = useState<ItineraryItemMetadata | undefined>(
-    undefined
+    parsedData.itinerary?.metadata
   )
 
   // Link input UI state
   const [newLinkTitle, setNewLinkTitle] = useState('')
   const [newLinkUrl, setNewLinkUrl] = useState('')
+
+  // Track if this is the first render (to avoid clearing metadata on mount)
+  const isFirstRender = useRef(true)
 
   // Update payer amount when expense amount changes
   useEffect(() => {
@@ -172,8 +179,12 @@ export function ParsedItemModal({
     }
   }, [expenseAmount])
 
-  // Clear metadata when itinerary type changes
+  // Clear metadata when itinerary type changes (but not on initial mount)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
     if (createItineraryChecked) {
       setItineraryMetadata(undefined)
     }

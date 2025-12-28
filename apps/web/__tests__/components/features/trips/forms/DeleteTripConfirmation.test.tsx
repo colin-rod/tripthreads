@@ -296,8 +296,8 @@ describe('DeleteTripConfirmation', () => {
   it('renders warning icon', () => {
     render(<DeleteTripConfirmation {...mockProps} />)
 
-    // The AlertTriangle icon should be in the document
-    const heading = screen.getByText(/delete trip/i)
+    // The AlertTriangle icon should be in the document (heading with role)
+    const heading = screen.getByRole('heading', { name: /delete trip/i })
     expect(heading).toBeInTheDocument()
   })
 
