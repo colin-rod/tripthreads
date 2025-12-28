@@ -76,6 +76,9 @@ interface ParsedItemModalProps {
       startDate: string
       endDate?: string
       location?: string
+      links?: Array<{ title: string; url: string }>
+      isAllDay?: boolean
+      metadata?: ItineraryItemMetadata
     }
   }
   currentIndex?: number
