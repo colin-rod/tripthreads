@@ -848,6 +848,8 @@ export type Database = {
           privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          subscription_currency: string | null
+          subscription_price_id: string | null
           tos_accepted_at: string | null
           updated_at: string
         }
@@ -867,6 +869,8 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          subscription_currency?: string | null
+          subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
         }
@@ -886,6 +890,8 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          subscription_currency?: string | null
+          subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
         }
