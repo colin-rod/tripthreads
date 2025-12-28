@@ -32,7 +32,7 @@ export function ChipSelector<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        'flex flex-nowrap gap-1 rounded-lg border border-border p-1 overflow-x-auto',
+        'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1 rounded-lg border border-border p-1',
         className
       )}
     >

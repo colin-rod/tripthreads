@@ -264,7 +264,7 @@ describe('createTrip', () => {
 
   it('should rollback the trip when participant insertion fails', async () => {
     const deleteEqMock = jest
-      .fn<() => Promise<{ error: null }>>()
+      .fn<(id: string) => Promise<{ error: null }>>()
       .mockResolvedValue({ error: null })
     const tripsSingleMock = jest
       .fn<() => Promise<{ data: { id: string; owner_id: string } | null; error: null }>>()

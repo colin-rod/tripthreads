@@ -60,6 +60,7 @@ export async function createTrip(input: Omit<CreateTripInput, 'owner_id'>) {
       hasDates: !!trip.start_date && !!trip.end_date,
       hasDescription: !!trip.description,
       source: 'manual',
+      userId: user.id,
     })
 
     // Revalidate trips list

@@ -151,11 +151,13 @@ export async function createItineraryItem(input: CreateItineraryItemInput) {
         parseSuccess: true,
         hasTime: !input.isAllDay,
         hasLocation: !!input.location,
+        userId: user.id,
       })
     } else {
       trackItemAddedManual({
         tripId: input.tripId,
         itemType: input.type,
+        userId: user.id,
       })
     }
 
@@ -274,6 +276,7 @@ export async function updateItineraryItem(input: UpdateItineraryItemInput) {
       tripId: existingItem.trip_id,
       itemId: input.id,
       itemType,
+      userId: user.id,
     })
 
     // Revalidate trip page
@@ -350,6 +353,7 @@ export async function deleteItineraryItem(itemId: string) {
       tripId: existingItem.trip_id,
       itemId,
       itemType: existingItem.type as ItineraryItemType,
+      userId: user.id,
     })
 
     // Revalidate trip page

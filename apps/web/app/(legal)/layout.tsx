@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Footer } from '@/components/features/legal/Footer'
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -51,11 +52,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-12 py-8">
-        <div className="container max-w-6xl text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} TripThreads. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Print styles */}
       <style

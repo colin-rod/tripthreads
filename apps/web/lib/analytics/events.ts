@@ -27,6 +27,22 @@
 import { posthog } from './posthog'
 import type { ItemType } from '@tripthreads/core'
 
+// Server-side capture - only available on server
+let captureServerEvent:
+  | ((distinctId: string, event: string, properties?: Record<string, unknown>) => void)
+  | null = null
+
+// Lazy load server capture on first use (server only)
+if (typeof window === 'undefined') {
+  import('./posthog-server')
+    .then(module => {
+      captureServerEvent = module.captureServerEvent
+    })
+    .catch(err => {
+      console.error('Failed to load server PostHog:', err)
+    })
+}
+
 // ============================================================================
 // Authentication Events
 // ============================================================================
@@ -36,11 +52,22 @@ import type { ItemType } from '@tripthreads/core'
  * @param method - Authentication method used
  * @param userId - Supabase user ID
  */
-export const trackSignup = (method: 'email' | 'google' | 'apple', userId: string) => {
-  posthog.capture('signup', {
+export const trackSignup = async (method: 'email' | 'google' | 'apple', userId: string) => {
+  const eventData = {
     method,
     user_id: userId,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'signup', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('signup', eventData)
 }
 
 /**
@@ -48,18 +75,41 @@ export const trackSignup = (method: 'email' | 'google' | 'apple', userId: string
  * @param method - Authentication method used
  * @param userId - Supabase user ID
  */
-export const trackLogin = (method: 'email' | 'google' | 'apple', userId: string) => {
-  posthog.capture('login', {
+export const trackLogin = async (method: 'email' | 'google' | 'apple', userId: string) => {
+  const eventData = {
     method,
     user_id: userId,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'login', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('login', eventData)
 }
 
 /**
  * Track user logout
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackLogout = () => {
-  posthog.capture('logout', {})
+export const trackLogout = async (userId?: string) => {
+  const eventData = {}
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'logout', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('logout', eventData)
 }
 
 // ============================================================================
@@ -68,42 +118,109 @@ export const trackLogout = () => {
 
 /**
  * Track onboarding start
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackOnboardingStarted = () => {
-  posthog.capture('onboarding_started', {})
+export const trackOnboardingStarted = async (userId?: string) => {
+  const eventData = {}
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'onboarding_started', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('onboarding_started', eventData)
 }
 
 /**
  * Track onboarding step view
  * @param step - Step identifier
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackOnboardingStepViewed = (
-  step: 'welcome' | 'roles' | 'features' | 'first-trip'
+export const trackOnboardingStepViewed = async (
+  step: 'welcome' | 'roles' | 'features' | 'first-trip',
+  userId?: string
 ) => {
-  posthog.capture('onboarding_step_viewed', { step })
+  const eventData = { step }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'onboarding_step_viewed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('onboarding_step_viewed', eventData)
 }
 
 /**
  * Track onboarding completion
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackOnboardingCompleted = () => {
-  posthog.capture('onboarding_completed', {})
+export const trackOnboardingCompleted = async (userId?: string) => {
+  const eventData = {}
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'onboarding_completed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('onboarding_completed', eventData)
 }
 
 /**
  * Track onboarding skip
  * @param step - Step where user skipped
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackOnboardingSkipped = (step: 'welcome' | 'roles' | 'features' | 'first-trip') => {
-  posthog.capture('onboarding_skipped', { step })
+export const trackOnboardingSkipped = async (
+  step: 'welcome' | 'roles' | 'features' | 'first-trip',
+  userId?: string
+) => {
+  const eventData = { step }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'onboarding_skipped', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('onboarding_skipped', eventData)
 }
 
 /**
  * Track platform detection during onboarding
  * @param platform - Detected platform
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackOnboardingPlatformDetected = (platform: 'web' | 'ios' | 'android') => {
-  posthog.capture('onboarding_platform_detected', { platform })
+export const trackOnboardingPlatformDetected = async (
+  platform: 'web' | 'ios' | 'android',
+  userId?: string
+) => {
+  const eventData = { platform }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'onboarding_platform_detected', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('onboarding_platform_detected', eventData)
 }
 
 // ============================================================================
@@ -113,51 +230,121 @@ export const trackOnboardingPlatformDetected = (platform: 'web' | 'ios' | 'andro
 /**
  * Track tour start
  * @param tourId - Tour identifier
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackTourStarted = (tourId: string) => {
-  posthog.capture('tour_started', { tour_id: tourId })
+export const trackTourStarted = async (tourId: string, userId?: string) => {
+  const eventData = { tour_id: tourId }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'tour_started', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('tour_started', eventData)
 }
 
 /**
  * Track tour step advancement
  * @param params - Tour step parameters
  */
-export const trackTourStepAdvanced = (params: { tourId: string; step: number; stepId: string }) => {
-  posthog.capture('tour_step_advanced', {
+export const trackTourStepAdvanced = async (params: {
+  tourId: string
+  step: number
+  stepId: string
+  userId?: string
+}) => {
+  const eventData = {
     tour_id: params.tourId,
     step: params.step,
     step_id: params.stepId,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'tour_step_advanced', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('tour_step_advanced', eventData)
 }
 
 /**
  * Track tour completion
  * @param tourId - Tour identifier
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackTourCompleted = (tourId: string) => {
-  posthog.capture('tour_completed', { tour_id: tourId })
+export const trackTourCompleted = async (tourId: string, userId?: string) => {
+  const eventData = { tour_id: tourId }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'tour_completed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('tour_completed', eventData)
 }
 
 /**
  * Track tour skip
  * @param params - Tour skip parameters
  */
-export const trackTourSkipped = (params: { tourId: string; step: number }) => {
-  posthog.capture('tour_skipped', {
+export const trackTourSkipped = async (params: {
+  tourId: string
+  step: number
+  userId?: string
+}) => {
+  const eventData = {
     tour_id: params.tourId,
     step: params.step,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'tour_skipped', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('tour_skipped', eventData)
 }
 
 /**
  * Track tour dismissal (can be resumed later)
  * @param params - Tour dismiss parameters
  */
-export const trackTourDismissed = (params: { tourId: string; step: number }) => {
-  posthog.capture('tour_dismissed', {
+export const trackTourDismissed = async (params: {
+  tourId: string
+  step: number
+  userId?: string
+}) => {
+  const eventData = {
     tour_id: params.tourId,
     step: params.step,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'tour_dismissed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('tour_dismissed', eventData)
 }
 
 // ============================================================================
@@ -173,21 +360,45 @@ export const trackTripCreated = (params: {
   hasDates: boolean
   hasDescription: boolean
   source: 'manual' | 'template' | 'import'
+  userId?: string
 }) => {
-  posthog.capture('trip_created', {
+  const eventData = {
     trip_id: params.tripId,
     has_dates: params.hasDates,
     has_description: params.hasDescription,
     source: params.source,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'trip_created', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('trip_created', eventData)
 }
 
 /**
  * Track trip view
  * @param tripId - Trip ID being viewed
+ * @param userId - Optional user ID for server-side tracking
  */
-export const trackTripViewed = (tripId: string) => {
-  posthog.capture('trip_viewed', { trip_id: tripId })
+export const trackTripViewed = async (tripId: string, userId?: string) => {
+  const eventData = { trip_id: tripId }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'trip_viewed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('trip_viewed', eventData)
 }
 
 /**
@@ -197,40 +408,79 @@ export const trackTripViewed = (tripId: string) => {
  * TODO: Implement when trip edit server action is created
  * Currently trip editing functionality doesn't exist in apps/web/app/actions/trips.ts
  */
-export const trackTripEdited = (params: { tripId: string; fieldsChanged: string[] }) => {
-  posthog.capture('trip_edited', {
+export const trackTripEdited = async (params: {
+  tripId: string
+  fieldsChanged: string[]
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     fields_changed: params.fieldsChanged,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'trip_edited', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('trip_edited', eventData)
 }
 
 /**
  * Track trip archival
  * @param tripId - Trip ID being archived
+ * @param userId - Optional user ID for server-side tracking
  *
  * TODO: Implement when trip archive server action is created
  * Currently trip archiving functionality doesn't exist in apps/web/app/actions/trips.ts
  */
-export const trackTripArchived = (tripId: string) => {
-  posthog.capture('trip_archived', { trip_id: tripId })
+export const trackTripArchived = async (tripId: string, userId?: string) => {
+  const eventData = { trip_id: tripId }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (userId && captureServerEvent) {
+      await captureServerEvent(userId, 'trip_archived', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('trip_archived', eventData)
 }
 
 /**
  * Track trip deletion
  * @param params - Trip deletion parameters
  */
-export const trackTripDeleted = (params: {
+export const trackTripDeleted = async (params: {
   tripId: string
   participantCount: number
   itemCount: number
   expenseCount: number
+  userId?: string
 }) => {
-  posthog.capture('trip_deleted', {
+  const eventData = {
     trip_id: params.tripId,
     participant_count: params.participantCount,
     item_count: params.itemCount,
     expense_count: params.expenseCount,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'trip_deleted', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('trip_deleted', eventData)
 }
 
 // ============================================================================
@@ -241,34 +491,58 @@ export const trackTripDeleted = (params: {
  * Track invite sent
  * @param params - Invite parameters
  */
-export const trackInviteSent = (params: {
+export const trackInviteSent = async (params: {
   tripId: string
   inviteMethod: 'email' | 'link' | 'qr'
   role: 'participant' | 'viewer'
+  userId?: string
 }) => {
-  posthog.capture('invite_sent', {
+  const eventData = {
     trip_id: params.tripId,
     invite_method: params.inviteMethod,
     role: params.role,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'invite_sent', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('invite_sent', eventData)
 }
 
 /**
  * Track invite acceptance
  * @param params - Invite acceptance parameters
  */
-export const trackInviteAccepted = (params: {
+export const trackInviteAccepted = async (params: {
   tripId: string
   role: 'participant' | 'viewer'
   inviteMethod: 'email' | 'link' | 'qr'
   isPartialJoiner: boolean
+  userId?: string
 }) => {
-  posthog.capture('invite_accepted', {
+  const eventData = {
     trip_id: params.tripId,
     role: params.role,
     invite_method: params.inviteMethod,
     is_partial_joiner: params.isPartialJoiner,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'invite_accepted', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('invite_accepted', eventData)
 }
 
 // ============================================================================
@@ -285,37 +559,80 @@ export const trackItemAddedNl = (params: {
   parseSuccess: boolean
   hasTime: boolean
   hasLocation: boolean
+  userId?: string
 }) => {
-  posthog.capture('item_added_nl', {
+  const eventData = {
     trip_id: params.tripId,
     item_type: params.itemType,
     parse_success: params.parseSuccess,
     has_time: params.hasTime,
     has_location: params.hasLocation,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'item_added_nl', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('item_added_nl', eventData)
 }
 
 /**
  * Track itinerary item added via manual form
  * @param params - Item parameters
  */
-export const trackItemAddedManual = (params: { tripId: string; itemType: ItemType }) => {
-  posthog.capture('item_added_manual', {
+export const trackItemAddedManual = (params: {
+  tripId: string
+  itemType: ItemType
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     item_type: params.itemType,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'item_added_manual', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('item_added_manual', eventData)
 }
 
 /**
  * Track itinerary item edit
  * @param params - Item edit parameters
  */
-export const trackItemEdited = (params: { tripId: string; itemId: string; itemType: ItemType }) => {
-  posthog.capture('item_edited', {
+export const trackItemEdited = (params: {
+  tripId: string
+  itemId: string
+  itemType: ItemType
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     item_id: params.itemId,
     item_type: params.itemType,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'item_edited', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('item_edited', eventData)
 }
 
 /**
@@ -326,12 +643,24 @@ export const trackItemDeleted = (params: {
   tripId: string
   itemId: string
   itemType: ItemType
+  userId?: string
 }) => {
-  posthog.capture('item_deleted', {
+  const eventData = {
     trip_id: params.tripId,
     item_id: params.itemId,
     item_type: params.itemType,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'item_deleted', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('item_deleted', eventData)
 }
 
 // ============================================================================
@@ -350,11 +679,12 @@ export const trackExpenseAddedNl = (params: {
   participantCount: number
   parseSuccess: boolean
   hasReceipt: boolean
+  userId?: string
 }) => {
   // Map 'custom' to 'amount' for analytics (they mean the same thing)
   const splitType = params.splitType === 'custom' ? 'amount' : params.splitType
 
-  posthog.capture('expense_added_nl', {
+  const eventData = {
     trip_id: params.tripId,
     amount_cents: params.amountCents,
     currency: params.currency,
@@ -362,7 +692,18 @@ export const trackExpenseAddedNl = (params: {
     participant_count: params.participantCount,
     parse_success: params.parseSuccess,
     has_receipt: params.hasReceipt,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'expense_added_nl', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('expense_added_nl', eventData)
 }
 
 /**
@@ -376,18 +717,30 @@ export const trackExpenseAddedManual = (params: {
   splitType: 'equal' | 'percentage' | 'amount' | 'custom' | 'none'
   participantCount: number
   hasReceipt: boolean
+  userId?: string
 }) => {
   // Map 'custom' to 'amount' for analytics (they mean the same thing)
   const splitType = params.splitType === 'custom' ? 'amount' : params.splitType
 
-  posthog.capture('expense_added_manual', {
+  const eventData = {
     trip_id: params.tripId,
     amount_cents: params.amountCents,
     currency: params.currency,
     split_type: splitType,
     participant_count: params.participantCount,
     has_receipt: params.hasReceipt,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'expense_added_manual', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('expense_added_manual', eventData)
 }
 
 /**
@@ -397,16 +750,28 @@ export const trackExpenseAddedManual = (params: {
  * TODO: Implement when expense edit server action is created
  * Currently expense editing functionality doesn't exist in apps/web/app/actions/expenses.ts
  */
-export const trackExpenseEdited = (params: {
+export const trackExpenseEdited = async (params: {
   tripId: string
   expenseId: string
   fieldsChanged: string[]
+  userId?: string
 }) => {
-  posthog.capture('expense_edited', {
+  const eventData = {
     trip_id: params.tripId,
     expense_id: params.expenseId,
     fields_changed: params.fieldsChanged,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'expense_edited', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('expense_edited', eventData)
 }
 
 /**
@@ -416,11 +781,26 @@ export const trackExpenseEdited = (params: {
  * TODO: Implement when expense delete server action is created
  * Currently expense deletion functionality doesn't exist in apps/web/app/actions/expenses.ts
  */
-export const trackExpenseDeleted = (params: { tripId: string; expenseId: string }) => {
-  posthog.capture('expense_deleted', {
+export const trackExpenseDeleted = async (params: {
+  tripId: string
+  expenseId: string
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     expense_id: params.expenseId,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'expense_deleted', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('expense_deleted', eventData)
 }
 
 // ============================================================================
@@ -431,18 +811,30 @@ export const trackExpenseDeleted = (params: { tripId: string; expenseId: string 
  * Track settlement creation
  * @param params - Settlement calculation parameters
  */
-export const trackSettlementCreated = (params: {
+export const trackSettlementCreated = async (params: {
   tripId: string
   settlementCount: number
   totalDebts: number
   currency: string
+  userId?: string
 }) => {
-  posthog.capture('settlement_created', {
+  const eventData = {
     trip_id: params.tripId,
     settlement_count: params.settlementCount,
     total_debts: params.totalDebts,
     currency: params.currency,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'settlement_created', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('settlement_created', eventData)
 }
 
 /**
@@ -454,13 +846,25 @@ export const trackSettlementMarkedPaid = (params: {
   settlementId: string
   amountCents: number
   currency: string
+  userId?: string
 }) => {
-  posthog.capture('settlement_marked_paid', {
+  const eventData = {
     trip_id: params.tripId,
     settlement_id: params.settlementId,
     amount_cents: params.amountCents,
     currency: params.currency,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'settlement_marked_paid', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('settlement_marked_paid', eventData)
 }
 
 // ============================================================================
@@ -475,39 +879,78 @@ export const trackChatMessageSent = (params: {
   tripId: string
   isAiResponse: boolean
   hasMentions: boolean
+  userId?: string
 }) => {
-  posthog.capture('chat_message_sent', {
+  const eventData = {
     trip_id: params.tripId,
     is_ai_response: params.isAiResponse,
     has_mentions: params.hasMentions,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'chat_message_sent', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('chat_message_sent', eventData)
 }
 
 /**
  * Track message reaction added
  * @param params - Reaction parameters
  */
-export const trackMessageReactionAdded = (params: { tripId: string; emoji: string }) => {
-  posthog.capture('message_reaction_added', {
+export const trackMessageReactionAdded = (params: {
+  tripId: string
+  emoji: string
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     emoji: params.emoji,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      captureServerEvent(params.userId, 'message_reaction_added', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('message_reaction_added', eventData)
 }
 
 /**
  * Track AI response generated
  * @param params - AI response parameters
  */
-export const trackAiResponseGenerated = (params: {
+export const trackAiResponseGenerated = async (params: {
   tripId: string
   tokenCount: number
   responseTime: number
+  userId?: string
 }) => {
-  posthog.capture('ai_response_generated', {
+  const eventData = {
     trip_id: params.tripId,
     token_count: params.tokenCount,
     response_time: params.responseTime,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'ai_response_generated', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('ai_response_generated', eventData)
 }
 
 // ============================================================================
@@ -518,27 +961,54 @@ export const trackAiResponseGenerated = (params: {
  * Track participant limit reached (Free tier: 10 participants)
  * @param params - Limit parameters
  */
-export const trackParticipantLimitReached = (params: {
+export const trackParticipantLimitReached = async (params: {
   tripId: string
   currentCount: number
   attemptedAction: 'invite' | 'accept_request'
+  userId?: string
 }) => {
-  posthog.capture('participant_limit_reached', {
+  const eventData = {
     trip_id: params.tripId,
     current_count: params.currentCount,
     attempted_action: params.attemptedAction,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'participant_limit_reached', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('participant_limit_reached', eventData)
 }
 
 /**
  * Track photo limit reached (Free tier: 50 photos)
  * @param params - Limit parameters
  */
-export const trackPhotoLimitReached = (params: { tripId: string; currentCount: number }) => {
-  posthog.capture('photo_limit_reached', {
+export const trackPhotoLimitReached = async (params: {
+  tripId: string
+  currentCount: number
+  userId?: string
+}) => {
+  const eventData = {
     trip_id: params.tripId,
     current_count: params.currentCount,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'photo_limit_reached', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('photo_limit_reached', eventData)
 }
 
 // ============================================================================
@@ -549,48 +1019,84 @@ export const trackPhotoLimitReached = (params: { tripId: string; currentCount: n
  * Track photo upload
  * @param params - Photo upload parameters
  */
-export const trackPhotoUploaded = (params: {
+export const trackPhotoUploaded = async (params: {
   tripId: string
   fileSizeKb: number
   hasCaption: boolean
+  userId?: string
 }) => {
-  posthog.capture('photo_uploaded', {
+  const eventData = {
     trip_id: params.tripId,
     file_size_kb: params.fileSizeKb,
     has_caption: params.hasCaption,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'photo_uploaded', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('photo_uploaded', eventData)
 }
 
 /**
  * Track video upload
  * @param params - Video upload parameters
  */
-export const trackVideoUploaded = (params: {
+export const trackVideoUploaded = async (params: {
   tripId: string
   fileSizeMb: number
   hasCaption: boolean
+  userId?: string
 }) => {
-  posthog.capture('video_uploaded', {
+  const eventData = {
     trip_id: params.tripId,
     file_size_mb: params.fileSizeMb,
     has_caption: params.hasCaption,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'video_uploaded', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('video_uploaded', eventData)
 }
 
 /**
  * Track feed view
  * @param params - Feed view parameters
  */
-export const trackFeedViewed = (params: {
+export const trackFeedViewed = async (params: {
   tripId: string
   photoCount: number
   videoCount: number
+  userId?: string
 }) => {
-  posthog.capture('feed_viewed', {
+  const eventData = {
     trip_id: params.tripId,
     photo_count: params.photoCount,
     video_count: params.videoCount,
-  })
+  }
+
+  // Server-side tracking
+  if (typeof window === 'undefined') {
+    if (params.userId && captureServerEvent) {
+      await captureServerEvent(params.userId, 'feed_viewed', eventData)
+    }
+    return
+  }
+
+  // Client-side tracking
+  posthog.capture('feed_viewed', eventData)
 }
 
 // ============================================================================

@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 // Role enum validation
 export const inviteRoleSchema = z.enum(['participant', 'viewer'], {
-  errorMap: () => ({ message: 'Role must be either participant or viewer' }),
+  message: 'Role must be either participant or viewer',
 })
 
 // Email validation with proper regex

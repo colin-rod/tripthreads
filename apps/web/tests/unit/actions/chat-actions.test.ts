@@ -104,7 +104,7 @@ describe('chat server actions', () => {
         error: null,
       })
       const messageSelect = jest.fn<() => any>().mockReturnValue({ single: messageSingle })
-      const messageInsert = jest.fn<() => any>().mockReturnValue({ select: messageSelect })
+      const messageInsert = jest.fn<(data: any) => any>().mockReturnValue({ select: messageSelect })
 
       mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'trip_participants') {
@@ -244,7 +244,7 @@ describe('chat server actions', () => {
         error: null,
       })
 
-      const limit = jest.fn<() => Promise<any>>().mockResolvedValue({
+      const limit = jest.fn<(count: number) => Promise<any>>().mockResolvedValue({
         data: [
           {
             id: 'message-1',
@@ -318,6 +318,56 @@ describe('chat server actions', () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe('Failed to fetch messages')
       expect(captureExceptionMock).toHaveBeenCalledWith(queryError, expect.any(Object))
+    })
+
+    it('orders messages by created_at descending (newest first)', async () => {
+      const mockSupabase = createMockSupabase()
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      })
+
+      const limit = jest.fn<(count: number) => Promise<any>>().mockResolvedValue({
+        data: [
+          {
+            id: 'msg-3',
+            created_at: '2025-12-27T10:00:00Z',
+            content: 'Newest message',
+          },
+          {
+            id: 'msg-2',
+            created_at: '2025-12-27T09:00:00Z',
+            content: 'Middle message',
+          },
+          {
+            id: 'msg-1',
+            created_at: '2025-12-27T08:00:00Z',
+            content: 'Oldest message',
+          },
+        ],
+        error: null,
+      })
+
+      const order = jest
+        .fn<(field: string, options: { ascending: boolean }) => any>()
+        .mockReturnValue({ limit })
+      const eq = jest.fn<() => any>().mockReturnValue({ order })
+      const select = jest.fn<() => any>().mockReturnValue({ eq })
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'chat_messages') {
+          return { select }
+        }
+        throw new Error(`Unexpected table ${table}`)
+      })
+
+      createClientMock.mockResolvedValue(mockSupabase as unknown as any)
+
+      const result = await getChatMessages('trip-1')
+
+      expect(result.success).toBe(true)
+      // Verify descending order was requested
+      expect(order).toHaveBeenCalledWith('created_at', { ascending: false })
     })
   })
 
@@ -393,7 +443,9 @@ describe('chat server actions', () => {
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
 
       // Mock the delete query chain: .delete().eq('id')
-      const deleteEq = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
+      const deleteEq = jest
+        .fn<(column: string, value: any) => Promise<any>>()
+        .mockResolvedValue({ error: null })
       const deleteFn = jest.fn<() => any>().mockReturnValue({ eq: deleteEq })
 
       const reactionTable = { select, delete: deleteFn }
@@ -428,7 +480,7 @@ describe('chat server actions', () => {
       const eqFirst = jest.fn<() => any>().mockReturnValue({ eq: eqSecond })
       const select = jest.fn<() => any>().mockReturnValue({ eq: eqFirst })
 
-      const insert = jest.fn<() => Promise<any>>().mockResolvedValue({ error: null })
+      const insert = jest.fn<(data: any) => Promise<any>>().mockResolvedValue({ error: null })
 
       // Mock the chat_messages query to get trip_id for analytics
       const messageSingle = jest

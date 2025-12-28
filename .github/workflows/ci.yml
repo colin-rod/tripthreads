@@ -11,8 +11,8 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -23,8 +23,8 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -35,8 +35,8 @@ jobs:
     name: Unit & Component Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -55,8 +55,8 @@ jobs:
     name: Build Web
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -66,7 +66,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Upload web build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-build
           path: apps/web/.next/
@@ -76,8 +76,8 @@ jobs:
     name: Build Mobile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -93,8 +93,8 @@ jobs:
       (github.event_name == 'pull_request' && github.base_ref == 'main') ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -114,7 +114,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Upload Playwright smoke report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-smoke-report
           path: apps/web/playwright-report/
@@ -126,8 +126,8 @@ jobs:
     needs: [lint, type-check, test]
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -147,41 +147,95 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Upload Playwright full report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-full-report
           path: apps/web/playwright-report/
           retention-days: 30
 
   e2e-mobile:
-    name: E2E Tests (Mobile - iOS)
-    runs-on: macos-latest
+    name: E2E Tests (Mobile - ${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
     needs: [lint, type-check, test]
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: iOS
+            os: macos-latest
+            build-cmd: npm run build:e2e:ios
+            test-cmd: npm run test:e2e:ios
+          - platform: Android
+            os: ubuntu-latest
+            build-cmd: npm run build:e2e:android
+            test-cmd: npm run test:e2e:android
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - name: Setup Detox environment
+
+      # iOS-specific setup
+      - name: Setup Detox (iOS)
+        if: matrix.platform == 'iOS'
         run: |
           brew tap wix/brew
           brew install applesimutils
-      - name: Build iOS app for Detox
-        run: npm run build:e2e:ios
+
+      # Android-specific setup
+      - name: Setup Android SDK
+        if: matrix.platform == 'Android'
+        uses: android-actions/setup-android@v2
+
+      - name: AVD cache
+        if: matrix.platform == 'Android'
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-pixel-7-api-34
+
+      # Build mobile app
+      - name: Build mobile app for Detox
+        run: ${{ matrix.build-cmd }}
         working-directory: apps/mobile
-      - name: Run Detox tests
-        run: npm run test:e2e:ios
+
+      # Run iOS tests
+      - name: Run Detox tests (iOS)
+        if: matrix.platform == 'iOS'
+        run: ${{ matrix.test-cmd }}
         working-directory: apps/mobile
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      # Run Android tests
+      - name: Run Detox tests (Android)
+        if: matrix.platform == 'Android'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: cd apps/mobile && ${{ matrix.test-cmd }}
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      # Upload artifacts with platform-specific names
       - name: Upload Detox artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: detox-artifacts
+          name: detox-artifacts-${{ matrix.platform }}
           path: apps/mobile/artifacts/
           retention-days: 30

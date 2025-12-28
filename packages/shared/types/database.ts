@@ -114,6 +114,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown
+          resource_id: string | null
+          resource_type: string
+          trip_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type: string
+          trip_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          resource_id?: string | null
+          resource_type?: string
+          trip_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           attachments: Json | null
@@ -852,6 +891,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          request_count: number | null
+          resource_key: string
+          resource_type: string
+          updated_at: string | null
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          resource_key: string
+          resource_type: string
+          updated_at?: string | null
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          request_count?: number | null
+          resource_key?: string
+          resource_type?: string
+          updated_at?: string | null
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       settlements: {
         Row: {
           amount: number
@@ -1119,6 +1191,33 @@ export type Database = {
       can_user_see_item: {
         Args: { p_item_date: string; p_trip_id: string; p_user_id: string }
         Returns: boolean
+      }
+      check_and_increment_rate_limit: {
+        Args: {
+          p_limit: number
+          p_resource_key: string
+          p_resource_type: string
+          p_user_id: string
+          p_window_start: string
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+        }[]
+      }
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      create_audit_log: {
+        Args: {
+          p_action: string
+          p_details: Json
+          p_ip_address?: unknown
+          p_resource_id: string
+          p_resource_type: string
+          p_trip_id: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       debug_auth_context: {
         Args: never

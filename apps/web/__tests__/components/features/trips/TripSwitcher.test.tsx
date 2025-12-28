@@ -40,6 +40,55 @@ describe('TripSwitcher', () => {
     ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
   })
 
+  // Date helper utilities for dynamic test dates
+  const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0]
+  }
+
+  const addDays = (date: Date, days: number): Date => {
+    const result = new Date(date)
+    result.setDate(result.getDate() + days)
+    return result
+  }
+
+  const getToday = (): Date => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return today
+  }
+
+  // Helper to create trips with dynamic dates relative to today
+  const createOngoingTrip = (
+    id: string,
+    name: string,
+    startDaysAgo = 5,
+    endDaysFromNow = 5
+  ): TripWithParticipants => {
+    const today = getToday()
+    const startDate = formatDate(addDays(today, -startDaysAgo))
+    const endDate = formatDate(addDays(today, endDaysFromNow))
+    return createMockTrip(id, name, startDate, endDate)
+  }
+
+  const createUpcomingTrip = (
+    id: string,
+    name: string,
+    startDaysFromNow = 3,
+    durationDays = 5
+  ): TripWithParticipants => {
+    const today = getToday()
+    const startDate = formatDate(addDays(today, startDaysFromNow))
+    const endDate = formatDate(addDays(today, startDaysFromNow + durationDays))
+    return createMockTrip(id, name, startDate, endDate)
+  }
+
+  const createPastTrip = (id: string, name: string, endDaysAgo = 2): TripWithParticipants => {
+    const today = getToday()
+    const startDate = formatDate(addDays(today, -(endDaysAgo + 5)))
+    const endDate = formatDate(addDays(today, -endDaysAgo))
+    return createMockTrip(id, name, startDate, endDate)
+  }
+
   const createMockTrip = (
     id: string,
     name: string,
@@ -78,9 +127,9 @@ describe('TripSwitcher', () => {
     it('filters and displays only active and upcoming trips (excludes past)', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('past-trip', 'Past Trip', '2024-01-01', '2024-01-05'),
-        createMockTrip('ongoing-trip', 'Ongoing Trip', '2025-12-10', '2025-12-20'),
-        createMockTrip('upcoming-trip', 'Upcoming Trip', '2025-12-25', '2025-12-30'),
+        createPastTrip('past-trip', 'Past Trip'),
+        createOngoingTrip('ongoing-trip', 'Ongoing Trip'),
+        createUpcomingTrip('upcoming-trip', 'Upcoming Trip'),
       ]
 
       render(
@@ -105,10 +154,14 @@ describe('TripSwitcher', () => {
 
     it('sorts trips by start date (chronological)', async () => {
       const user = userEvent.setup()
+      // Create 3 ongoing/upcoming trips with different start dates
+      // First Trip: started 10 days ago (ongoing)
+      // Second Trip: started 2 days ago (ongoing)
+      // Third Trip: starts in 5 days (upcoming)
       const trips = [
-        createMockTrip('trip-3', 'Third Trip', '2025-12-25', '2025-12-30'),
-        createMockTrip('trip-1', 'First Trip', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Second Trip', '2025-12-21', '2025-12-24'),
+        createUpcomingTrip('trip-3', 'Third Trip', 5, 5), // Starts in 5 days
+        createOngoingTrip('trip-1', 'First Trip', 10, 3), // Started 10 days ago
+        createOngoingTrip('trip-2', 'Second Trip', 2, 5), // Started 2 days ago
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="First Trip" trips={trips} />)
@@ -143,8 +196,8 @@ describe('TripSwitcher', () => {
     it('highlights current trip with bg-accent background', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
@@ -166,8 +219,8 @@ describe('TripSwitcher', () => {
     it('displays correct status badges for ongoing and upcoming trips', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('ongoing', 'Ongoing Trip', '2025-12-10', '2025-12-20'),
-        createMockTrip('upcoming', 'Upcoming Trip', '2025-12-25', '2025-12-30'),
+        createOngoingTrip('ongoing', 'Ongoing Trip'),
+        createUpcomingTrip('upcoming', 'Upcoming Trip'),
       ]
 
       render(<TripSwitcher currentTripId="ongoing" currentTripName="Ongoing Trip" trips={trips} />)
@@ -187,8 +240,8 @@ describe('TripSwitcher', () => {
     it('navigates to trip overview on trip selection', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
@@ -208,8 +261,8 @@ describe('TripSwitcher', () => {
       const user = userEvent.setup()
       const onClose = jest.fn()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(
@@ -231,7 +284,7 @@ describe('TripSwitcher', () => {
 
   describe('Empty State Handling', () => {
     it('renders static trip name when fewer than 2 active trips', () => {
-      const trips = [createMockTrip('only-trip', 'Only Trip', '2025-12-10', '2025-12-20')]
+      const trips = [createOngoingTrip('only-trip', 'Only Trip')]
 
       render(<TripSwitcher currentTripId="only-trip" currentTripName="Only Trip" trips={trips} />)
 
@@ -244,14 +297,14 @@ describe('TripSwitcher', () => {
 
     it('renders static trip name when all trips are past', () => {
       const trips = [
-        createMockTrip('past-1', 'Past Trip 1', '2024-01-01', '2024-01-05'),
-        createMockTrip('past-2', 'Past Trip 2', '2024-02-01', '2024-02-05'),
+        createPastTrip('past-1', 'Past Trip 1', 5),
+        createPastTrip('past-2', 'Past Trip 2', 3),
       ]
 
       render(<TripSwitcher currentTripId="past-1" currentTripName="Past Trip 1" trips={trips} />)
 
       // Should NOT have dropdown trigger (no active trips)
-      expect(screen.queryByRole('button', { name: /switch trip/i })).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Switch trip')).not.toBeInTheDocument()
 
       // Should have static heading
       expect(screen.getByRole('heading', { name: 'Past Trip 1' })).toBeInTheDocument()
@@ -264,8 +317,8 @@ describe('TripSwitcher', () => {
       const longName =
         'My Amazing European Adventure Across 7 Countries Including France, Italy, Spain, and More'
       const trips = [
-        createMockTrip('trip-1', longName, '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Short Trip', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', longName, 5, 10),
+        createOngoingTrip('trip-2', 'Short Trip', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName={longName} trips={trips} />)
@@ -283,8 +336,8 @@ describe('TripSwitcher', () => {
   describe('Accessibility', () => {
     it('has proper ARIA attributes on trigger button', () => {
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
@@ -296,8 +349,8 @@ describe('TripSwitcher', () => {
     it('marks current trip with aria-current attribute', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)
@@ -314,8 +367,8 @@ describe('TripSwitcher', () => {
     it('supports keyboard navigation', async () => {
       const user = userEvent.setup()
       const trips = [
-        createMockTrip('trip-1', 'Trip A', '2025-12-10', '2025-12-20'),
-        createMockTrip('trip-2', 'Trip B', '2025-12-21', '2025-12-25'),
+        createOngoingTrip('trip-1', 'Trip A', 5, 10),
+        createOngoingTrip('trip-2', 'Trip B', 2, 5),
       ]
 
       render(<TripSwitcher currentTripId="trip-1" currentTripName="Trip A" trips={trips} />)

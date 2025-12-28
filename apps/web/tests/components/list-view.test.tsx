@@ -250,9 +250,14 @@ describe('ListView', () => {
         />
       )
 
-      const flightItem = screen.getByText('Flight to Lisbon').closest('div')
-      await user.click(flightItem!)
+      const flightItem = screen.getByText('Flight to Lisbon').closest('.group')
 
+      // First click: expand card (doesn't trigger onItemClick)
+      await user.click(flightItem!)
+      expect(mockOnItemClick).not.toHaveBeenCalled()
+
+      // Second click: trigger onItemClick
+      await user.click(flightItem!)
       expect(mockOnItemClick).toHaveBeenCalledWith(mockItems[0])
     })
 

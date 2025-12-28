@@ -33,7 +33,7 @@ export function getStripeServerClient(): Stripe {
 
   // Create Stripe instance with TypeScript support
   return new Stripe(secretKey, {
-    apiVersion: '2025-10-29.clover', // Use latest API version
+    apiVersion: '2025-12-15.clover', // Use latest API version
     typescript: true,
     appInfo: {
       name: 'TripThreads',

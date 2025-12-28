@@ -35,24 +35,30 @@ For every feature, follow this cycle:
 ### Current Setup (Phase 1-2)
 
 ✅ **Jest** - Unit and component testing
+
 - Migrated from Vitest in Phase 2
 - Configuration: `jest.config.js` (root), `jest.config.ts` (apps/web)
 - Test files: `*.test.ts`, `*.test.tsx`
 - Mocks: `__mocks__` directories
 
 ✅ **React Testing Library** - Component testing
+
 - User-centric testing approach
 - Queries: `getByRole`, `getByText`, `getByLabelText`
 - User interactions: `userEvent` for realistic interactions
 
 ✅ **Playwright** - E2E web testing
+
 - Configuration: `playwright.config.ts` in apps/web
 - Tests: `apps/web/tests/e2e/`
 - **Note:** E2E tests run in CI only (not locally due to flakiness)
 
-🚧 **Detox** - Mobile E2E testing (Phase 3)
+✅ **Detox** - Mobile E2E testing
+
 - Configuration: `apps/mobile/.detoxrc.js`
 - Tests: `apps/mobile/e2e/`
+- Platforms: iOS (iPhone 15), Android (Pixel 7 API 34)
+- **Note:** Tests run in CI/CD only (GitHub Actions with matrix strategy)
 
 ---
 
@@ -63,6 +69,7 @@ For every feature, follow this cycle:
 **Purpose:** Test individual functions and utilities in isolation
 
 **Coverage Required:**
+
 - ✅ Currency/FX calculations (100% coverage - zero tolerance for errors)
 - ✅ Ledger calculations (balances, settlements, debt optimization)
 - ✅ Date utilities and formatters
@@ -96,6 +103,7 @@ describe('convertCurrency', () => {
 **Purpose:** Test React components in isolation with mocked dependencies
 
 **Coverage Required:**
+
 - ✅ Expense cards and forms
 - ✅ Settlement summary and dialogs
 - ✅ Itinerary item cards
@@ -154,6 +162,7 @@ describe('ExpenseCard', () => {
 **Purpose:** Test Supabase interactions with real database (local)
 
 **Coverage Required:**
+
 - ✅ Auth flows (email, Google OAuth)
 - ✅ RLS policy enforcement
 - ✅ Trip and expense CRUD operations
@@ -187,18 +196,14 @@ describe('Expense Integration', () => {
       amount: 5000,
       currency: 'EUR',
       payer_id: testUserId,
-      date: '2025-10-15'
+      date: '2025-10-15',
     })
 
     expect(expense).toBeDefined()
     expect(expense.description).toBe('Test expense')
 
     // Verify RLS: non-participant cannot see expense
-    const { data, error } = await supabase
-      .from('expenses')
-      .select()
-      .eq('id', expense.id)
-      .single()
+    const { data, error } = await supabase.from('expenses').select().eq('id', expense.id).single()
 
     // Should fail if current user is not participant
     expect(error).toBeDefined()
@@ -211,6 +216,7 @@ describe('Expense Integration', () => {
 **Purpose:** Test complete user flows in browser/device
 
 **Coverage Required:**
+
 - ✅ Trip creation and invitation flow
 - ✅ Expense tracking and settlement
 - 🚧 Itinerary building
@@ -247,23 +253,91 @@ test('complete expense tracking flow', async ({ page }) => {
 })
 ```
 
+### 5. Mobile E2E Tests (Detox)
+
+**Purpose:** Test mobile-specific behaviors on iOS and Android
+
+**Framework:** Detox 20.x + Jest
+**Platforms:** iOS (iPhone 15 simulator), Android (Pixel 7 API 34 emulator)
+
+**Test Files:**
+
+- `apps/mobile/e2e/deep-linking.e2e.ts` - Deep link navigation and auth redirects
+- `apps/mobile/e2e/photo-picker.e2e.ts` - Photo permissions and picker
+- `apps/mobile/e2e/platform-specific.e2e.ts` - Platform behaviors (back button, swipe, safe areas)
+
+**Coverage:**
+
+- ✅ Deep linking (invite links, trip links, universal links)
+- ✅ Authentication redirects via deep links
+- ✅ Photo library permissions
+- ✅ Android back button navigation
+- ✅ iOS swipe-back gestures
+- ✅ Status bar and safe area rendering
+
+**Running Tests (NOT RECOMMENDED - flaky in local environments):**
+
+```bash
+# iOS
+cd apps/mobile
+npm run build:e2e:ios
+npm run test:e2e:ios
+
+# Android
+npm run build:e2e:android
+npm run test:e2e:android
+```
+
+**CI/CD:** Tests run automatically on PRs to `main` (both iOS and Android in parallel).
+
+**Mocking Strategy:**
+
+- `expo-image-picker` mocked with test images (see `e2e/mocks/`)
+- Supabase uses real backend (test database with seed data)
+- Permissions granted/denied via `device.grantPermissions()`
+
+**Test Example:**
+
+```typescript
+// apps/mobile/e2e/deep-linking.e2e.ts
+import { device, element, by, expect as detoxExpect, waitFor } from 'detox'
+
+it('TC1.1: Should open invite screen from deep link', async () => {
+  await device.openURL(`tripthreads://invite/${testInviteToken}`)
+
+  await waitFor(element(by.text('Trip Invitation')))
+    .toBeVisible()
+    .withTimeout(5000)
+
+  await detoxExpect(element(by.text('Accept Invitation'))).toBeVisible()
+})
+```
+
+**Troubleshooting:**
+
+- **Flaky tests locally:** Run in CI only (GitHub Actions)
+- **Android emulator slow:** Ensure hardware acceleration enabled
+- **iOS build failures:** Clean derived data (`rm -rf ios/build`)
+- **Permission errors:** Check Detox device permissions configuration
+
 ---
 
 ## Test Coverage Requirements
 
 ### Minimum Coverage Targets
 
-| Category | Target | Status |
-|----------|--------|--------|
-| **Currency/Money Calculations** | 100% | ✅ Achieved |
-| **Ledger Calculations** | 100% | ✅ Achieved |
-| **Critical Paths** (Auth, RLS, API) | 80%+ | 🚧 70% (In Progress) |
-| **UI Components** | 70%+ | 🚧 60% (In Progress) |
-| **Overall Codebase** | 60%+ | 🚧 55% (In Progress) |
+| Category                            | Target | Status               |
+| ----------------------------------- | ------ | -------------------- |
+| **Currency/Money Calculations**     | 100%   | ✅ Achieved          |
+| **Ledger Calculations**             | 100%   | ✅ Achieved          |
+| **Critical Paths** (Auth, RLS, API) | 80%+   | 🚧 70% (In Progress) |
+| **UI Components**                   | 70%+   | 🚧 60% (In Progress) |
+| **Overall Codebase**                | 60%+   | 🚧 55% (In Progress) |
 
 ### What to Test
 
 ✅ **Always Test:**
+
 - Edge cases (empty states, zero amounts, null values)
 - Error states (network failures, validation errors)
 - Loading states (async operations)
@@ -272,6 +346,7 @@ test('complete expense tracking flow', async ({ page }) => {
 - Multi-currency scenarios (EUR, USD, GBP, JPY)
 
 ❌ **Don't Test:**
+
 - Third-party libraries (Supabase, React, shadcn/ui)
 - Simple type definitions
 - Trivial getters/setters
@@ -390,11 +465,11 @@ export const createClient = jest.fn(() => ({
     update: jest.fn().mockReturnThis(),
     delete: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data: mockData, error: null })
+    single: jest.fn().mockResolvedValue({ data: mockData, error: null }),
   })),
   auth: {
-    getUser: jest.fn().mockResolvedValue({ data: { user: mockUser }, error: null })
-  }
+    getUser: jest.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
+  },
 }))
 ```
 
@@ -409,7 +484,7 @@ export const useRouter = jest.fn(() => ({
   replace: jest.fn(),
   pathname: '/trips/123',
   query: { id: '123' },
-  asPath: '/trips/123'
+  asPath: '/trips/123',
 }))
 ```
 
@@ -418,7 +493,7 @@ export const useRouter = jest.fn(() => ({
 ```typescript
 // apps/web/tests/setup.ts
 jest.mock('@/app/actions/expenses', () => ({
-  createExpenseAction: jest.fn().mockResolvedValue({ success: true, data: mockExpense })
+  createExpenseAction: jest.fn().mockResolvedValue({ success: true, data: mockExpense }),
 }))
 ```
 
@@ -429,11 +504,13 @@ jest.mock('@/app/actions/expenses', () => ({
 ### GitHub Actions
 
 Tests run automatically on:
+
 - ✅ Every push to any branch
 - ✅ Every pull request
 - ✅ Before deployment to staging/production
 
 **Pipeline Steps:**
+
 1. Lint (ESLint)
 2. Type check (TypeScript)
 3. Unit tests (Jest)
@@ -474,17 +551,20 @@ See [CICD.md](CICD.md) for full pipeline documentation.
 ### Common Issues
 
 **1. Tests pass locally but fail in CI**
+
 - Check for timezone differences (`process.env.TZ = 'UTC'` in setup)
 - Verify mocks are properly scoped
 - Check for race conditions in async tests
 
 **2. Flaky tests**
+
 - Add `await waitFor()` for async operations
 - Increase timeouts for slow operations
 - Check for shared state between tests
 - Use `jest.useFakeTimers()` for time-dependent code
 
 **3. Mock not working**
+
 - Ensure mock is in correct `__mocks__` directory
 - Call `jest.mock()` before importing module
 - Clear mocks between tests: `jest.clearAllMocks()`
@@ -512,6 +592,7 @@ npm test -- --runInBand
 ### Phase 2+
 
 🚧 **In Progress:**
+
 - Offline sync integration tests
 - NL parser comprehensive test suite
 - React Hook testing utilities
@@ -519,6 +600,7 @@ npm test -- --runInBand
 ### Phase 3
 
 📋 **Planned:**
+
 - Visual regression testing (Percy or Chromatic)
 - Performance testing (Lighthouse CI)
 - Mobile E2E tests (Detox)
@@ -527,6 +609,7 @@ npm test -- --runInBand
 ### Phase 4+
 
 📋 **Potential:**
+
 - Load testing (k6 or Artillery)
 - Security testing (OWASP ZAP)
 - Accessibility testing (axe-core)
@@ -553,6 +636,7 @@ npm test -- --runInBand
 ---
 
 **For more documentation:**
+
 - [DATABASE.md](DATABASE.md) - Database schema and migrations
 - [CICD.md](CICD.md) - CI/CD pipeline details
 - [CLAUDE.md](../CLAUDE.md) - Main project documentation

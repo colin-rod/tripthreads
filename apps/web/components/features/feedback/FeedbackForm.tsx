@@ -40,18 +40,6 @@ export type FeedbackFormValues = z.infer<typeof feedbackSchema>
 
 const categoryOptions = [
   {
-    value: 'bug-report' as const,
-    label: 'Bug Report',
-    icon: Bug,
-    description: 'Report software defects or errors',
-  },
-  {
-    value: 'feature-request' as const,
-    label: 'Feature Request',
-    icon: Lightbulb,
-    description: 'Suggest new features or improvements',
-  },
-  {
     value: 'general' as const,
     label: 'General Feedback',
     icon: MessageSquare,
@@ -62,6 +50,18 @@ const categoryOptions = [
     label: 'UX Issue',
     icon: MousePointerClick,
     description: 'Report usability or design problems',
+  },
+  {
+    value: 'bug-report' as const,
+    label: 'Bug Report',
+    icon: Bug,
+    description: 'Report software defects or errors',
+  },
+  {
+    value: 'feature-request' as const,
+    label: 'Feature Request',
+    icon: Lightbulb,
+    description: 'Suggest new features or improvements',
   },
 ] satisfies ChipOption<FeedbackCategory>[]
 

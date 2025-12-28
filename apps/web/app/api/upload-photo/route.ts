@@ -14,6 +14,7 @@ import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createMediaFile, canUploadPhoto } from '@tripthreads/core'
+import { checkRateLimit, createRateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +45,13 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    // Rate limiting check (10 uploads per hour per user)
+    const rateLimitResult = await checkRateLimit(user.id, 'photo_upload', user.id)
+    if (!rateLimitResult.allowed) {
+      console.log('[Photo Upload] Rate limit exceeded for user:', user.id)
+      return createRateLimitResponse(rateLimitResult)
     }
 
     // Verify user is a participant of the trip

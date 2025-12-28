@@ -20,8 +20,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.76.1",
-    "zod": "^3.23.8",
+    "@supabase/supabase-js": "^2.89.0",
+    "zod": "^4.2.1",
     "date-fns": "^4.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -30,10 +30,10 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.0.3",
     "@types/string-similarity": "^4.0.2",
     "jest": "^30.2.0",
-    "ts-jest": "^29.4.5",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.0.0"
   }
 }

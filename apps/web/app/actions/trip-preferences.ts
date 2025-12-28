@@ -46,7 +46,7 @@ export async function updateTripNotificationPreferences(
         extra: {
           tripId,
           preferences,
-          errors: validation.error.errors,
+          errors: validation.error.issues,
         },
       })
       throw new Error('Invalid notification preferences format')

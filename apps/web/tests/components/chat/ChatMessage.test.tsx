@@ -331,4 +331,142 @@ describe('ChatMessage', () => {
       expect(wrapper).not.toHaveClass('flex-row-reverse')
     })
   })
+
+  describe('Reaction Container Alignment', () => {
+    const mockReaction = [{ emoji: '👍', count: 1, userIds: ['user-1'] }]
+
+    it('should left-align reactions for other user messages', () => {
+      const message: ChatMessageData = {
+        id: 'msg-1',
+        trip_id: 'trip-1',
+        user_id: 'user-2',
+        message_type: 'user',
+        content: 'Test message',
+        attachments: [],
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user: mockUser,
+      }
+
+      const { container } = render(
+        <ChatMessage
+          message={message}
+          tripId="trip-1"
+          currentUserId="user-1"
+          reactions={mockReaction}
+        />
+      )
+
+      // Find reaction container - look for div with relative, w-full, and flex classes
+      const reactionContainers = container.querySelectorAll('.relative.w-full')
+      expect(reactionContainers.length).toBeGreaterThan(0)
+
+      // The reaction container should have justify-start for left alignment
+      const reactionContainer = Array.from(reactionContainers).find(el =>
+        el.classList.contains('justify-start')
+      )
+      expect(reactionContainer).toBeTruthy()
+      expect(reactionContainer).toHaveClass('w-full')
+      expect(reactionContainer).toHaveClass('relative')
+    })
+
+    it('should right-align reactions for current user messages', () => {
+      const message: ChatMessageData = {
+        id: 'msg-1',
+        trip_id: 'trip-1',
+        user_id: 'user-1',
+        message_type: 'user',
+        content: 'My message',
+        attachments: [],
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user: mockUser,
+      }
+
+      const { container } = render(
+        <ChatMessage
+          message={message}
+          tripId="trip-1"
+          currentUserId="user-1"
+          reactions={mockReaction}
+        />
+      )
+
+      // Find reaction container - look for div with relative, w-full, and flex classes
+      const reactionContainers = container.querySelectorAll('.relative.w-full')
+      expect(reactionContainers.length).toBeGreaterThan(0)
+
+      // The reaction container should have justify-end for right alignment
+      const reactionContainer = Array.from(reactionContainers).find(el =>
+        el.classList.contains('justify-end')
+      )
+      expect(reactionContainer).toBeTruthy()
+      expect(reactionContainer).toHaveClass('w-full')
+      expect(reactionContainer).toHaveClass('relative')
+    })
+
+    it('should have full width constraint on reaction container', () => {
+      const message: ChatMessageData = {
+        id: 'msg-1',
+        trip_id: 'trip-1',
+        user_id: 'user-1',
+        message_type: 'user',
+        content: 'Test',
+        attachments: [],
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user: mockUser,
+      }
+
+      const { container } = render(
+        <ChatMessage
+          message={message}
+          tripId="trip-1"
+          currentUserId="user-1"
+          reactions={mockReaction}
+        />
+      )
+
+      // Find all divs with w-full class
+      const fullWidthContainers = container.querySelectorAll('.w-full')
+      expect(fullWidthContainers.length).toBeGreaterThan(0)
+
+      // At least one should also have 'relative' class (the reaction container)
+      const hasReactionContainer = Array.from(fullWidthContainers).some(
+        el => el.classList.contains('relative') && el.classList.contains('flex')
+      )
+      expect(hasReactionContainer).toBe(true)
+    })
+
+    it('should not render reaction container for system messages', () => {
+      const message: ChatMessageData = {
+        id: 'msg-1',
+        trip_id: 'trip-1',
+        user_id: null,
+        message_type: 'system',
+        content: 'System notification',
+        attachments: [],
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user: null,
+      }
+
+      const { container } = render(
+        <ChatMessage
+          message={message}
+          tripId="trip-1"
+          currentUserId="user-1"
+          reactions={mockReaction}
+        />
+      )
+
+      // System messages should not have reaction containers
+      const reactionContainers = container.querySelectorAll('.relative.w-full')
+      expect(reactionContainers.length).toBe(0)
+    })
+  })
 })

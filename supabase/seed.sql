@@ -254,6 +254,48 @@ VALUES (
 -- No participants entries for Maya - she's completely isolated
 
 -- ============================================================================
+-- E2E TEST DATA (for Mobile & Web E2E Tests)
+-- ============================================================================
+
+-- Test user for E2E tests
+-- NOTE: This assumes the user exists in auth.users via Supabase Auth
+-- For CI/CD, create this user with email: test-mobile@tripthreads.test
+INSERT INTO public.profiles (id, email, full_name, created_at, updated_at)
+VALUES (
+  'test-user-1-id'::UUID,
+  'test-mobile@tripthreads.test',
+  'Mobile Test User',
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Test trip for deep linking tests
+INSERT INTO public.trips (id, name, description, start_date, end_date, owner_id, base_currency, created_at, updated_at)
+VALUES (
+  'test-trip-deep-link'::UUID,
+  'Deep Link Test Trip',
+  'Test trip for E2E deep linking tests',
+  '2025-01-01 00:00:00+00',
+  '2025-01-07 00:00:00+00',
+  'test-user-1-id'::UUID,
+  'USD',
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Test invite for deep linking tests
+INSERT INTO public.trip_invites (token, trip_id, inviter_id, email, role, status, created_at)
+VALUES (
+  'test-invite-token-123',
+  'test-trip-deep-link'::UUID,
+  'test-user-1-id'::UUID,
+  'invitee@test.com',
+  'participant',
+  'pending',
+  NOW()
+) ON CONFLICT (token) DO NOTHING;
+
+-- ============================================================================
 -- VERIFICATION QUERIES
 -- ============================================================================
 

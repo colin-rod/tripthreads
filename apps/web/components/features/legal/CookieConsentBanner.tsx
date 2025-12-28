@@ -62,7 +62,7 @@ export function CookieConsentBanner() {
   if (!showBanner) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t-2 border-primary shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t-2 border-primary shadow-lg">
       <div className="container max-w-6xl py-6 space-y-4">
         {!showDetails ? (
           // Simple mode

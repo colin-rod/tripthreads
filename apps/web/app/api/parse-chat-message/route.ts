@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@/lib/supabase/server'
-import { SYSTEM_PROMPT } from '@tripthreads/core'
+import { SYSTEM_PROMPT, type ItineraryItemMetadata } from '@tripthreads/core'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const DEFAULT_MODEL = 'gpt-4o-mini'
@@ -33,6 +33,9 @@ interface ParsedItinerary {
   startDate: string
   endDate?: string
   location?: string
+  links?: Array<{ title: string; url: string }>
+  isAllDay?: boolean
+  metadata?: ItineraryItemMetadata
 }
 
 interface ParseChatMessageResponse {
@@ -168,7 +171,10 @@ Parse the message and return a JSON object with this structure:
     "description": "optional description" | null,
     "startDate": "ISO 8601 datetime",
     "endDate": "ISO 8601 datetime" | null,
-    "location": "location if mentioned" | null
+    "location": "location if mentioned" | null,
+    "links": [{"title": "link title", "url": "https://..."}] | null,
+    "isAllDay": boolean | null,
+    "metadata": {} | null
   } | null
 }
 

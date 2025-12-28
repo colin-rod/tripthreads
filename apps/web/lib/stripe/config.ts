@@ -17,7 +17,6 @@ export type Currency = 'EUR' | 'USD' | 'GBP'
 export type PlanInterval = 'monthly' | 'yearly' | 'oneoff'
 
 export interface PriceConfig {
-  priceId: string
   amount: number
   currency: Currency
   displayAmount: string // Formatted for display (e.g., "€7", "$8", "£6")
@@ -92,6 +91,16 @@ export const STRIPE_PRODUCTS: Record<PlanInterval, ProductConfig> = {
 }
 
 /**
+ * Stripe Price IDs (Adaptive Pricing - single ID supports all currencies)
+ * Stripe automatically shows the correct currency based on customer location
+ */
+export const STRIPE_PRICES: Record<PlanInterval, string> = {
+  monthly: process.env.STRIPE_PRICE_MONTHLY || '',
+  yearly: process.env.STRIPE_PRICE_YEARLY || '',
+  oneoff: process.env.STRIPE_PRICE_ONEOFF || '',
+}
+
+/**
  * Currency-first pricing configuration
  * Uses FX-adjusted pricing for fairness across regions
  */
@@ -102,19 +111,16 @@ export const STRIPE_CURRENCIES: Record<Currency, CurrencyConfig> = {
     name: 'Euro',
     prices: {
       monthly: {
-        priceId: process.env.STRIPE_PRICE_MONTHLY_EUR || '',
         amount: 7,
         currency: 'EUR',
         displayAmount: '€7',
       },
       yearly: {
-        priceId: process.env.STRIPE_PRICE_YEARLY_EUR || '',
         amount: 70,
         currency: 'EUR',
         displayAmount: '€70',
       },
       oneoff: {
-        priceId: process.env.STRIPE_PRICE_ONEOFF_EUR || '',
         amount: 9,
         currency: 'EUR',
         displayAmount: '€9',
@@ -127,19 +133,16 @@ export const STRIPE_CURRENCIES: Record<Currency, CurrencyConfig> = {
     name: 'US Dollar',
     prices: {
       monthly: {
-        priceId: process.env.STRIPE_PRICE_MONTHLY_USD || '',
         amount: 8,
         currency: 'USD',
         displayAmount: '$8',
       },
       yearly: {
-        priceId: process.env.STRIPE_PRICE_YEARLY_USD || '',
         amount: 80,
         currency: 'USD',
         displayAmount: '$80',
       },
       oneoff: {
-        priceId: process.env.STRIPE_PRICE_ONEOFF_USD || '',
         amount: 10,
         currency: 'USD',
         displayAmount: '$10',
@@ -152,19 +155,16 @@ export const STRIPE_CURRENCIES: Record<Currency, CurrencyConfig> = {
     name: 'British Pound',
     prices: {
       monthly: {
-        priceId: process.env.STRIPE_PRICE_MONTHLY_GBP || '',
         amount: 6,
         currency: 'GBP',
         displayAmount: '£6',
       },
       yearly: {
-        priceId: process.env.STRIPE_PRICE_YEARLY_GBP || '',
         amount: 60,
         currency: 'GBP',
         displayAmount: '£60',
       },
       oneoff: {
-        priceId: process.env.STRIPE_PRICE_ONEOFF_GBP || '',
         amount: 8,
         currency: 'GBP',
         displayAmount: '£8',
@@ -205,10 +205,10 @@ export function getSupportedCurrencies(): Currency[] {
 }
 
 /**
- * Get price ID for a specific plan and currency
+ * Get price ID for a specific plan (adaptive pricing - supports all currencies)
  */
-export function getPriceId(plan: PlanInterval, currency: Currency): string {
-  return STRIPE_CURRENCIES[currency].prices[plan].priceId
+export function getPriceId(plan: PlanInterval): string {
+  return STRIPE_PRICES[plan]
 }
 
 /**
@@ -253,13 +253,11 @@ export function validateStripeConfig(): void {
     }
   })
 
-  // Check prices for each currency
-  Object.entries(STRIPE_CURRENCIES).forEach(([currency, config]) => {
-    Object.entries(config.prices).forEach(([plan, priceConfig]) => {
-      if (!priceConfig.priceId) {
-        missing.push(`STRIPE_PRICE_${plan.toUpperCase()}_${currency}`)
-      }
-    })
+  // Check prices (adaptive pricing - one ID per plan)
+  Object.entries(STRIPE_PRICES).forEach(([plan, priceId]) => {
+    if (!priceId) {
+      missing.push(`STRIPE_PRICE_${plan.toUpperCase()}`)
+    }
   })
 
   if (missing.length > 0) {
@@ -275,6 +273,7 @@ export function validateStripeConfig(): void {
 
 export default {
   products: STRIPE_PRODUCTS,
+  prices: STRIPE_PRICES,
   currencies: STRIPE_CURRENCIES,
   features: PLAN_FEATURES,
   getSupportedCurrencies,

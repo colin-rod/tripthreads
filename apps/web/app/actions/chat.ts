@@ -134,6 +134,7 @@ export async function createMessage(input: CreateMessageInput) {
       tripId: input.tripId,
       isAiResponse: false,
       hasMentions: (input.mentionedUserIds?.length ?? 0) > 0,
+      userId: user.id,
     })
 
     // Revalidate the chat page
@@ -218,11 +219,12 @@ export async function createBotMessage(input: CreateBotMessageInput) {
       }
     }
 
-    // Track analytics event
+    // Track analytics event (no userId for bot messages)
     trackChatMessageSent({
       tripId: input.tripId,
       isAiResponse: true,
       hasMentions: false,
+      userId: undefined,
     })
 
     // Revalidate the chat page
@@ -310,7 +312,7 @@ export async function getChatMessages(tripId: string, limit = 50) {
       `
       )
       .eq('trip_id', tripId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit)
 
     if (messagesError) {
@@ -565,6 +567,7 @@ export async function addReaction(messageId: string, emoji: string) {
         trackMessageReactionAdded({
           tripId: message.trip_id,
           emoji,
+          userId: user.id,
         })
       }
 

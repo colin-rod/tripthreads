@@ -9,8 +9,19 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
-import { Users, Mail, Bell, UserPlus, MoreVertical, UserMinus, UserCog } from 'lucide-react'
+import {
+  Users,
+  Mail,
+  Bell,
+  UserPlus,
+  MoreVertical,
+  UserMinus,
+  UserCog,
+  Pencil,
+  AlertTriangle,
+} from 'lucide-react'
 import { useState } from 'react'
 import {
   Accordion,
@@ -32,6 +43,8 @@ import { PendingInvitesList } from '@/components/features/invites/PendingInvites
 import { TripNotificationPreferencesSection } from '@/components/features/trips/TripNotificationPreferencesSection'
 import { RemoveParticipantDialog } from '@/components/features/trips/RemoveParticipantDialog'
 import { ChangeRoleDialog } from '@/components/features/trips/ChangeRoleDialog'
+import { EditTripForm } from '@/components/features/trips/forms/EditTripForm'
+import { DeleteTripConfirmation } from '@/components/features/trips/forms/DeleteTripConfirmation'
 import type { TripNotificationPreferences } from '@tripthreads/core'
 import type { GlobalNotificationPreferences } from '@/lib/utils/notifications'
 
@@ -84,6 +97,7 @@ export function SettingsSection({
   tripNotificationPreferences,
   globalNotificationPreferences,
 }: SettingsSectionProps) {
+  const router = useRouter()
   const tripParticipants = trip.trip_participants || []
   const [inviteOpen, setInviteOpen] = useState(false)
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
@@ -129,6 +143,35 @@ export function SettingsSection({
         defaultValue={['participants', 'invitations', 'notifications']}
         className="space-y-4"
       >
+        {/* Trip Details Section (Owner Only) */}
+        {isOwner && (
+          <AccordionItem value="trip-details" className="border rounded-lg px-6">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+                  <Pencil className="h-5 w-5 text-blue-600 dark:text-blue-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium">Trip Details</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Edit trip name, dates, and description
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+
+            <AccordionContent className="pt-6 pb-4">
+              <EditTripForm
+                trip={trip}
+                variant="compact"
+                onSuccess={() => {
+                  router.refresh()
+                }}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
         {/* Participants Section */}
         <AccordionItem value="participants" className="border rounded-lg px-6">
           <AccordionTrigger className="hover:no-underline">
@@ -289,6 +332,32 @@ export function SettingsSection({
             />
           </AccordionContent>
         </AccordionItem>
+
+        {/* Danger Zone Section (Owner Only) */}
+        {isOwner && (
+          <AccordionItem
+            value="danger-zone"
+            className="border rounded-lg px-6 border-destructive/50"
+          >
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-medium text-destructive">Danger Zone</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Permanently delete this trip
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+
+            <AccordionContent className="pt-6 pb-4">
+              <DeleteTripConfirmation tripId={trip.id} tripName={trip.name} variant="inline" />
+            </AccordionContent>
+          </AccordionItem>
+        )}
       </Accordion>
 
       {/* Invite Dialog */}

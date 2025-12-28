@@ -42,6 +42,8 @@ const mockUser: User = {
   plan: 'free',
   plan_expires_at: null,
   stripe_customer_id: null,
+  subscription_currency: null,
+  subscription_price_id: null,
   notification_preferences: null,
   cookie_consent: null,
   cookie_consent_updated_at: null,

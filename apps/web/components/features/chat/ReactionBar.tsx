@@ -49,12 +49,12 @@ export function ReactionBar({
 
   if (reactions.length === 0) {
     return (
-      <div className="mt-1 flex items-center gap-1">
+      <div className="mt-2 flex items-center gap-1.5">
         <Button
           variant="ghost"
           size="sm"
           onClick={onShowPicker}
-          className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+          className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <SmilePlus className="mr-1 h-3 w-3" />
           Add reaction
@@ -64,7 +64,7 @@ export function ReactionBar({
   }
 
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-1">
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 max-w-full">
       {reactions.map(reaction => {
         const hasReacted = currentUserId ? reaction.userIds.includes(currentUserId) : false
 
@@ -74,7 +74,7 @@ export function ReactionBar({
             onClick={() => handleReactionClick(reaction.emoji)}
             disabled={!currentUserId || isTogglingReaction}
             className={cn(
-              'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors',
+              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
               hasReacted
                 ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
                 : 'border-border bg-background hover:bg-muted',
@@ -92,7 +92,7 @@ export function ReactionBar({
         variant="ghost"
         size="sm"
         onClick={onShowPicker}
-        className="h-6 w-6 p-0"
+        className="h-7 min-w-7 px-2 shrink-0"
         title="Add reaction"
       >
         <SmilePlus className="h-3 w-3" />

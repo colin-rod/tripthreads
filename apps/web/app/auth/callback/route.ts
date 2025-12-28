@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { posthog } from '@/lib/analytics/posthog'
+import { trackSignup, trackLogin } from '@/lib/analytics/events'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -21,15 +21,9 @@ export async function GET(request: NextRequest) {
       const isNewUser = now.getTime() - createdAt.getTime() < 10000 // 10 seconds
 
       if (isNewUser) {
-        posthog.capture('signup', {
-          method: 'google',
-          user_id: data.user.id,
-        })
+        await trackSignup('google', data.user.id)
       } else {
-        posthog.capture('login', {
-          method: 'google',
-          user_id: data.user.id,
-        })
+        await trackLogin('google', data.user.id)
       }
 
       // Redirect to trips page

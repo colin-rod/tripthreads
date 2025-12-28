@@ -386,6 +386,7 @@ export async function createExpense(input: CreateExpenseInput) {
       splitType: input.splitType,
       participantCount: expenseParticipantsResult.participants.length || input.splitCount || 0,
       hasReceipt: false, // Phase 3 feature
+      userId: user.id,
     }
 
     if (input.source === 'nl') {

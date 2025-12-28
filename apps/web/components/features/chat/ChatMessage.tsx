@@ -122,7 +122,12 @@ export function ChatMessage({
         )}
 
         {/* Reaction Bar */}
-        <div className={cn('relative', isCurrentUser && 'flex justify-end')}>
+        <div
+          className={cn(
+            'relative w-full',
+            isCurrentUser ? 'flex justify-end' : 'flex justify-start'
+          )}
+        >
           <ReactionBar
             messageId={message.id}
             reactions={reactions}
@@ -136,6 +141,7 @@ export function ChatMessage({
               messageId={message.id}
               onClose={() => setShowReactionPicker(false)}
               onReactionAdded={() => setShowReactionPicker(false)}
+              align={isCurrentUser ? 'right' : 'left'}
             />
           )}
         </div>
