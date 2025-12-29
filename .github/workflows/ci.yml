@@ -190,7 +190,7 @@ jobs:
       # Android-specific setup
       - name: Setup Android SDK
         if: matrix.platform == 'Android'
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       - name: AVD cache
         if: matrix.platform == 'Android'
