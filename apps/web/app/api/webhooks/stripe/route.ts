@@ -17,6 +17,7 @@ import * as Sentry from '@sentry/nextjs'
 import type Stripe from 'stripe'
 import { verifyWebhookSignature } from '@/lib/stripe/client'
 import { createClient } from '@/lib/supabase/server'
+import { checkWebhookProcessed, markWebhookProcessed } from '@/lib/stripe/utils'
 
 interface WebhookResponse {
   received?: boolean
@@ -47,20 +48,42 @@ export async function POST(request: NextRequest): Promise<NextResponse<WebhookRe
       )
     }
 
-    // 3. Handle different event types
+    // 3. Check for duplicate webhook (idempotency)
+    const supabase = await createClient()
+    const { processed, error: checkError } = await checkWebhookProcessed(
+      supabase,
+      event.id,
+      event.type
+    )
+
+    if (checkError) {
+      console.error('[stripe-webhook] Error checking webhook idempotency:', checkError)
+      Sentry.captureException(checkError, {
+        tags: { feature: 'stripe', operation: 'webhook-idempotency-check' },
+        extra: { eventId: event.id, eventType: event.type },
+      })
+      // Continue processing even if idempotency check fails (fail-open approach)
+    }
+
+    if (processed) {
+      console.log(`[stripe-webhook] Event ${event.id} already processed, returning success`)
+      return NextResponse.json({ received: true })
+    }
+
+    // 4. Handle different event types
     console.log(`[stripe-webhook] Handling event: ${event.type}`)
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(event)
+        await handleCheckoutCompleted(event, supabase)
         break
 
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event)
+        await handleSubscriptionUpdated(event, supabase)
         break
 
       case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event)
+        await handleSubscriptionDeleted(event, supabase)
         break
 
       case 'invoice.payment_failed':
@@ -68,11 +91,23 @@ export async function POST(request: NextRequest): Promise<NextResponse<WebhookRe
         break
 
       case 'charge.refunded':
-        await handleChargeRefunded(event)
+        await handleChargeRefunded(event, supabase)
         break
 
       default:
         console.log(`[stripe-webhook] Unhandled event type: ${event.type}`)
+    }
+
+    // 5. Mark webhook as processed (after successful handling)
+    const { error: markError } = await markWebhookProcessed(supabase, event.id, event.type)
+
+    if (markError) {
+      console.error('[stripe-webhook] Error marking webhook as processed:', markError)
+      Sentry.captureException(markError, {
+        tags: { feature: 'stripe', operation: 'webhook-idempotency-mark' },
+        extra: { eventId: event.id, eventType: event.type },
+      })
+      // Don't fail the webhook if marking fails - the event was already processed successfully
     }
 
     return NextResponse.json({ received: true })
@@ -97,7 +132,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<WebhookRe
  * Handle checkout.session.completed event
  * Upgrades user to Pro plan when payment succeeds
  */
-async function handleCheckoutCompleted(event: Stripe.Event) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleCheckoutCompleted(event: Stripe.Event, supabase: any) {
   const session = event.data.object as Stripe.Checkout.Session
   const userId = session.metadata?.userId || session.client_reference_id
 
@@ -105,8 +141,6 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     console.error('[stripe-webhook] Missing userId in checkout session')
     return
   }
-
-  const supabase = await createClient()
 
   // Determine if this is a subscription or one-time payment
   const isSubscription = session.mode === 'subscription'
@@ -160,7 +194,8 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
  * Handle customer.subscription.updated event
  * Updates subscription expiry date and handles cancellations
  */
-async function handleSubscriptionUpdated(event: Stripe.Event) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleSubscriptionUpdated(event: Stripe.Event, supabase: any) {
   const subscription = event.data.object as Stripe.Subscription
   const userId = subscription.metadata?.userId
 
@@ -168,8 +203,6 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
     console.error('[stripe-webhook] Missing userId in subscription')
     return
   }
-
-  const supabase = await createClient()
 
   // Check subscription status
   if (subscription.status === 'canceled') {
@@ -226,7 +259,8 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
  * Handle customer.subscription.deleted event
  * Downgrades user to Free plan
  */
-async function handleSubscriptionDeleted(event: Stripe.Event) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
   const subscription = event.data.object as Stripe.Subscription
   const userId = subscription.metadata?.userId
 
@@ -234,8 +268,6 @@ async function handleSubscriptionDeleted(event: Stripe.Event) {
     console.error('[stripe-webhook] Missing userId in subscription')
     return
   }
-
-  const supabase = await createClient()
 
   const { data: _data3, error } = await supabase
     .from('profiles')
@@ -298,7 +330,8 @@ async function handleInvoicePaymentFailed(event: Stripe.Event) {
  * Handle charge.refunded event
  * Downgrades user to Free plan when a refund is issued
  */
-async function handleChargeRefunded(event: Stripe.Event) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleChargeRefunded(event: Stripe.Event, supabase: any) {
   const charge = event.data.object as Stripe.Charge
   const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
 
@@ -306,8 +339,6 @@ async function handleChargeRefunded(event: Stripe.Event) {
     console.warn('[stripe-webhook] charge.refunded event missing customer ID')
     return
   }
-
-  const supabase = await createClient()
 
   // Find user by stripe_customer_id
   const { data: profile, error: fetchError } = await supabase
