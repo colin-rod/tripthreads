@@ -426,6 +426,155 @@ describe('POST /api/webhooks/stripe', () => {
     })
   })
 
+  describe('charge.refunded Event', () => {
+    const mockEvent: Partial<Stripe.Event> = {
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_test_123',
+          customer: 'cus_test_123',
+        } as Stripe.Charge,
+      },
+    }
+
+    it('downgrades user to Free plan and clears subscription data', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      const updateMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'free' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: selectMock,
+          })),
+        })),
+        update: updateMock,
+        eq: eqMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockFrom).toHaveBeenCalledWith('profiles')
+      expect(updateMock).toHaveBeenCalledWith({
+        plan: 'free',
+        plan_expires_at: null,
+        stripe_subscription_id: null,
+        subscription_price_id: null,
+      })
+    })
+
+    it('handles missing customer ID gracefully', async () => {
+      const eventWithoutCustomer: Partial<Stripe.Event> = {
+        type: 'charge.refunded',
+        data: {
+          object: {
+            id: 'ch_test_123',
+            customer: null,
+          } as unknown as Stripe.Charge,
+        },
+      }
+
+      mockVerifyWebhookSignature.mockReturnValue(eventWithoutCustomer)
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(eventWithoutCustomer),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockFrom).not.toHaveBeenCalled()
+    })
+
+    it('handles user not found gracefully', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      mockFrom.mockReturnValue({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: new Error('User not found'),
+            }),
+          })),
+        })),
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+    })
+
+    it('handles database error when updating user', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValueOnce({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: selectMock,
+          })),
+        })),
+      })
+
+      mockFrom.mockReturnValueOnce({
+        update: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({
+          data: null,
+          error: new Error('Database error'),
+        }),
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toContain('Failed to process refund')
+    })
+  })
+
   describe('Unknown Event Types', () => {
     it('returns 200 for unhandled event types', async () => {
       const unknownEvent: Partial<Stripe.Event> = {

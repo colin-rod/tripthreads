@@ -67,6 +67,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<WebhookRe
         await handleInvoicePaymentFailed(event)
         break
 
+      case 'charge.refunded':
+        await handleChargeRefunded(event)
+        break
+
       default:
         console.log(`[stripe-webhook] Unhandled event type: ${event.type}`)
     }
@@ -288,4 +292,69 @@ async function handleInvoicePaymentFailed(event: Stripe.Event) {
   // Note: We don't immediately downgrade the user
   // Stripe will retry the payment automatically
   // If all retries fail, Stripe will send a subscription.deleted event
+}
+
+/**
+ * Handle charge.refunded event
+ * Downgrades user to Free plan when a refund is issued
+ */
+async function handleChargeRefunded(event: Stripe.Event) {
+  const charge = event.data.object as Stripe.Charge
+  const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
+
+  if (!customerId) {
+    console.warn('[stripe-webhook] charge.refunded event missing customer ID')
+    return
+  }
+
+  const supabase = await createClient()
+
+  // Find user by stripe_customer_id
+  const { data: profile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('id, plan')
+    .eq('stripe_customer_id', customerId)
+    .single()
+
+  if (fetchError || !profile) {
+    console.warn('[stripe-webhook] User not found for refunded charge', {
+      customerId,
+      chargeId: charge.id,
+      error: fetchError,
+    })
+    Sentry.captureMessage('charge.refunded: User not found', {
+      level: 'warning',
+      tags: { feature: 'stripe', operation: 'charge-refunded' },
+      extra: { customerId, chargeId: charge.id, error: fetchError },
+    })
+    return
+  }
+
+  // Downgrade to Free and clear entitlements
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      plan: 'free',
+      plan_expires_at: null,
+      stripe_subscription_id: null,
+      subscription_price_id: null,
+    })
+    .eq('id', profile.id)
+
+  if (updateError) {
+    console.error('[stripe-webhook] Error processing refund:', updateError)
+    Sentry.captureException(updateError, {
+      tags: { feature: 'stripe', operation: 'charge-refunded' },
+      contexts: {
+        user: { id: profile.id },
+        charge: { id: charge.id },
+        customer: { id: customerId },
+      },
+    })
+    throw new Error('Failed to process refund')
+  }
+
+  console.log(
+    `[stripe-webhook] User ${profile.id} downgraded to Free (charge refunded: ${charge.id})`
+  )
 }

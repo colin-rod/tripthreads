@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '13.0.5'
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       access_requests: {
@@ -848,6 +873,7 @@ export type Database = {
           privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscription_currency: string | null
           subscription_price_id: string | null
           tos_accepted_at: string | null
@@ -869,6 +895,7 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_currency?: string | null
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
@@ -890,6 +917,7 @@ export type Database = {
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_currency?: string | null
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
@@ -1408,6 +1436,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
