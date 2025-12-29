@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkParticipantLimit } from '@/lib/subscription/limits'
 
-export async function GET(request: Request, { params }: { params: { tripId: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ tripId: string }> }) {
   try {
     const supabase = await createClient()
 
@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: { tripId: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { tripId } = params
+    const { tripId } = await params
 
     if (!tripId) {
       return NextResponse.json({ error: 'Trip ID is required' }, { status: 400 })
