@@ -11,6 +11,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createTrip as createTripQuery, type CreateTripInput } from '@tripthreads/core'
 import { trackTripCreated } from '@/lib/analytics'
+import { checkTripLimit } from '@/lib/subscription/limits'
 
 /**
  * Create a new trip
@@ -41,6 +42,20 @@ export async function createTrip(input: Omit<CreateTripInput, 'owner_id'>) {
   }
 
   console.log('Creating trip for user:', user.id)
+
+  // Check if user can create a trip (Free tier: 1 trip, Pro: unlimited)
+  const limitCheck = await checkTripLimit(user.id)
+  if (!limitCheck.allowed) {
+    return {
+      success: false,
+      error: limitCheck.reason || 'You have reached your trip limit',
+      limitInfo: {
+        currentCount: limitCheck.currentCount,
+        limit: limitCheck.limit,
+        isProUser: limitCheck.isProUser,
+      },
+    }
+  }
 
   // Create trip with current user as owner
   const tripData: CreateTripInput = {

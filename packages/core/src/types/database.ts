@@ -861,9 +861,11 @@ export type Database = {
           deleted_at: string | null
           email: string
           full_name: string | null
+          grace_period_end: string | null
           id: string
           is_deleted: boolean
           notification_preferences: Json | null
+          photo_count: number
           plan: string
           plan_expires_at: string | null
           privacy_accepted_at: string | null
@@ -883,9 +885,11 @@ export type Database = {
           deleted_at?: string | null
           email: string
           full_name?: string | null
+          grace_period_end?: string | null
           id: string
           is_deleted?: boolean
           notification_preferences?: Json | null
+          photo_count?: number
           plan?: string
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
@@ -905,9 +909,11 @@ export type Database = {
           deleted_at?: string | null
           email?: string
           full_name?: string | null
+          grace_period_end?: string | null
           id?: string
           is_deleted?: boolean
           notification_preferences?: Json | null
+          photo_count?: number
           plan?: string
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
@@ -1206,6 +1212,9 @@ export type Database = {
         Args: { p_participant_id: string }
         Returns: number
       }
+      can_add_participant: { Args: { trip_id_param: string }; Returns: boolean }
+      can_create_trip: { Args: { user_id: string }; Returns: boolean }
+      can_upload_photo: { Args: { user_id: string }; Returns: boolean }
       can_user_create_trip: {
         Args: { trip_owner_id: string }
         Returns: boolean
@@ -1235,6 +1244,7 @@ export type Database = {
           current_count: number
         }[]
       }
+      cleanup_expired_grace_periods: { Args: never; Returns: number }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_audit_log: {
@@ -1284,6 +1294,7 @@ export type Database = {
         Args: { p_date: string; p_participant_id: string }
         Returns: boolean
       }
+      is_pro_user: { Args: { user_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_user_id: string }; Returns: boolean }
       is_trip_owner: {
         Args: { p_trip_id: string; p_user_id: string }

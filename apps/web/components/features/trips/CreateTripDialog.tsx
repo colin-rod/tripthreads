@@ -41,16 +41,25 @@ import { useToast } from '@/hooks/use-toast'
 
 import { createTrip } from '@/app/actions/trips'
 import type { CreateTripInput } from '@tripthreads/core'
+import { UpgradePromptDialog } from '@/components/features/subscription/UpgradePromptDialog'
 
 interface CreateTripDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
+interface LimitInfo {
+  currentCount: number
+  limit: number
+  isProUser: boolean
+}
+
 export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [limitInfo, setLimitInfo] = useState<LimitInfo | null>(null)
 
   type CreateTripFormInput = Omit<CreateTripInput, 'owner_id'>
 
@@ -71,6 +80,14 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
       const result = await createTrip(values)
 
       if (!result.success || !result.trip) {
+        // Check if this is a limit error
+        if (result.limitInfo) {
+          setLimitInfo(result.limitInfo)
+          setShowUpgradePrompt(true)
+          return
+        }
+
+        // Otherwise show generic error toast
         toast({
           title: 'Error creating trip',
           description: result.error || 'An unexpected error occurred',
@@ -238,6 +255,17 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
           </form>
         </Form>
       </DialogContent>
+
+      {/* Upgrade Prompt Dialog */}
+      <UpgradePromptDialog
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        title="Trip Limit Reached"
+        description="You've reached the free tier limit. Upgrade to Pro for unlimited trips."
+        limitType="trips"
+        currentCount={limitInfo?.currentCount ?? 0}
+        limit={limitInfo?.limit ?? 1}
+      />
     </Dialog>
   )
 }
