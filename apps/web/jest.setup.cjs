@@ -131,56 +131,60 @@ class MockHTMLVideoElement extends MockHTMLMediaElement {
   }
 }
 
-// Override document.createElement for video elements
-// Use actual jsdom createElement but override video element creation
-const originalCreateElement = document.createElement.bind(document)
-document.createElement = function (tagName, options) {
-  if (tagName === 'video') {
-    // Create a real div element and add video properties to it
-    // This ensures it has all the Node interface methods
-    const element = originalCreateElement('div', options)
+// Only setup DOM-related mocks when jsdom is available
+// This allows API route tests to run in Node environment
+if (typeof document !== 'undefined') {
+  // Override document.createElement for video elements
+  // Use actual jsdom createElement but override video element creation
+  const originalCreateElement = document.createElement.bind(document)
+  document.createElement = function (tagName, options) {
+    if (tagName === 'video') {
+      // Create a real div element and add video properties to it
+      // This ensures it has all the Node interface methods
+      const element = originalCreateElement('div', options)
 
-    // Add video-specific properties
-    Object.defineProperties(element, {
-      duration: { value: 0, writable: true },
-      currentTime: { value: 0, writable: true },
-      paused: { value: true, writable: true },
-      ended: { value: false, writable: true },
-      muted: { value: false, writable: true },
-      volume: { value: 1, writable: true },
-      playbackRate: { value: 1, writable: true },
-      readyState: { value: 4, writable: true },
-      networkState: { value: 2, writable: true },
-      error: { value: null, writable: true },
-      videoWidth: { value: 1920, writable: true },
-      videoHeight: { value: 1080, writable: true },
-      controls: { value: false, writable: true },
-      autoplay: { value: false, writable: true },
-      loop: { value: false, writable: true },
-      playsInline: { value: false, writable: true }
-    })
+      // Add video-specific properties
+      Object.defineProperties(element, {
+        duration: { value: 0, writable: true },
+        currentTime: { value: 0, writable: true },
+        paused: { value: true, writable: true },
+        ended: { value: false, writable: true },
+        muted: { value: false, writable: true },
+        volume: { value: 1, writable: true },
+        playbackRate: { value: 1, writable: true },
+        readyState: { value: 4, writable: true },
+        networkState: { value: 2, writable: true },
+        error: { value: null, writable: true },
+        videoWidth: { value: 1920, writable: true },
+        videoHeight: { value: 1080, writable: true },
+        controls: { value: false, writable: true },
+        autoplay: { value: false, writable: true },
+        loop: { value: false, writable: true },
+        playsInline: { value: false, writable: true }
+      })
 
-    // Add media methods
-    element.play = function() {
-      this.paused = false
-      return Promise.resolve()
-    }
-    element.pause = function() {
-      this.paused = true
-    }
-    element.load = function() {
-      this.readyState = 4
-      setTimeout(() => {
-        const loadedEvent = new Event('loadeddata')
-        const canplayEvent = new Event('canplay')
-        this.dispatchEvent(loadedEvent)
-        this.dispatchEvent(canplayEvent)
-      }, 0)
-    }
+      // Add media methods
+      element.play = function() {
+        this.paused = false
+        return Promise.resolve()
+      }
+      element.pause = function() {
+        this.paused = true
+      }
+      element.load = function() {
+        this.readyState = 4
+        setTimeout(() => {
+          const loadedEvent = new Event('loadeddata')
+          const canplayEvent = new Event('canplay')
+          this.dispatchEvent(loadedEvent)
+          this.dispatchEvent(canplayEvent)
+        }, 0)
+      }
 
-    return element
+      return element
+    }
+    return originalCreateElement(tagName, options)
   }
-  return originalCreateElement(tagName, options)
 }
 
 global.HTMLMediaElement = MockHTMLMediaElement
