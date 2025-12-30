@@ -615,6 +615,7 @@ export type Database = {
           caption: string | null
           created_at: string
           date_taken: string
+          file_size_bytes: number
           id: string
           thumbnail_url: string | null
           trip_id: string
@@ -626,6 +627,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           date_taken: string
+          file_size_bytes?: number
           id?: string
           thumbnail_url?: string | null
           trip_id: string
@@ -637,6 +639,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           date_taken?: string
+          file_size_bytes?: number
           id?: string
           thumbnail_url?: string | null
           trip_id?: string
@@ -876,6 +879,7 @@ export type Database = {
           subscription_price_id: string | null
           tos_accepted_at: string | null
           updated_at: string
+          video_storage_bytes: number
         }
         Insert: {
           avatar_url?: string | null
@@ -900,6 +904,7 @@ export type Database = {
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
+          video_storage_bytes?: number
         }
         Update: {
           avatar_url?: string | null
@@ -924,6 +929,7 @@ export type Database = {
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
+          video_storage_bytes?: number
         }
         Relationships: []
       }
@@ -1215,6 +1221,10 @@ export type Database = {
       can_add_participant: { Args: { trip_id_param: string }; Returns: boolean }
       can_create_trip: { Args: { user_id: string }; Returns: boolean }
       can_upload_photo: { Args: { user_id: string }; Returns: boolean }
+      can_upload_video: {
+        Args: { user_id: string; video_size_bytes: number }
+        Returns: boolean
+      }
       can_user_create_trip: {
         Args: { trip_owner_id: string }
         Returns: boolean

@@ -43,6 +43,7 @@ const mockUser: User = {
   plan_expires_at: null,
   grace_period_end: null,
   photo_count: 0,
+  video_storage_bytes: 0,
   stripe_customer_id: null,
   stripe_subscription_id: null,
   subscription_currency: null,

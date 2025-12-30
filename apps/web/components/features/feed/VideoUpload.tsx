@@ -222,10 +222,16 @@ export default function VideoUpload({ tripId, onUploadComplete }: VideoUploadPro
     [uploadPermission]
   )
 
-  const isStorageLimitReached =
-    uploadPermission && uploadPermission.isProUser && uploadPermission.remainingGB <= 0
-  const showStorageWarning =
-    uploadPermission && uploadPermission.isProUser && uploadPermission.remainingGB < 1
+  const isStorageLimitReached: boolean = !!(
+    uploadPermission &&
+    uploadPermission.isProUser &&
+    uploadPermission.remainingGB <= 0
+  )
+  const showStorageWarning: boolean = !!(
+    uploadPermission &&
+    uploadPermission.isProUser &&
+    uploadPermission.remainingGB < 1
+  )
 
   return (
     <>

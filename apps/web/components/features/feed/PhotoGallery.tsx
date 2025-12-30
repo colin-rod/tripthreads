@@ -33,8 +33,8 @@ interface MediaFileWithUser {
   date_taken: string
   trip_id: string
   user_id: string
-  type: 'photo' | 'video'
-  file_size_bytes?: number
+  type: string
+  file_size_bytes: number
   created_at: string
   user: {
     id: string
