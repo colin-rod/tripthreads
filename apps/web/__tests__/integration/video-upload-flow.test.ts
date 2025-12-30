@@ -9,15 +9,19 @@
  * - Storage tracking and limits
  */
 
-import { createClient } from '@supabase/supabase-js'
 import { checkVideoLimit } from '@/lib/subscription/limits'
 import { createMediaFile, getMediaFiles } from '@tripthreads/core'
 
-// Mock Supabase client
-jest.mock('@supabase/supabase-js')
+// Mock Supabase server module
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }))
+
+// Import createClient AFTER mock is declared
+import { createClient } from '@/lib/supabase/server'
+
+// Type the mock properly
+const createClientMock = createClient as jest.MockedFunction<typeof createClient>
 
 const mockSupabase = {
   auth: {
@@ -32,7 +36,9 @@ const mockSupabase = {
 describe('Video Upload Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(createClient as jest.Mock).mockReturnValue(mockSupabase)
+    // Configure createClient to return mockSupabase for all calls
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createClientMock.mockResolvedValue(mockSupabase as any)
   })
 
   describe('Free User Flow', () => {

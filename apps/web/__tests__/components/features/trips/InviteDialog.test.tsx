@@ -103,7 +103,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
       })
 
       // Click "Generate Link" button
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       // Wait for API call
@@ -151,7 +151,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
       await user.type(emailInput, 'test@example.com')
 
       // Click "Send Invites" button
-      const sendButton = screen.getByRole('button', { name: /send invites/i })
+      const sendButton = screen.getByRole('button', { name: /send email invitations/i })
       fireEvent.click(sendButton)
 
       // Wait for API call
@@ -182,7 +182,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       await waitFor(() => {
@@ -210,7 +210,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       await waitFor(() => {
@@ -243,7 +243,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       await waitFor(() => {
@@ -293,7 +293,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
       await user.type(emailInput, 'test@example.com')
 
       // Click "Send Invites" button
-      const sendButton = screen.getByRole('button', { name: /send invites/i })
+      const sendButton = screen.getByRole('button', { name: /send email invitations/i })
       fireEvent.click(sendButton)
 
       await waitFor(() => {
@@ -330,7 +330,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       await waitFor(() => {
@@ -370,7 +370,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       // Should call limit check API
@@ -428,7 +428,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
       await user.type(emailInput, 'test@example.com')
 
       // Click "Send Invites" button
-      const sendButton = screen.getByRole('button', { name: /send invites/i })
+      const sendButton = screen.getByRole('button', { name: /send email invitations/i })
       fireEvent.click(sendButton)
 
       // Should call limit check API
@@ -471,7 +471,7 @@ describe('InviteDialog - Participant Limit Paywall', () => {
         expect(screen.getByText('Invite Participants')).toBeInTheDocument()
       })
 
-      const generateButton = screen.getByRole('button', { name: /generate link/i })
+      const generateButton = screen.getByRole('button', { name: /generate invite link/i })
       fireEvent.click(generateButton)
 
       // Should still proceed with invite creation (fail open)
