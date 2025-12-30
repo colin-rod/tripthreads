@@ -44,7 +44,7 @@ describe('PhotoGallery', () => {
       render(<PhotoGallery tripId={mockTripId} onPhotoClick={mockOnPhotoClick} />)
 
       await waitFor(() => {
-        expect(screen.getByText(/no photos yet/i)).toBeInTheDocument()
+        expect(screen.getByText(/no photos or videos yet/i)).toBeInTheDocument()
       })
     })
 
@@ -69,6 +69,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb1.jpg',
             caption: 'Beach photo',
             date_taken: '2025-01-15T10:00:00Z',
+            type: 'photo',
             user: {
               id: 'user-1',
               full_name: 'Alice Smith',
@@ -81,6 +82,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb2.jpg',
             caption: 'Sunset',
             date_taken: '2025-01-15T18:00:00Z',
+            type: 'photo',
             user: {
               id: 'user-2',
               full_name: 'Bob Jones',
@@ -95,6 +97,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: null,
             date_taken: '2025-01-16T12:00:00Z',
+            type: 'photo',
             user: {
               id: 'user-1',
               full_name: 'Alice Smith',
@@ -131,6 +134,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb.jpg',
             caption: null,
             date_taken: '2025-01-15T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
           {
@@ -139,6 +143,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: null,
             date_taken: '2025-01-15T11:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],
@@ -166,6 +171,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb1.jpg',
             caption: 'Test photo',
             date_taken: '2025-01-15T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],
@@ -194,6 +200,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb1.jpg',
             caption: 'Beautiful sunset',
             date_taken: '2025-01-15T18:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice Smith', avatar_url: null },
           },
         ],
@@ -217,6 +224,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: 'https://example.com/thumb1.jpg',
             caption: null,
             date_taken: '2025-01-15T18:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice Smith', avatar_url: null },
           },
         ],
@@ -242,6 +250,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: 'Old photo',
             date_taken: '2025-01-10T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],
@@ -252,6 +261,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: 'New photo',
             date_taken: '2025-01-20T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],
@@ -291,6 +301,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: 'Trip 1 photo',
             date_taken: '2025-01-15T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],
@@ -313,6 +324,7 @@ describe('PhotoGallery', () => {
             thumbnail_url: null,
             caption: 'Trip 2 photo',
             date_taken: '2025-01-16T10:00:00Z',
+            type: 'photo',
             user: { id: 'user-1', full_name: 'Alice', avatar_url: null },
           },
         ],

@@ -178,7 +178,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={3}
+        currentUsage={3}
         limit={5}
       />
     )
