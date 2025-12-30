@@ -82,6 +82,7 @@ describe('CreateTripDialog', () => {
       }
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockCreateTrip.mockReturnValueOnce(createTripPromise as any)
 
     render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
@@ -252,5 +253,257 @@ describe('CreateTripDialog', () => {
 
     expect(endCalendar.disabled?.(beforeStart)).toBe(true)
     expect(endCalendar.disabled?.(afterStart)).toBe(false)
+  })
+
+  describe('Trip Limit Paywall', () => {
+    it('shows upgrade dialog when server action returns limitInfo', async () => {
+      const user = userEvent.setup()
+      const onOpenChange = jest.fn()
+
+      mockCreateTrip.mockResolvedValueOnce({
+        success: false,
+        error: 'Trip limit reached',
+        limitInfo: {
+          currentCount: 1,
+          limit: 1,
+          isProUser: false,
+        },
+      })
+
+      render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
+
+      await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+      const submitButton = screen.getByRole('button', { name: /create trip/i })
+      const nameInput = screen.getByLabelText(/trip name/i)
+      await user.type(nameInput, 'Second Trip')
+
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() + 1)
+      const endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 5)
+
+      const getLatestPickers = () => {
+        expect(datePickerMocks.length).toBeGreaterThanOrEqual(2)
+        return datePickerMocks.slice(-2)
+      }
+
+      act(() => {
+        const [startPicker, endPicker] = getLatestPickers()
+        startPicker.onChange?.(startDate)
+        endPicker.onChange?.(endDate)
+      })
+
+      const form = submitButton.closest('form')
+      expect(form).not.toBeNull()
+
+      await act(async () => {
+        fireEvent.submit(form!)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Trip Limit Reached')).toBeInTheDocument()
+        expect(
+          screen.getByText(
+            /You've reached the free tier limit. Upgrade to Pro for unlimited trips./
+          )
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('upgrade dialog shows correct limit type (trips)', async () => {
+      const user = userEvent.setup()
+      const onOpenChange = jest.fn()
+
+      mockCreateTrip.mockResolvedValueOnce({
+        success: false,
+        error: 'Trip limit reached',
+        limitInfo: {
+          currentCount: 1,
+          limit: 1,
+          isProUser: false,
+        },
+      })
+
+      render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
+
+      await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+      const submitButton = screen.getByRole('button', { name: /create trip/i })
+      const nameInput = screen.getByLabelText(/trip name/i)
+      await user.type(nameInput, 'Second Trip')
+
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() + 1)
+      const endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 5)
+
+      const getLatestPickers = () => datePickerMocks.slice(-2)
+
+      act(() => {
+        const [startPicker, endPicker] = getLatestPickers()
+        startPicker.onChange?.(startDate)
+        endPicker.onChange?.(endDate)
+      })
+
+      const form = submitButton.closest('form')!
+      await act(async () => {
+        fireEvent.submit(form)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Trip Limit Reached')).toBeInTheDocument()
+        // Should show trips-specific benefits
+        expect(screen.getByText('Unlimited trips')).toBeInTheDocument()
+        expect(screen.getByText('Priority support')).toBeInTheDocument()
+      })
+    })
+
+    it('upgrade dialog shows 1/1 usage for free user', async () => {
+      const user = userEvent.setup()
+      const onOpenChange = jest.fn()
+
+      mockCreateTrip.mockResolvedValueOnce({
+        success: false,
+        error: 'Trip limit reached',
+        limitInfo: {
+          currentCount: 1,
+          limit: 1,
+          isProUser: false,
+        },
+      })
+
+      render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
+
+      await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+      const submitButton = screen.getByRole('button', { name: /create trip/i })
+      const nameInput = screen.getByLabelText(/trip name/i)
+      await user.type(nameInput, 'Second Trip')
+
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() + 1)
+      const endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 5)
+
+      act(() => {
+        const [startPicker, endPicker] = datePickerMocks.slice(-2)
+        startPicker.onChange?.(startDate)
+        endPicker.onChange?.(endDate)
+      })
+
+      const form = submitButton.closest('form')!
+      await act(async () => {
+        fireEvent.submit(form)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Trip Limit Reached')).toBeInTheDocument()
+        // Dialog should display current usage
+        expect(screen.getByText(/1 trip/)).toBeInTheDocument()
+      })
+    })
+
+    it('does NOT create trip when limit exceeded', async () => {
+      const user = userEvent.setup()
+      const onOpenChange = jest.fn()
+
+      mockCreateTrip.mockResolvedValueOnce({
+        success: false,
+        error: 'Trip limit reached',
+        limitInfo: {
+          currentCount: 1,
+          limit: 1,
+          isProUser: false,
+        },
+      })
+
+      render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
+
+      await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+      const submitButton = screen.getByRole('button', { name: /create trip/i })
+      const nameInput = screen.getByLabelText(/trip name/i)
+      await user.type(nameInput, 'Second Trip')
+
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() + 1)
+      const endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 5)
+
+      act(() => {
+        const [startPicker, endPicker] = datePickerMocks.slice(-2)
+        startPicker.onChange?.(startDate)
+        endPicker.onChange?.(endDate)
+      })
+
+      const form = submitButton.closest('form')!
+      await act(async () => {
+        fireEvent.submit(form)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Trip Limit Reached')).toBeInTheDocument()
+      })
+
+      // Dialog should stay open (not navigate away)
+      expect(mockRouterPush).not.toHaveBeenCalled()
+      // No success toast
+      expect(mockToast).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Trip created!',
+        })
+      )
+    })
+
+    it('navigates to /settings on upgrade click', async () => {
+      const user = userEvent.setup()
+      const onOpenChange = jest.fn()
+
+      mockCreateTrip.mockResolvedValueOnce({
+        success: false,
+        error: 'Trip limit reached',
+        limitInfo: {
+          currentCount: 1,
+          limit: 1,
+          isProUser: false,
+        },
+      })
+
+      render(<CreateTripDialog open={true} onOpenChange={onOpenChange} />)
+
+      await waitFor(() => expect(datePickerMocks.length).toBeGreaterThanOrEqual(2))
+
+      const submitButton = screen.getByRole('button', { name: /create trip/i })
+      const nameInput = screen.getByLabelText(/trip name/i)
+      await user.type(nameInput, 'Second Trip')
+
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() + 1)
+      const endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 5)
+
+      act(() => {
+        const [startPicker, endPicker] = datePickerMocks.slice(-2)
+        startPicker.onChange?.(startDate)
+        endPicker.onChange?.(endDate)
+      })
+
+      const form = submitButton.closest('form')!
+      await act(async () => {
+        fireEvent.submit(form)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Trip Limit Reached')).toBeInTheDocument()
+      })
+
+      const upgradeButton = screen.getByRole('button', { name: /upgrade to pro/i })
+      await user.click(upgradeButton)
+
+      await waitFor(() => {
+        expect(mockRouterPush).toHaveBeenCalledWith('/settings?tab=subscription')
+      })
+    })
   })
 })
