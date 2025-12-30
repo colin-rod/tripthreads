@@ -77,11 +77,10 @@ class MockHTMLMediaElement {
 
   load() {
     // Simulate immediate load without codec initialization
+    // Dispatch events synchronously to avoid timing issues in tests
     this.readyState = 4
-    setTimeout(() => {
-      this.dispatchEvent(new Event('loadeddata'))
-      this.dispatchEvent(new Event('canplay'))
-    }, 0)
+    this.dispatchEvent(new Event('loadeddata'))
+    this.dispatchEvent(new Event('canplay'))
   }
 
   setAttribute(name, value) {
@@ -173,12 +172,11 @@ if (typeof document !== 'undefined') {
       }
       element.load = function() {
         this.readyState = 4
-        setTimeout(() => {
-          const loadedEvent = new Event('loadeddata')
-          const canplayEvent = new Event('canplay')
-          this.dispatchEvent(loadedEvent)
-          this.dispatchEvent(canplayEvent)
-        }, 0)
+        // Dispatch events synchronously to avoid timing issues in tests
+        const loadedEvent = new Event('loadeddata')
+        const canplayEvent = new Event('canplay')
+        this.dispatchEvent(loadedEvent)
+        this.dispatchEvent(canplayEvent)
       }
 
       return element

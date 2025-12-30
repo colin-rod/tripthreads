@@ -16,9 +16,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import VideoUpload from '@/components/features/feed/VideoUpload'
 
-// Mock fetch globally
-global.fetch = jest.fn()
-
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({
@@ -34,24 +31,49 @@ const createMockVideoFile = (
   sizeInBytes: number,
   type: string = 'video/mp4'
 ): File => {
-  const blob = new Blob(['a'.repeat(sizeInBytes)], { type })
+  // Create a mock file with the correct size property
+  // Don't use repeat for large sizes as it can exceed string length limits
+  const chunks: string[] = []
+  const chunkSize = 1024 * 1024 // 1MB chunks
+  const numChunks = Math.floor(sizeInBytes / chunkSize)
+  const remainder = sizeInBytes % chunkSize
+
+  for (let i = 0; i < numChunks; i++) {
+    chunks.push('a'.repeat(chunkSize))
+  }
+  if (remainder > 0) {
+    chunks.push('a'.repeat(remainder))
+  }
+
+  const blob = new Blob(chunks, { type })
   return new File([blob], name, { type })
 }
 
 describe('VideoUpload Component', () => {
   const mockTripId = 'trip-123'
   const mockOnUploadComplete = jest.fn()
+  let fetchSpy: jest.SpyInstance
 
   beforeEach(() => {
     jest.clearAllMocks()
-    // Reset fetch mock
-    ;(global.fetch as jest.Mock).mockReset()
+    // Create a fresh fetch spy for each test
+    fetchSpy = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        json: async () => ({}),
+      } as Response)
+    )
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.clearAllTimers()
   })
 
   describe('Pro User - Rendering and Functionality', () => {
     it('renders video upload UI for Pro users', async () => {
       // Mock GET /api/upload-video - Pro user with available storage
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -60,22 +82,25 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
-      await waitFor(() => {
-        expect(screen.getByText(/Video storage:/)).toBeInTheDocument()
-        expect(screen.getByText(/2.50 GB \/ 10 GB used/)).toBeInTheDocument()
-        expect(screen.getByText(/7.50 GB remaining/)).toBeInTheDocument()
-      })
+      await waitFor(
+        () => {
+          expect(screen.getByText(/Video storage:/)).toBeInTheDocument()
+          expect(screen.getByText(/2.50 GB \/ 10 GB used/)).toBeInTheDocument()
+          expect(screen.getByText(/7.50 GB remaining/)).toBeInTheDocument()
+        },
+        { timeout: 1000 }
+      )
 
       expect(screen.getByText('Drop videos here or click to upload')).toBeInTheDocument()
       expect(screen.getByText('Select Videos')).toBeInTheDocument()
     })
 
     it('allows Pro users to select valid video files', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -84,7 +109,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -110,7 +135,7 @@ describe('VideoUpload Component', () => {
 
     it('successfully uploads video for Pro users', async () => {
       // Mock GET /api/upload-video
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -119,7 +144,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -141,7 +166,7 @@ describe('VideoUpload Component', () => {
       })
 
       // Mock POST /api/upload-video - successful upload
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -152,10 +177,10 @@ describe('VideoUpload Component', () => {
             remainingGB: 7.45,
           },
         }),
-      })
+      } as Response)
 
       // Mock GET /api/upload-video - refresh after upload
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -164,7 +189,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.45,
         }),
-      })
+      } as Response)
 
       const uploadButton = screen.getByText('Upload 1 Video')
       fireEvent.click(uploadButton)
@@ -178,7 +203,7 @@ describe('VideoUpload Component', () => {
   describe('Free User - Blocking and Upgrade Prompts', () => {
     it('shows upgrade prompt for free users', async () => {
       // Mock GET /api/upload-video - Free user
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: false,
@@ -189,7 +214,7 @@ describe('VideoUpload Component', () => {
           reason:
             'Video uploads are a Pro feature. Upgrade to Pro to upload videos (10GB storage).',
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -206,7 +231,7 @@ describe('VideoUpload Component', () => {
     })
 
     it('blocks free users from selecting video files', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: false,
@@ -215,7 +240,7 @@ describe('VideoUpload Component', () => {
           limitGB: 0,
           remainingGB: 0,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -234,9 +259,9 @@ describe('VideoUpload Component', () => {
   })
 
   describe('File Validation', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Mock GET /api/upload-video - Pro user
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -245,7 +270,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
     })
 
     it('rejects video files larger than 100MB', async () => {
@@ -325,7 +350,7 @@ describe('VideoUpload Component', () => {
 
   describe('Storage Usage Display', () => {
     it('shows storage usage for Pro users', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -334,7 +359,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 4.75,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -345,7 +370,7 @@ describe('VideoUpload Component', () => {
     })
 
     it('shows warning when storage is low (<1GB remaining)', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -354,20 +379,22 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 0.8,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
       await waitFor(() => {
         expect(screen.getByText(/Running low on video storage/)).toBeInTheDocument()
-        expect(screen.getByText(/0.80 GB remaining/)).toBeInTheDocument()
+        // Use getAllByText since the storage info appears in multiple places
+        const remainingTexts = screen.getAllByText(/0.80 GB remaining/)
+        expect(remainingTexts.length).toBeGreaterThan(0)
       })
     })
   })
 
   describe('Storage Limit Enforcement', () => {
     it('disables upload when Pro user reaches 10GB storage limit', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: false,
@@ -376,7 +403,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 0,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -393,7 +420,7 @@ describe('VideoUpload Component', () => {
 
     it('updates storage usage after successful upload', async () => {
       // Initial GET - Pro user with space
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -402,7 +429,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -424,7 +451,7 @@ describe('VideoUpload Component', () => {
       })
 
       // Mock POST - successful upload
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -435,10 +462,10 @@ describe('VideoUpload Component', () => {
             remainingGB: 7.45,
           },
         }),
-      })
+      } as Response)
 
       // Mock GET - refreshed storage info
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -447,7 +474,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.45,
         }),
-      })
+      } as Response)
 
       const uploadButton = screen.getByText('Upload 1 Video')
       fireEvent.click(uploadButton)
@@ -461,7 +488,7 @@ describe('VideoUpload Component', () => {
 
   describe('Error Handling', () => {
     it('handles upload errors gracefully', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -470,7 +497,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
@@ -492,13 +519,13 @@ describe('VideoUpload Component', () => {
       })
 
       // Mock POST - upload failure
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      fetchSpy.mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           error: 'Upload failed',
           message: 'Storage quota exceeded',
         }),
-      })
+      } as Response)
 
       const uploadButton = screen.getByText('Upload 1 Video')
       fireEvent.click(uploadButton)
@@ -511,20 +538,20 @@ describe('VideoUpload Component', () => {
     })
 
     it('handles network errors gracefully', async () => {
-      ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+      fetchSpy.mockRejectedValueOnce(new Error('Network error'))
 
       render(<VideoUpload tripId={mockTripId} onUploadComplete={mockOnUploadComplete} />)
 
-      // Should still render UI even if permission fetch fails
+      // Should render upgrade prompt when permission fetch fails (defaults to free user)
       await waitFor(() => {
-        expect(screen.getByText('Select Videos')).toBeInTheDocument()
+        expect(screen.getByText('Upgrade to Pro')).toBeInTheDocument()
       })
     })
   })
 
   describe('User Interactions', () => {
-    beforeEach(async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+    beforeEach(() => {
+      fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           allowed: true,
@@ -533,7 +560,7 @@ describe('VideoUpload Component', () => {
           limitGB: 10,
           remainingGB: 7.5,
         }),
-      })
+      } as Response)
     })
 
     it('allows users to remove selected videos', async () => {
