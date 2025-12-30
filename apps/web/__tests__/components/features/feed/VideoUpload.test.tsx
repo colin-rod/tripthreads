@@ -31,22 +31,19 @@ const createMockVideoFile = (
   sizeInBytes: number,
   type: string = 'video/mp4'
 ): File => {
-  // Create a mock file with the correct size property
-  // Don't use repeat for large sizes as it can exceed string length limits
-  const chunks: string[] = []
-  const chunkSize = 1024 * 1024 // 1MB chunks
-  const numChunks = Math.floor(sizeInBytes / chunkSize)
-  const remainder = sizeInBytes % chunkSize
+  // Create a minimal blob but override the size property for performance
+  // This avoids creating large blobs (100MB+) which are slow in tests
+  // The component only checks file.size and file.type, not actual content
+  const blob = new Blob(['x'], { type })
+  const file = new File([blob], name, { type })
 
-  for (let i = 0; i < numChunks; i++) {
-    chunks.push('a'.repeat(chunkSize))
-  }
-  if (remainder > 0) {
-    chunks.push('a'.repeat(remainder))
-  }
+  // Override the size property to match the intended size
+  Object.defineProperty(file, 'size', {
+    value: sizeInBytes,
+    writable: false,
+  })
 
-  const blob = new Blob(chunks, { type })
-  return new File([blob], name, { type })
+  return file
 }
 
 describe('VideoUpload Component', () => {
