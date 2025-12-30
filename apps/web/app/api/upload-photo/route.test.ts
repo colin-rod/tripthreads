@@ -150,6 +150,7 @@ describe('POST /api/upload-photo', () => {
       thumbnail_url: 'https://cdn/thumb.jpg',
       caption: 'Great trip',
       date_taken: '2024-01-01T00:00:00.000Z',
+      file_size_bytes: 100,
     })
   })
 
