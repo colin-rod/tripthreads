@@ -202,6 +202,7 @@ export async function POST(request: NextRequest) {
         thumbnail_url: thumbnailUrl,
         caption: caption || null,
         date_taken: dateTaken, // Use extracted EXIF date or fallback
+        file_size_bytes: fullImageFile.size, // Track file size for consistency with videos
       })
 
       return NextResponse.json({

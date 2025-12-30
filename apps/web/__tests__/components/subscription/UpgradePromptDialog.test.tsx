@@ -22,6 +22,7 @@ describe('UpgradePromptDialog', () => {
     mockUseRouter.mockReturnValue({
       push: mockPush,
       // Add other router properties as needed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
   })
 
@@ -35,7 +36,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="You've reached the free tier limit. Upgrade to Pro for unlimited trips."
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -55,7 +56,7 @@ describe('UpgradePromptDialog', () => {
         title="Participant Limit Reached"
         description="You've reached the free tier limit for participants."
         limitType="participants"
-        currentCount={5}
+        currentUsage={5}
         limit={5}
       />
     )
@@ -75,7 +76,7 @@ describe('UpgradePromptDialog', () => {
         title="Photo Limit Reached"
         description="You've reached the free tier photo limit."
         limitType="photos"
-        currentCount={25}
+        currentUsage={25}
         limit={25}
       />
     )
@@ -95,7 +96,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -116,7 +117,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -137,7 +138,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -159,7 +160,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -195,7 +196,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )
@@ -214,7 +215,7 @@ describe('UpgradePromptDialog', () => {
         title="Trip Limit Reached"
         description="Upgrade to Pro"
         limitType="trips"
-        currentCount={1}
+        currentUsage={1}
         limit={1}
       />
     )

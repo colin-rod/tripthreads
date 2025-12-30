@@ -263,7 +263,7 @@ export function CreateTripDialog({ open, onOpenChange }: CreateTripDialogProps) 
         title="Trip Limit Reached"
         description="You've reached the free tier limit. Upgrade to Pro for unlimited trips."
         limitType="trips"
-        currentCount={limitInfo?.currentCount ?? 0}
+        currentUsage={limitInfo?.currentCount ?? 0}
         limit={limitInfo?.limit ?? 1}
       />
     </Dialog>

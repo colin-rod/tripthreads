@@ -8,8 +8,13 @@
  * - Trips: 1 active trip
  * - Participants: 5 per trip
  * - Photos: 25 total across all trips
+ * - Videos: 0 (hard block, Pro feature only)
  *
- * Pro users have unlimited access to all features.
+ * Pro Tier Limits:
+ * - Trips: Unlimited
+ * - Participants: Unlimited
+ * - Photos: Unlimited
+ * - Videos: 10GB total storage, 100MB max file size
  *
  * @module lib/subscription/limits
  */
@@ -49,12 +54,22 @@ const FREE_TIER_LIMITS = {
   trips: 1,
   participants: 5,
   photos: 25,
+  videos: 0, // Free users cannot upload videos
+  videoStorageGB: 0, // Free users have no video storage
+} as const
+
+const PRO_TIER_LIMITS = {
+  videoStorageGB: 10, // 10GB total video storage for Pro users
+  maxVideoFileSizeMB: 100, // 100MB max file size per video
 } as const
 
 const ERROR_MESSAGES = {
   trips: `You've reached the free tier limit of ${FREE_TIER_LIMITS.trips} trip. Upgrade to Pro for unlimited trips.`,
   participants: `This trip has reached the free tier limit of ${FREE_TIER_LIMITS.participants} participants. Upgrade to Pro for unlimited participants.`,
   photos: `You've reached the free tier limit of ${FREE_TIER_LIMITS.photos} photos. Upgrade to Pro for unlimited photos.`,
+  videos: 'Video uploads are a Pro feature. Upgrade to Pro to upload videos (10GB storage).',
+  videoStorage: `You've reached your ${PRO_TIER_LIMITS.videoStorageGB}GB video storage limit. Delete some videos or contact support.`,
+  videoFileSize: `Video file size exceeds the ${PRO_TIER_LIMITS.maxVideoFileSizeMB}MB limit. Please compress your video or upload a shorter clip.`,
 } as const
 
 // ==========================================
@@ -264,6 +279,99 @@ export async function checkPhotoLimit(userId: string): Promise<LimitCheckResult>
     currentCount: photoCount,
     limit: FREE_TIER_LIMITS.photos,
     isProUser: false,
+  }
+}
+
+/**
+ * Check if user can upload a video of given size
+ *
+ * Free tier: 0 videos (hard block, Pro feature only)
+ * Pro tier: 10GB total video storage, 100MB max file size
+ *
+ * @param userId - User ID to check
+ * @param fileSizeBytes - Video file size in bytes
+ * @returns Limit check result with allowed status, storage info, and metadata
+ */
+export async function checkVideoLimit(
+  userId: string,
+  fileSizeBytes: number
+): Promise<
+  LimitCheckResult & { currentStorageGB?: number; limitGB?: number; remainingGB?: number }
+> {
+  const supabase = await createClient()
+
+  // Check if user is Pro
+  const isPro = await isProUser(userId)
+
+  // Free users cannot upload videos at all
+  if (!isPro) {
+    return {
+      allowed: false,
+      reason: ERROR_MESSAGES.videos,
+      currentCount: 0,
+      limit: FREE_TIER_LIMITS.videos,
+      isProUser: false,
+      currentStorageGB: 0,
+      limitGB: 0,
+      remainingGB: 0,
+    }
+  }
+
+  // Check file size limit (100MB = 104,857,600 bytes)
+  const maxFileSizeBytes = PRO_TIER_LIMITS.maxVideoFileSizeMB * 1024 * 1024
+  if (fileSizeBytes > maxFileSizeBytes) {
+    // Get current storage for display
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('video_storage_bytes')
+      .eq('id', userId)
+      .single()
+
+    const currentStorageBytes = profile?.video_storage_bytes ?? 0
+    const currentStorageGB = currentStorageBytes / (1024 * 1024 * 1024)
+    const limitGB = PRO_TIER_LIMITS.videoStorageGB
+    const remainingGB = Math.max(limitGB - currentStorageGB, 0)
+
+    return {
+      allowed: false,
+      reason: ERROR_MESSAGES.videoFileSize,
+      currentCount: 0,
+      limit: Infinity,
+      isProUser: true,
+      currentStorageGB,
+      limitGB,
+      remainingGB,
+    }
+  }
+
+  // Get current video storage (denormalized in profiles table)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('video_storage_bytes')
+    .eq('id', userId)
+    .single()
+
+  const currentStorageBytes = profile?.video_storage_bytes ?? 0
+  const maxStorageBytes = PRO_TIER_LIMITS.videoStorageGB * 1024 * 1024 * 1024 // 10GB in bytes
+
+  // Convert to GB for display
+  const currentStorageGB = currentStorageBytes / (1024 * 1024 * 1024)
+  const limitGB = PRO_TIER_LIMITS.videoStorageGB
+  const newStorageBytes = currentStorageBytes + fileSizeBytes
+  const remainingGB = Math.max(limitGB - currentStorageGB, 0)
+
+  // Check if adding this video would exceed the storage limit
+  const allowed = newStorageBytes <= maxStorageBytes
+
+  return {
+    allowed,
+    reason: allowed ? undefined : ERROR_MESSAGES.videoStorage,
+    currentCount: 0, // We track storage, not count
+    limit: Infinity, // Unlimited video count, limited by storage
+    isProUser: true,
+    currentStorageGB: Math.round(currentStorageGB * 100) / 100, // Round to 2 decimal places
+    limitGB,
+    remainingGB: Math.round(remainingGB * 100) / 100,
   }
 }
 

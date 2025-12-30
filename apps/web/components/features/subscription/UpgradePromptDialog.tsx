@@ -29,10 +29,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 interface UpgradePromptDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  limitType: 'trips' | 'participants' | 'photos'
-  currentCount: number
+  title?: string
+  description?: string
+  limitType: 'trips' | 'participants' | 'photos' | 'videos'
+  currentUsage: number
   limit: number
 }
 
@@ -41,15 +41,25 @@ const LIMIT_BENEFITS = {
     'Unlimited trips',
     'Unlimited participants per trip',
     'Unlimited photo uploads',
+    '10GB video storage',
     'Priority support',
   ],
   participants: [
     'Unlimited participants per trip',
     'Unlimited trips',
     'Unlimited photo uploads',
+    '10GB video storage',
     'Priority support',
   ],
   photos: [
+    'Unlimited photo uploads',
+    'Unlimited trips',
+    'Unlimited participants per trip',
+    '10GB video storage',
+    'Priority support',
+  ],
+  videos: [
+    '10GB video storage',
     'Unlimited photo uploads',
     'Unlimited trips',
     'Unlimited participants per trip',
@@ -61,6 +71,23 @@ const LIMIT_LABELS = {
   trips: 'trip',
   participants: 'participant',
   photos: 'photo',
+  videos: 'video',
+}
+
+const DEFAULT_TITLES = {
+  trips: 'Upgrade to Pro for Unlimited Trips',
+  participants: 'Upgrade to Pro for Unlimited Participants',
+  photos: 'Upgrade to Pro for Unlimited Photos',
+  videos: 'Upgrade to Pro for Video Uploads',
+}
+
+const DEFAULT_DESCRIPTIONS = {
+  trips: "You've reached the free tier limit of 1 trip. Upgrade to Pro to create unlimited trips.",
+  participants:
+    "You've reached the free tier limit of 5 participants per trip. Upgrade to Pro for unlimited participants.",
+  photos:
+    "You've reached the free tier limit of 25 photos. Upgrade to Pro for unlimited photo uploads.",
+  videos: 'Video uploads are a Pro feature. Upgrade to Pro to upload videos with 10GB of storage.',
 }
 
 export function UpgradePromptDialog({
@@ -69,7 +96,7 @@ export function UpgradePromptDialog({
   title,
   description,
   limitType,
-  currentCount,
+  currentUsage,
   limit,
 }: UpgradePromptDialogProps) {
   const router = useRouter()
@@ -83,6 +110,13 @@ export function UpgradePromptDialog({
   const label = LIMIT_LABELS[limitType]
   const plural = limit === 1 ? label : `${label}s`
 
+  // Use provided title/description or defaults
+  const dialogTitle = title || DEFAULT_TITLES[limitType]
+  const dialogDescription = description || DEFAULT_DESCRIPTIONS[limitType]
+
+  // For videos, free users have 0 limit (hard block)
+  const showUsageAlert = limitType !== 'videos'
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -91,17 +125,19 @@ export function UpgradePromptDialog({
             <div className="rounded-full bg-primary/10 p-3">
               <Crown className="h-6 w-6 text-primary" />
             </div>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </div>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
 
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You're currently using {currentCount} of {limit} {plural} on the free tier.
-          </AlertDescription>
-        </Alert>
+        {showUsageAlert && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You're currently using {currentUsage} of {limit} {plural} on the free tier.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="space-y-3">
           <p className="text-sm font-semibold">Upgrade to Pro to unlock:</p>

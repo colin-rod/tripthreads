@@ -449,7 +449,7 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
         title="Participant Limit Reached"
         description="You've reached the free tier limit for participants. Upgrade to Pro for unlimited participants."
         limitType="participants"
-        currentCount={limitInfo?.currentCount ?? 0}
+        currentUsage={limitInfo?.currentCount ?? 0}
         limit={limitInfo?.limit ?? 5}
       />
     </Dialog>
