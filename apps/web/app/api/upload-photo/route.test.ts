@@ -44,10 +44,6 @@ function createPostRequest(fields: Record<string, unknown>) {
   } as unknown as NextRequest
 }
 
-function createGetRequest(url: string) {
-  return { url } as unknown as NextRequest
-}
-
 function createMockFile(name: string) {
   return {
     name,
@@ -430,9 +426,7 @@ describe('GET /api/upload-photo', () => {
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(401)
@@ -453,9 +447,7 @@ describe('GET /api/upload-photo', () => {
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(200)
@@ -476,9 +468,7 @@ describe('GET /api/upload-photo', () => {
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(500)
