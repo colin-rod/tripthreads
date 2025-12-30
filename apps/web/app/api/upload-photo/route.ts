@@ -13,8 +13,9 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createMediaFile, canUploadPhoto } from '@tripthreads/core'
+import { createMediaFile } from '@tripthreads/core'
 import { checkRateLimit, createRateLimitResponse } from '@/lib/rate-limit'
+import { checkPhotoLimit } from '@/lib/subscription/limits'
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,16 +80,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check free tier photo limit
-    const uploadPermission = await canUploadPhoto(supabase, tripId, user.id)
+    // Check free tier photo limit (uses subscription-aware limit checking)
+    const limitCheck = await checkPhotoLimit(user.id)
 
-    if (!uploadPermission.canUpload) {
+    if (!limitCheck.allowed) {
       return NextResponse.json(
         {
-          error: 'Photo limit reached',
-          message: `You've reached the free tier limit of ${uploadPermission.limit} photos. Upgrade to Pro for unlimited photos.`,
-          limit: uploadPermission.limit,
-          total: uploadPermission.total,
+          error: 'Photo upload limit reached',
+          message: 'Free users are limited to 25 photos. Upgrade to Pro for unlimited uploads.',
+          limitInfo: {
+            currentCount: limitCheck.currentCount,
+            limit: limitCheck.limit,
+            isProUser: limitCheck.isProUser,
+          },
         },
         { status: 403 }
       )
@@ -203,7 +207,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         media: mediaFile,
-        remaining: uploadPermission.remaining - 1, // Updated count
+        remaining: limitCheck.limit - limitCheck.currentCount - 1, // Updated count
       })
     } catch (dbError) {
       console.error('Error creating media file record:', dbError)
@@ -248,20 +252,13 @@ export async function POST(request: NextRequest) {
  * GET endpoint to check upload permissions and limits
  *
  * Returns:
- * - canUpload: boolean
- * - remaining: number of photos remaining
- * - total: current photo count
- * - limit: max photos for current plan
+ * - allowed: boolean - Whether user can upload
+ * - currentCount: number - Current photo count
+ * - limit: number - Max photos for current plan
+ * - isProUser: boolean - Whether user is on Pro plan
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const tripId = searchParams.get('tripId')
-
-    if (!tripId) {
-      return NextResponse.json({ error: 'Missing tripId parameter' }, { status: 400 })
-    }
-
     const supabase = await createClient()
 
     // Get current user
@@ -274,10 +271,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Check upload permission
-    const permission = await canUploadPhoto(supabase, tripId, user.id)
+    // Check upload permission using subscription-aware limit checking
+    const limitCheck = await checkPhotoLimit(user.id)
 
-    return NextResponse.json(permission)
+    return NextResponse.json({
+      allowed: limitCheck.allowed,
+      currentCount: limitCheck.currentCount,
+      limit: limitCheck.limit,
+      isProUser: limitCheck.isProUser,
+      remaining: limitCheck.limit - limitCheck.currentCount,
+    })
   } catch (error) {
     console.error('Error checking upload permission:', error)
 
