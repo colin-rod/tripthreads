@@ -33,11 +33,18 @@ import { createClient } from '@/lib/supabase/client'
 import { createInviteLink, createBatchEmailInvites, type InviteLinkResult } from '@tripthreads/core'
 import { Textarea } from '@/components/ui/textarea'
 import { trackInviteSent } from '@/lib/analytics'
+import { UpgradePromptDialog } from '@/components/features/subscription/UpgradePromptDialog'
 
 interface InviteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   tripId: string
+}
+
+interface LimitInfo {
+  currentCount: number
+  limit: number
+  isProUser: boolean
 }
 
 export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) {
@@ -51,7 +58,39 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
   const [emailInput, setEmailInput] = useState('')
   const [isSendingEmails, setIsSendingEmails] = useState(false)
 
+  // Upgrade prompt state
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [limitInfo, setLimitInfo] = useState<LimitInfo | null>(null)
+
+  // Check participant limit before allowing invites
+  async function checkParticipantLimit(): Promise<boolean> {
+    try {
+      const response = await fetch(`/api/trips/${tripId}/participant-limit`)
+      const data = await response.json()
+
+      if (!data.allowed) {
+        setLimitInfo({
+          currentCount: data.currentCount,
+          limit: data.limit,
+          isProUser: data.isProUser,
+        })
+        setShowUpgradePrompt(true)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error checking participant limit:', error)
+      // If check fails, allow the action (fail open)
+      return true
+    }
+  }
+
   async function handleGenerateLink() {
+    // Check participant limit first
+    const canInvite = await checkParticipantLimit()
+    if (!canInvite) return
+
     setIsGenerating(true)
     try {
       const supabase = createClient()
@@ -116,6 +155,10 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
       })
       return
     }
+
+    // Check participant limit first
+    const canInvite = await checkParticipantLimit()
+    if (!canInvite) return
 
     setIsSendingEmails(true)
     try {
@@ -398,6 +441,17 @@ export function InviteDialog({ open, onOpenChange, tripId }: InviteDialogProps) 
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Upgrade Prompt Dialog */}
+      <UpgradePromptDialog
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        title="Participant Limit Reached"
+        description="You've reached the free tier limit for participants. Upgrade to Pro for unlimited participants."
+        limitType="participants"
+        currentUsage={limitInfo?.currentCount ?? 0}
+        limit={limitInfo?.limit ?? 5}
+      />
     </Dialog>
   )
 }

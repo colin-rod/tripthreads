@@ -44,7 +44,7 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:coverage
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
           files: ./coverage/lcov.info
@@ -190,7 +190,7 @@ jobs:
       # Android-specific setup
       - name: Setup Android SDK
         if: matrix.platform == 'Android'
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       - name: AVD cache
         if: matrix.platform == 'Android'

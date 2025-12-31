@@ -1,7 +1,7 @@
 # Database Architecture & Schema
 
-**Last Updated:** November 2025
-**Status:** ✅ Phase 1-2 Complete | 🚧 Ongoing Updates
+**Last Updated:** December 2025
+**Status:** ✅ Phase 1-2 Complete | ✅ Phase 3 Video Upload Complete | 🚧 Ongoing Updates
 
 ---
 
@@ -191,7 +191,7 @@ git commit -m "feat(db): add expenses table with RLS policies"
 
 #### Users (`profiles` table)
 
-✅ **Status:** Implemented (Phase 1)
+✅ **Status:** Implemented (Phase 1) | ✅ **Updated:** Phase 3 (Video Storage Tracking)
 
 ```typescript
 interface User {
@@ -202,6 +202,8 @@ interface User {
   plan: 'free' | 'pro'
   plan_expires_at?: string // ISO 8601
   stripe_customer_id?: string
+  photo_count: number // Total photos uploaded (for free tier 25 photo limit)
+  video_storage_bytes: number // Total video storage used in bytes (Pro tier: 10GB limit) ✅ Added Phase 3
   created_at: string
   updated_at: string
 }
@@ -605,7 +607,7 @@ interface MessageReaction {
 
 #### Media Files (`media_files` table)
 
-📋 **Status:** Planned (Phase 3)
+✅ **Status:** Implemented (Phase 2 Photos, Phase 3 Videos) | Migration: `20250103000004_add_video_upload_limits.sql`
 
 ```typescript
 interface MediaFile {
@@ -617,22 +619,48 @@ interface MediaFile {
   thumbnail_url?: string
   caption?: string
   date_taken: string // ISO 8601 (auto-tagged to day)
+  file_size_bytes: number // File size in bytes (used for video storage tracking) ✅ Added Phase 3
   created_at: string
 }
 ```
 
-**Planned Indexes:**
+**Indexes:**
 
 - Primary key on `id`
 - Index on `trip_id`
 - Index on `user_id`
 - Index on `date_taken` for chronological display
 
-**Planned RLS Policies:**
+**RLS Policies:**
 
-- All trip participants see all photos
-- Viewers can see photos (read-only)
-- Participants can upload photos
+- All trip participants can see all media (`view_trip_media`)
+- Viewers can see media (read-only)
+- Participants can upload photos (unlimited for Pro, 25 max for Free)
+- Only Pro users can upload videos (`free_users_cannot_upload_videos`)
+- Pro users limited to 10GB total video storage
+
+**Storage Limits:**
+
+- **Free Tier:**
+  - Photos: 25 total (tracked via `profiles.photo_count`)
+  - Videos: 0 (hard block, must upgrade to Pro)
+- **Pro Tier:**
+  - Photos: Unlimited
+  - Videos: 10GB total storage (tracked via `profiles.video_storage_bytes`)
+  - Max file size: 100MB per video
+  - Supported formats: MP4, WebM, MOV, QuickTime
+
+**Database Triggers:**
+
+- `increment_photo_count`: Increments `profiles.photo_count` on photo INSERT
+- `decrement_photo_count`: Decrements `profiles.photo_count` on photo DELETE
+- `increment_video_storage`: Increments `profiles.video_storage_bytes` on video INSERT
+- `decrement_video_storage`: Decrements `profiles.video_storage_bytes` on video DELETE
+
+**Database Functions:**
+
+- `can_upload_photo(user_id)`: Returns `boolean` - checks if user can upload photos (Free: <25, Pro: unlimited)
+- `can_upload_video(user_id, video_size_bytes)`: Returns `boolean` - checks if user can upload videos (Free: false, Pro: storage check)
 
 ---
 
@@ -1022,7 +1050,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 RESEND_API_KEY=re_your_api_key
 
 # Frontend URL (for email links)
-FRONTEND_URL=https://tripthreads.com
+FRONTEND_URL=https://tripthreads.app
 ```
 
 ### Migration Files

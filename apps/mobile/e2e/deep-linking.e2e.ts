@@ -45,7 +45,7 @@ describe('Deep Linking E2E', () => {
 
     it('TC1.1b: Should open invite screen from universal link', async () => {
       // Open deep link with universal link (https)
-      await device.openURL({ url: `https://tripthreads.com/invite/${testInviteToken}` })
+      await device.openURL({ url: `https://tripthreads.app/invite/${testInviteToken}` })
 
       // Should navigate to invite screen
       await waitFor(element(by.text('Trip Invitation')))
@@ -76,7 +76,7 @@ describe('Deep Linking E2E', () => {
 
     it('TC1.3b: Should navigate to trip from universal link', async () => {
       // Open trip universal link
-      await device.openURL({ url: `https://tripthreads.com/trips/${testTripId}` })
+      await device.openURL({ url: `https://tripthreads.app/trips/${testTripId}` })
 
       // Should navigate to trip detail screen
       await waitFor(element(by.id('trip-detail-screen')))

@@ -19,11 +19,13 @@ OPENAI_API_KEY=sk-...your-api-key...
 ```
 
 **Get your API key:**
+
 - Go to: https://platform.openai.com/api-keys
 - Create new secret key
 - Copy and save securely
 
 **Add to Vercel Environment Variables:**
+
 1. Go to Vercel Dashboard → Project Settings → Environment Variables
 2. Add `OPENAI_API_KEY` with your key
 3. Apply to: Production, Preview, Development (optional)
@@ -31,6 +33,7 @@ OPENAI_API_KEY=sk-...your-api-key...
 ### 2. Dependencies
 
 Already installed in `package.json`:
+
 - ✅ `openai` (^6.8.0)
 - ✅ `sonner` (toast notifications)
 - ✅ `date-fns` (date formatting)
@@ -39,6 +42,7 @@ Already installed in `package.json`:
 ### 3. Database
 
 **No migrations required** - AI parser uses existing tables:
+
 - `trips`
 - `trip_participants`
 - `expenses` (existing table)
@@ -50,6 +54,7 @@ Already installed in `package.json`:
 ### 4. Code Review
 
 **Files to Review:**
+
 - [ ] `apps/web/app/api/parse-with-openai/route.ts` - API route
 - [ ] `apps/web/components/features/expenses/ExpenseInput.tsx` - Expense UI
 - [ ] `apps/web/components/features/itinerary/ItineraryInput.tsx` - Itinerary UI
@@ -58,6 +63,7 @@ Already installed in `package.json`:
 - [ ] `apps/web/app/(app)/trips/[id]/page.tsx` - Enhanced trip page
 
 **Known Issues:**
+
 - Minor ESLint warnings (unused imports in test files, `any` types in options)
 - Non-blocking, can be fixed in follow-up PR
 
@@ -70,11 +76,13 @@ Already installed in `package.json`:
 Before deploying, test locally:
 
 1. **Add API key to `.env.local`:**
+
    ```bash
    echo "OPENAI_API_KEY=sk-..." >> apps/web/.env.local
    ```
 
 2. **Start dev server:**
+
    ```bash
    npm run dev
    ```
@@ -123,17 +131,20 @@ After deploying to staging:
 ### OpenAI API Usage
 
 **Monitor in OpenAI Dashboard:**
+
 - https://platform.openai.com/usage
 - Track daily/monthly usage
 - Set up usage alerts
 
 **Expected Usage:**
+
 - Average: 100-250 tokens per parse
 - Cost: ~$0.00005 per parse
 - 1,000 parses/day: ~$0.05/day = ~$1.50/month
 - 10,000 parses/month: ~$0.50/month
 
 **Set Usage Limits:**
+
 - Go to: https://platform.openai.com/account/billing/limits
 - Set monthly limit (e.g., $10/month)
 - Enable email alerts
@@ -141,11 +152,13 @@ After deploying to staging:
 ### Error Monitoring
 
 **Sentry (already configured):**
+
 - Monitor for OpenAI API errors
 - Track parsing failures
 - Monitor server action errors
 
 **Logs to Watch:**
+
 - `[OpenAI API]` prefixed logs
 - Expense creation errors
 - Itinerary creation errors
@@ -164,11 +177,13 @@ After deploying to staging:
 ### Rate Limiting
 
 **OpenAI has built-in rate limits:**
+
 - Tier 1 (Free): 3 RPM, 200 RPD
 - Tier 2 ($5+ spent): 3,500 RPM
 - Tier 3 ($50+ spent): 5,000 RPM
 
 **If rate limited:**
+
 - Return friendly error to user
 - Implement retry with exponential backoff
 - Consider caching common parses
@@ -176,6 +191,7 @@ After deploying to staging:
 ### Input Validation
 
 Currently basic validation. Consider adding:
+
 - [ ] Input length limits (e.g., max 500 chars)
 - [ ] Rate limiting per user (e.g., 50 parses/hour)
 - [ ] Sanitize input before sending to OpenAI
@@ -193,11 +209,11 @@ Currently basic validation. Consider adding:
 ### Estimated Costs
 
 | Usage Level | Parses/Month | Est. Cost/Month |
-|-------------|--------------|-----------------|
-| Low (Beta) | 1,000 | $0.05 |
-| Medium | 10,000 | $0.50 |
-| High | 100,000 | $5.00 |
-| Very High | 1M | $50.00 |
+| ----------- | ------------ | --------------- |
+| Low (Beta)  | 1,000        | $0.05           |
+| Medium      | 10,000       | $0.50           |
+| High        | 100,000      | $5.00           |
+| Very High   | 1M           | $50.00          |
 
 ### Cost Optimization
 
@@ -318,7 +334,7 @@ Add feature flag to disable AI parser:
 
 ```typescript
 // In .env
-ENABLE_AI_PARSER=false
+ENABLE_AI_PARSER = false
 
 // In components
 if (process.env.NEXT_PUBLIC_ENABLE_AI_PARSER === 'true') {
@@ -331,6 +347,7 @@ if (process.env.NEXT_PUBLIC_ENABLE_AI_PARSER === 'true') {
 ### Option 3: Switch to Backup
 
 The regex-based parsers are still in codebase:
+
 - `packages/shared/src/parser/date.ts`
 - `packages/shared/src/parser/expense.ts`
 
@@ -374,14 +391,14 @@ After successful deployment:
 
 Track these metrics post-deployment:
 
-| Metric | Target | Check At |
-|--------|--------|----------|
-| Parser success rate | >90% | 24h, 1 week |
-| Average parse time | <2s | 24h, 1 week |
-| User adoption | >50% of expense/itinerary entries | 1 week, 1 month |
-| API cost | <$10/month | Weekly |
-| Error rate | <2% | Daily |
-| User satisfaction | Positive feedback | Ongoing |
+| Metric              | Target                            | Check At        |
+| ------------------- | --------------------------------- | --------------- |
+| Parser success rate | >90%                              | 24h, 1 week     |
+| Average parse time  | <2s                               | 24h, 1 week     |
+| User adoption       | >50% of expense/itinerary entries | 1 week, 1 month |
+| API cost            | <$10/month                        | Weekly          |
+| Error rate          | <2%                               | Daily           |
+| User satisfaction   | Positive feedback                 | Ongoing         |
 
 ---
 
@@ -400,8 +417,9 @@ Track these metrics post-deployment:
    - OpenAI account has credit
 
 3. **Test API directly:**
+
    ```bash
-   curl https://tripthreads.com/api/parse-with-openai \
+   curl https://tripthreads.app/api/parse-with-openai \
      -H "Content-Type: application/json" \
      -d '{"input":"Dinner €60 split 4 ways","parserType":"expense"}'
    ```

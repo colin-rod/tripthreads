@@ -1,8 +1,8 @@
 # TripThreads - Project Documentation
 
-**Last Updated:** November 2025
-**Version:** 0.2.0 (Phase 1-2 Complete)
-**Status:** 🚧 **Active Development** - Phase 3 (Media & Stripe) Next
+**Last Updated:** December 2025
+**Version:** 0.3.0 (Phase 1-2 Complete, Phase 3 Video Upload Complete)
+**Status:** 🚧 **Active Development** - Phase 3 (Stripe & PDF Recap) Next
 **Linear Project:** https://linear.app/crod/project/tripthreads-mvp-cda67386ed0a
 
 ---
@@ -15,7 +15,7 @@
 | ----------- | ----------- | ------------------------------------------------------ |
 | **Phase 1** | ✅ Complete | Core foundation (Auth, Trips, Participants, Invites)   |
 | **Phase 2** | ✅ Complete | Itinerary, Expenses, Multi-currency, Chat, Settlements |
-| **Phase 3** | 📋 Planned  | Media/Feed, Stripe/Pro, PDF Recap                      |
+| **Phase 3** | 🚧 Partial  | Video Upload ✅, Stripe/Pro 🚧, PDF Recap 📋           |
 | **Phase 4** | 📋 Planned  | Push Notifications, Launch Prep                        |
 | **Phase 5** | 📋 Future   | Post-MVP Enhancements                                  |
 
@@ -97,10 +97,12 @@ git push origin main       # Deploy to production
 - ✅ Shared expense tracking with multi-currency support and optimized settlements
 - ✅ Trip chat with AI assistant
 - ✅ Collaborative itinerary building
+- ✅ Video uploads with Pro tier gating (10GB storage limit)
+- ✅ Trip media feed with photos and videos
 - 🚧 Offline-first architecture (read + basic write queue) - Phase 2+
 - 🚧 Role-based collaboration (Owner, Participant, Viewer, Partial Joiner) - Partially implemented
-- 📋 Trip media feed with photos/videos - Phase 3
-- 📋 Pro tier with unlimited participants/photos and PDF recap - Phase 3
+- 📋 Pro tier with Stripe payment integration - Phase 3 (In Progress)
+- 📋 PDF trip recap generation - Phase 3
 
 ---
 
@@ -161,6 +163,56 @@ git push origin main       # Deploy to production
 - ✅ Notification preference inheritance (trip-specific overrides global)
 - ✅ Notification logging for testing and analytics
 - ✅ Responsive HTML email templates via Resend
+
+#### Video Upload & Media Feed (December 2025)
+
+**Status:** ✅ **Complete** - CRO-739 Video Upload Gating
+
+**Frontend Components:**
+
+- ✅ VideoUpload component with drag-and-drop support
+- ✅ PhotoGallery component updated to display photos and videos
+- ✅ UpgradePromptDialog enhanced with video limit type
+- ✅ Native HTML5 video playback with controls
+- ✅ Storage usage display for Pro users (X GB / 10 GB used)
+- ✅ File size display for videos
+- ✅ Progress indicators and error handling
+
+**Backend Implementation:**
+
+- ✅ Database migration (video_storage_bytes, file_size_bytes columns)
+- ✅ `/api/upload-video` POST endpoint with validation
+- ✅ `/api/upload-video` GET endpoint (permissions check)
+- ✅ Storage-based limit checking (10GB for Pro users)
+- ✅ File size validation (100MB max per video)
+- ✅ File type validation (MP4, WebM, MOV, QuickTime)
+- ✅ `checkVideoLimit()` function in subscription/limits
+- ✅ Database triggers for storage tracking
+
+**Tier Limits:**
+
+- ✅ Free tier: 0 videos (hard block with upgrade prompt)
+- ✅ Pro tier: 10GB total video storage, 100MB max file size
+- ✅ Separate limits for photos (25 free/unlimited pro) and videos
+
+**Test Coverage:**
+
+- ✅ 14/14 API endpoint tests passing
+- ✅ 17 VideoUpload component tests
+- ✅ 25+ integration tests (storage tracking, limits, validation)
+- ✅ 15 E2E Playwright scenarios
+
+**Features:**
+
+- ✅ Free users blocked with clear upgrade prompts
+- ✅ Pro users can upload videos (MP4, WebM, MOV, QuickTime)
+- ✅ 10GB storage limit enforcement for Pro users
+- ✅ 100MB file size limit per video
+- ✅ Real-time storage usage tracking
+- ✅ Low storage warnings (<1GB remaining)
+- ✅ Videos appear in media feed with playback controls
+- ✅ File size displayed below video captions
+- ✅ No compression (videos stored as-is)
 
 #### Developer Experience
 
@@ -260,12 +312,13 @@ git push origin main       # Deploy to production
 
 ### 📋 Planned (Phase 3-5)
 
-#### Phase 3: Media & Pro Features (Next)
+#### Phase 3: Media & Pro Features (Partial ✅)
 
-- 📋 Photo/video uploads to trip feed
-- 📋 Trip media timeline with day tagging
-- 📋 Stripe integration for Pro subscriptions
-- 📋 Pro tier features (unlimited participants/photos)
+- ✅ Photo uploads to trip feed (Phase 2 - Complete)
+- ✅ Video uploads with Pro tier gating (December 2025 - Complete)
+- ✅ Trip media timeline with day grouping (December 2025 - Complete)
+- 🚧 Stripe integration for Pro subscriptions (In Progress - CRO-813)
+- ✅ Pro tier limit enforcement (photos, videos, trips, participants)
 - 📋 PDF trip recap generation
 
 #### Phase 4: Push & Launch
@@ -548,12 +601,12 @@ main (production)
 ### Branch Purposes
 
 - **`main`** - Production branch (✅ Ready)
-  - Deploys to: `tripthreads.com` (web) 📋 Not yet live
+  - Deploys to: `tripthreads.app` (web) 📋 Not yet live
   - Protected, requires PR approval
   - Only merge from `development`
 
 - **`development`** - Staging branch (✅ Active)
-  - Deploys to: `dev.tripthreads.com` 🚧 URL pending
+  - Deploys to: `dev.tripthreads.app` 🚧 URL pending
   - Integration branch for all features
   - Default branch for PRs
 

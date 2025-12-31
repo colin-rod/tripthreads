@@ -277,8 +277,8 @@ toast({
 - `STRIPE_SECRET_KEY` - Stripe secret key (server-side)
 - `NEXT_PUBLIC_APP_URL` - Application base URL for return URL
   - Local: `http://localhost:3000`
-  - Staging: `https://dev.tripthreads.com`
-  - Production: `https://tripthreads.com`
+  - Staging: `https://dev.tripthreads.app`
+  - Production: `https://tripthreads.app`
 
 ## Return URL Behavior
 
@@ -291,8 +291,8 @@ toast({
 **Examples:**
 
 - Local: `http://localhost:3000/settings?tab=subscription`
-- Staging: `https://dev.tripthreads.com/settings?tab=subscription`
-- Production: `https://tripthreads.com/settings?tab=subscription`
+- Staging: `https://dev.tripthreads.app/settings?tab=subscription`
+- Production: `https://tripthreads.app/settings?tab=subscription`
 
 The `?tab=subscription` query parameter ensures the Subscription tab is active when the user returns.
 
@@ -315,7 +315,7 @@ See [docs/STRIPE_WEBHOOK_SETUP.md](STRIPE_WEBHOOK_SETUP.md) for webhook details.
 Before deploying to production:
 
 - [ ] Customer Portal configured in **live mode** Stripe Dashboard
-- [ ] Return URL set to production domain (`https://tripthreads.com/settings?tab=subscription`)
+- [ ] Return URL set to production domain (`https://tripthreads.app/settings?tab=subscription`)
 - [ ] Cancellation policy configured (immediate vs. at period end)
 - [ ] Branding customized (logo, colors)
 - [ ] All 7 tests passing

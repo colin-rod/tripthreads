@@ -356,11 +356,11 @@ export default function TermsPage() {
           <ul className="list-none mb-4 space-y-2">
             <li>
               Email:{' '}
-              <a href="mailto:support@tripthreads.com" className="text-primary hover:underline">
-                support@tripthreads.com
+              <a href="mailto:support@tripthreads.app" className="text-primary hover:underline">
+                support@tripthreads.app
               </a>
             </li>
-            <li>Website: tripthreads.com</li>
+            <li>Website: tripthreads.app</li>
           </ul>
         </section>
       </div>

@@ -349,7 +349,7 @@ export default function CookiesPage() {
               If we add new cookie categories requiring consent, we&apos;ll notify you via the
               cookie banner
             </li>
-            <li>You can review the current policy at any time at tripthreads.com/cookies</li>
+            <li>You can review the current policy at any time at tripthreads.app/cookies</li>
           </ul>
         </section>
 
@@ -361,8 +361,8 @@ export default function CookiesPage() {
           <ul className="list-none mb-4 space-y-2">
             <li>
               <strong>Email:</strong>{' '}
-              <a href="mailto:support@tripthreads.com" className="text-primary hover:underline">
-                support@tripthreads.com
+              <a href="mailto:support@tripthreads.app" className="text-primary hover:underline">
+                support@tripthreads.app
               </a>
             </li>
             <li>

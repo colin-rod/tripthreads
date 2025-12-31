@@ -48,10 +48,17 @@ const UI_TO_ITEM_TYPE_MAP: Record<UiItineraryType, ItineraryItemType> = {
   activity: 'activity',
 }
 
+export interface ChatItemReference {
+  id: string
+  type: 'expense' | 'itinerary'
+  itineraryType?: string
+  title: string
+}
+
 interface ParsedItemModalProps {
   open: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm: (createdItems?: ChatItemReference[]) => void
   tripId: string
   parsedData: {
     command: string
@@ -234,6 +241,8 @@ export function ParsedItemModal({
     setIsSubmitting(true)
 
     try {
+      const createdItems: ChatItemReference[] = []
+
       // Create expense if checked
       if (createExpenseChecked && parsedData.hasExpense) {
         const totalPayerAmount = payers.reduce((sum, p) => sum + Number(p.amount), 0)
@@ -263,6 +272,16 @@ export function ParsedItemModal({
           setIsSubmitting(false)
           return
         }
+
+        // Capture expense ID and details
+        if (result.expense) {
+          const formattedAmount = expenseAmount.toFixed(2)
+          createdItems.push({
+            id: result.expense.id,
+            type: 'expense',
+            title: `${expenseDescription} - ${expenseCurrency}${formattedAmount}`,
+          })
+        }
       }
 
       // Create itinerary if checked
@@ -287,10 +306,20 @@ export function ParsedItemModal({
           setIsSubmitting(false)
           return
         }
+
+        // Capture itinerary item ID and details
+        if (result.item) {
+          createdItems.push({
+            id: result.item.id,
+            type: 'itinerary',
+            itineraryType: UI_TO_ITEM_TYPE_MAP[itineraryType],
+            title: itineraryTitle,
+          })
+        }
       }
 
       toast.success('Items created successfully!')
-      onConfirm()
+      onConfirm(createdItems)
     } catch (error) {
       console.error('Error creating items:', error)
       toast.error('Failed to create items')

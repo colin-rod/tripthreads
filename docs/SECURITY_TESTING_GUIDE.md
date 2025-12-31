@@ -28,7 +28,7 @@ This guide provides step-by-step procedures for security testing TripThreads. Te
 
 **Testing Environments:**
 
-- **Staging**: `https://dev.tripthreads.com` (or Vercel preview deployment)
+- **Staging**: `https://dev.tripthreads.app` (or Vercel preview deployment)
 - **Local**: `http://localhost:3000` (for development testing only)
 
 ---
@@ -99,7 +99,7 @@ Viewer Account:
 
 2. **Set Target URL**
    - Mode: Standard Mode
-   - Target: `https://dev.tripthreads.com`
+   - Target: `https://dev.tripthreads.app`
 
 3. **Configure Authentication** (if scanning authenticated pages)
    - Tools → Options → Authentication
@@ -178,7 +178,7 @@ Save to: docs/security-audit/zap-scan-report-YYYY-MM-DD.html
 
 ```bash
 # Should return 401 Unauthorized
-curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
+curl -X POST https://dev.tripthreads.app/api/parse-with-openai \
   -H "Content-Type: application/json" \
   -d '{"input": "50 EUR dinner", "parserType": "expense"}'
 
@@ -193,7 +193,7 @@ curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
 
 ```bash
 # Use invalid/expired token
-curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
+curl -X POST https://dev.tripthreads.app/api/parse-with-openai \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer INVALID_TOKEN" \
   -d '{"input": "50 EUR dinner", "parserType": "expense"}'
@@ -214,7 +214,7 @@ TRIP_A_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 # 2. Try to access Trip A as User B
 # Log in as User B, get session cookie
 # Attempt to fetch Trip A's data
-curl https://dev.tripthreads.com/api/trips/${TRIP_A_ID} \
+curl https://dev.tripthreads.app/api/trips/${TRIP_A_ID} \
   -H "Cookie: sb-access-token=USER_B_TOKEN"
 
 # Expected: 403 Forbidden or empty response (RLS blocks)
@@ -229,7 +229,7 @@ curl https://dev.tripthreads.com/api/trips/${TRIP_A_ID} \
 ```bash
 # Log in as viewer account
 # Attempt to create expense
-curl -X POST https://dev.tripthreads.com/api/expenses \
+curl -X POST https://dev.tripthreads.app/api/expenses \
   -H "Cookie: sb-access-token=VIEWER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -251,7 +251,7 @@ curl -X POST https://dev.tripthreads.com/api/expenses \
 ```bash
 # Log in as participant account (not owner)
 # Attempt to remove another participant
-curl -X DELETE https://dev.tripthreads.com/api/participants/${PARTICIPANT_ID} \
+curl -X DELETE https://dev.tripthreads.app/api/participants/${PARTICIPANT_ID} \
   -H "Cookie: sb-access-token=PARTICIPANT_TOKEN"
 
 # Expected: 403 Forbidden
@@ -267,7 +267,7 @@ curl -X DELETE https://dev.tripthreads.com/api/participants/${PARTICIPANT_ID} \
 
 ```bash
 # Attempt to modify trip_id in request
-curl -X POST https://dev.tripthreads.com/api/expenses \
+curl -X POST https://dev.tripthreads.app/api/expenses \
   -H "Cookie: sb-access-token=VALID_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -288,7 +288,7 @@ curl -X POST https://dev.tripthreads.com/api/expenses \
 
 ```bash
 # Attempt to specify different user_id
-curl -X POST https://dev.tripthreads.com/api/expenses \
+curl -X POST https://dev.tripthreads.app/api/expenses \
   -H "Cookie: sb-access-token=VALID_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -315,7 +315,7 @@ curl -X POST https://dev.tripthreads.com/api/expenses \
 # Script to test rate limiting
 for i in {1..110}; do
   echo "Request $i"
-  curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
+  curl -X POST https://dev.tripthreads.app/api/parse-with-openai \
     -H "Cookie: sb-access-token=VALID_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"input": "test", "parserType": "expense"}' \
@@ -342,7 +342,7 @@ done
 # Upload 11 photos in quick succession
 for i in {1..11}; do
   echo "Upload $i"
-  curl -X POST https://dev.tripthreads.com/api/upload-photo \
+  curl -X POST https://dev.tripthreads.app/api/upload-photo \
     -H "Cookie: sb-access-token=VALID_TOKEN" \
     -F "fullImage=@test-photo.jpg" \
     -F "thumbnail=@test-thumb.jpg" \
@@ -368,7 +368,7 @@ done
 
 ```bash
 # Test from different origin
-curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
+curl -X POST https://dev.tripthreads.app/api/parse-with-openai \
   -H "Origin: https://evil.com" \
   -H "Content-Type: application/json" \
   -H "Cookie: sb-access-token=VALID_TOKEN" \
@@ -376,7 +376,7 @@ curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
   -v 2>&1 | grep -i "access-control"
 
 # Expected: No Access-Control-Allow-Origin header
-# or Access-Control-Allow-Origin: https://dev.tripthreads.com
+# or Access-Control-Allow-Origin: https://dev.tripthreads.app
 ```
 
 **Pass Criteria:** CORS headers only allow same-origin or explicitly allowed origins
@@ -391,7 +391,7 @@ curl -X POST https://dev.tripthreads.com/api/parse-with-openai \
 
 ```bash
 # Attempt to upload non-image file
-curl -X POST https://dev.tripthreads.com/api/upload-photo \
+curl -X POST https://dev.tripthreads.app/api/upload-photo \
   -H "Cookie: sb-access-token=VALID_TOKEN" \
   -F "fullImage=@malicious.php" \
   -F "thumbnail=@thumb.jpg" \
@@ -412,7 +412,7 @@ curl -X POST https://dev.tripthreads.com/api/upload-photo \
 dd if=/dev/zero of=large-file.jpg bs=1m count=51
 
 # Attempt to upload
-curl -X POST https://dev.tripthreads.com/api/upload-photo \
+curl -X POST https://dev.tripthreads.app/api/upload-photo \
   -H "Cookie: sb-access-token=VALID_TOKEN" \
   -F "fullImage=@large-file.jpg" \
   -F "thumbnail=@thumb.jpg" \
@@ -434,7 +434,7 @@ curl -X POST https://dev.tripthreads.com/api/upload-photo \
 
 ```bash
 # Check security headers
-curl -I https://dev.tripthreads.com/ | grep -E "(Content-Security-Policy|Strict-Transport|X-Frame|X-Content-Type|Referrer-Policy|Permissions-Policy)"
+curl -I https://dev.tripthreads.app/ | grep -E "(Content-Security-Policy|Strict-Transport|X-Frame|X-Content-Type|Referrer-Policy|Permissions-Policy)"
 
 # Expected headers:
 # Content-Security-Policy: default-src 'self'; ...
@@ -468,7 +468,7 @@ curl -I https://dev.tripthreads.com/ | grep -E "(Content-Security-Policy|Strict-
 **Purpose:** Get automated security headers score
 
 1. Visit: https://securityheaders.com/
-2. Enter: `https://dev.tripthreads.com`
+2. Enter: `https://dev.tripthreads.app`
 3. Click "Scan"
 
 **Expected Score:** A+ or A

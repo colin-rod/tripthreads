@@ -615,6 +615,7 @@ export type Database = {
           caption: string | null
           created_at: string
           date_taken: string
+          file_size_bytes: number
           id: string
           thumbnail_url: string | null
           trip_id: string
@@ -626,6 +627,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           date_taken: string
+          file_size_bytes?: number
           id?: string
           thumbnail_url?: string | null
           trip_id: string
@@ -637,6 +639,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           date_taken?: string
+          file_size_bytes?: number
           id?: string
           thumbnail_url?: string | null
           trip_id?: string
@@ -831,6 +834,27 @@ export type Database = {
           },
         ]
       }
+      processed_webhook_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string
+          processed_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type: string
+          processed_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string
+          processed_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -840,18 +864,22 @@ export type Database = {
           deleted_at: string | null
           email: string
           full_name: string | null
+          grace_period_end: string | null
           id: string
           is_deleted: boolean
           notification_preferences: Json | null
+          photo_count: number
           plan: string
           plan_expires_at: string | null
           privacy_accepted_at: string | null
           profile_completed_at: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscription_currency: string | null
           subscription_price_id: string | null
           tos_accepted_at: string | null
           updated_at: string
+          video_storage_bytes: number
         }
         Insert: {
           avatar_url?: string | null
@@ -861,18 +889,22 @@ export type Database = {
           deleted_at?: string | null
           email: string
           full_name?: string | null
+          grace_period_end?: string | null
           id: string
           is_deleted?: boolean
           notification_preferences?: Json | null
+          photo_count?: number
           plan?: string
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_currency?: string | null
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
+          video_storage_bytes?: number
         }
         Update: {
           avatar_url?: string | null
@@ -882,18 +914,22 @@ export type Database = {
           deleted_at?: string | null
           email?: string
           full_name?: string | null
+          grace_period_end?: string | null
           id?: string
           is_deleted?: boolean
           notification_preferences?: Json | null
+          photo_count?: number
           plan?: string
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_currency?: string | null
           subscription_price_id?: string | null
           tos_accepted_at?: string | null
           updated_at?: string
+          video_storage_bytes?: number
         }
         Relationships: []
       }
@@ -1182,6 +1218,13 @@ export type Database = {
         Args: { p_participant_id: string }
         Returns: number
       }
+      can_add_participant: { Args: { trip_id_param: string }; Returns: boolean }
+      can_create_trip: { Args: { user_id: string }; Returns: boolean }
+      can_upload_photo: { Args: { user_id: string }; Returns: boolean }
+      can_upload_video: {
+        Args: { user_id: string; video_size_bytes: number }
+        Returns: boolean
+      }
       can_user_create_trip: {
         Args: { trip_owner_id: string }
         Returns: boolean
@@ -1211,6 +1254,7 @@ export type Database = {
           current_count: number
         }[]
       }
+      cleanup_expired_grace_periods: { Args: never; Returns: number }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_audit_log: {
@@ -1260,6 +1304,7 @@ export type Database = {
         Args: { p_date: string; p_participant_id: string }
         Returns: boolean
       }
+      is_pro_user: { Args: { user_id: string }; Returns: boolean }
       is_profile_complete: { Args: { p_user_id: string }; Returns: boolean }
       is_trip_owner: {
         Args: { p_trip_id: string; p_user_id: string }

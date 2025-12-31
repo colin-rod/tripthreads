@@ -22,8 +22,8 @@ This guide covers deploying TripThreads to staging and production environments.
 | Environment     | Web Hosting         | Mobile Builds               | Database            | Branch        |
 | --------------- | ------------------- | --------------------------- | ------------------- | ------------- |
 | **Development** | localhost:3000      | Expo Dev                    | Supabase Dev        | `feature/*`   |
-| **Staging**     | dev.tripthreads.com | TestFlight/Internal Testing | Supabase Staging    | `development` |
-| **Production**  | tripthreads.com     | App Store/Play Store        | Supabase Production | `main`        |
+| **Staging**     | dev.tripthreads.app | TestFlight/Internal Testing | Supabase Staging    | `development` |
+| **Production**  | tripthreads.app     | App Store/Play Store        | Supabase Production | `main`        |
 
 ### Deployment Triggers
 
@@ -155,8 +155,8 @@ eas secret:create --scope project --name STRIPE_PUBLISHABLE_KEY --value pk_live_
      - **Development:** For local development (optional)
 
 4. **Configure domains**
-   - **Production:** `tripthreads.com`
-   - **Staging:** `dev.tripthreads.com`
+   - **Production:** `tripthreads.app`
+   - **Staging:** `dev.tripthreads.app`
 
 ### Deployment Workflow
 
@@ -168,7 +168,7 @@ git checkout development
 git merge feature/your-feature
 git push origin development
 
-# Vercel auto-deploys to dev.tripthreads.com
+# Vercel auto-deploys to dev.tripthreads.app
 # Check deployment status at https://vercel.com/your-team/tripthreads
 ```
 
@@ -179,7 +179,7 @@ git push origin development
 gh pr create --base main --head development --title "Release: vX.X.X"
 
 # After review and approval, merge to main
-# Vercel auto-deploys to tripthreads.com
+# Vercel auto-deploys to tripthreads.app
 ```
 
 ### Environment Variables per Environment
@@ -370,7 +370,7 @@ supabase db push --project-ref your-project-ref
 3. Get test API keys from Developers → API keys
 4. Set up test webhook:
    ```
-   Endpoint URL: https://dev.tripthreads.com/api/webhooks/stripe
+   Endpoint URL: https://dev.tripthreads.app/api/webhooks/stripe
    Events: customer.subscription.created, customer.subscription.updated, customer.subscription.deleted
    ```
 5. Add webhook secret to Vercel staging environment
@@ -382,7 +382,7 @@ supabase db push --project-ref your-project-ref
 3. Get live API keys
 4. Set up live webhook:
    ```
-   Endpoint URL: https://tripthreads.com/api/webhooks/stripe
+   Endpoint URL: https://tripthreads.app/api/webhooks/stripe
    Events: customer.subscription.created, customer.subscription.updated, customer.subscription.deleted
    ```
 5. Add webhook secret to Vercel production environment

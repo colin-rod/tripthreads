@@ -192,34 +192,34 @@
 
 ## 🎯 Feature Comparison: Mobile vs Web
 
-| Feature                  | Web              | Mobile            | Status                          |
-| ------------------------ | ---------------- | ----------------- | ------------------------------- |
-| **Authentication**       | ✅               | ✅                | ✅ Complete                     |
-| **Trip List**            | ✅               | ✅                | ✅ Complete                     |
-| **Create Trip**          | ✅               | ✅                | ✅ Complete (Phase 2)           |
-| **Edit Trip**            | ✅               | ✅                | ✅ **Complete** (Phase 2) 🆕    |
-| **Trip Settings**        | ✅               | ✅                | ✅ Complete (Phase 2)           |
-| **Invite Sharing**       | ✅ (Dialog + QR) | ✅ (Native share) | ✅ Complete (Phase 2)           |
-| **Accept Invite**        | ✅               | ✅                | ✅ Complete                     |
-| **View Participants**    | ✅               | ✅                | ✅ Complete (Phase 2)           |
-| **Delete Trip**          | ✅               | ✅                | ✅ Complete (Phase 2)           |
-| **Itinerary (View)**     | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Itinerary (Add)**      | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Itinerary (Edit)**     | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Itinerary (Delete)**   | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Expenses (View)**      | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Expenses (Add)**       | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Expenses (Edit)**      | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Expenses (Delete)**    | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Split Calculator**     | ✅               | ✅ (Equal only)   | ✅ **Complete** (Phase 3) 🆕    |
-| **Settlements**          | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Settlement Optimize**  | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
-| **Multi-Currency**       | ✅               | ✅ (Display only) | ✅ **Partial** (Phase 3) 🆕     |
-| **NL Itinerary Parser**  | ✅               | ❌                | ⏳ Deferred (Nice-to-have)      |
-| **NL Expense Parser**    | ✅               | ❌                | ⏳ Deferred (Nice-to-have)      |
-| **Advanced Splits**      | ✅               | ❌                | ⏳ Deferred (Percentage/Custom) |
-| **Media/Photos**         | ✅               | ❌                | ⏳ Missing (Phase 4)            |
-| **Offline Sync**         | ✅               | ❌                | ⏳ Missing (Phase 5)            |
+| Feature                 | Web              | Mobile            | Status                          |
+| ----------------------- | ---------------- | ----------------- | ------------------------------- |
+| **Authentication**      | ✅               | ✅                | ✅ Complete                     |
+| **Trip List**           | ✅               | ✅                | ✅ Complete                     |
+| **Create Trip**         | ✅               | ✅                | ✅ Complete (Phase 2)           |
+| **Edit Trip**           | ✅               | ✅                | ✅ **Complete** (Phase 2) 🆕    |
+| **Trip Settings**       | ✅               | ✅                | ✅ Complete (Phase 2)           |
+| **Invite Sharing**      | ✅ (Dialog + QR) | ✅ (Native share) | ✅ Complete (Phase 2)           |
+| **Accept Invite**       | ✅               | ✅                | ✅ Complete                     |
+| **View Participants**   | ✅               | ✅                | ✅ Complete (Phase 2)           |
+| **Delete Trip**         | ✅               | ✅                | ✅ Complete (Phase 2)           |
+| **Itinerary (View)**    | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Itinerary (Add)**     | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Itinerary (Edit)**    | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Itinerary (Delete)**  | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Expenses (View)**     | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Expenses (Add)**      | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Expenses (Edit)**     | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Expenses (Delete)**   | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Split Calculator**    | ✅               | ✅ (Equal only)   | ✅ **Complete** (Phase 3) 🆕    |
+| **Settlements**         | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Settlement Optimize** | ✅               | ✅                | ✅ **Complete** (Phase 3) 🆕    |
+| **Multi-Currency**      | ✅               | ✅ (Display only) | ✅ **Partial** (Phase 3) 🆕     |
+| **NL Itinerary Parser** | ✅               | ❌                | ⏳ Deferred (Nice-to-have)      |
+| **NL Expense Parser**   | ✅               | ❌                | ⏳ Deferred (Nice-to-have)      |
+| **Advanced Splits**     | ✅               | ❌                | ⏳ Deferred (Percentage/Custom) |
+| **Media/Photos**        | ✅               | ❌                | ⏳ Missing (Phase 4)            |
+| **Offline Sync**        | ✅               | ❌                | ⏳ Missing (Phase 5)            |
 
 ---
 
@@ -479,7 +479,7 @@
   "expo": {
     "scheme": "tripthreads",
     "ios": {
-      "associatedDomains": ["applinks:tripthreads.com"]
+      "associatedDomains": ["applinks:tripthreads.app"]
     },
     "android": {
       "intentFilters": [
@@ -487,7 +487,7 @@
           "action": "VIEW",
           "data": {
             "scheme": "https",
-            "host": "tripthreads.com",
+            "host": "tripthreads.app",
             "pathPrefix": "/invite"
           }
         }

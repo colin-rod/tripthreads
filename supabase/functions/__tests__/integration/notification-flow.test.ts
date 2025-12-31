@@ -209,7 +209,7 @@ Deno.test('sendEmailNotification - successful delivery', async () => {
 
   const result = await sendEmailNotification(
     'test-api-key',
-    'TripThreads <notifications@tripthreads.com>',
+    'TripThreads <notifications@tripthreads.app>',
     'recipient@example.com',
     'Test Subject',
     '<p>Test HTML</p>'
@@ -234,7 +234,7 @@ Deno.test('sendEmailNotification - failed delivery', async () => {
 
   const result = await sendEmailNotification(
     'test-api-key',
-    'TripThreads <notifications@tripthreads.com>',
+    'TripThreads <notifications@tripthreads.app>',
     'recipient@example.com',
     'Test Subject',
     '<p>Test HTML</p>'
@@ -378,7 +378,7 @@ Deno.test('E2E: Expense notification with mixed preferences', async () => {
   for (const participant of toNotify) {
     const emailResult = await sendEmailNotification(
       'test-api-key',
-      'TripThreads <notifications@tripthreads.com>',
+      'TripThreads <notifications@tripthreads.app>',
       participant.user.email,
       'New Expense',
       '<p>Test</p>'

@@ -452,7 +452,7 @@ What You Should Do:
 We sincerely apologize for this incident and are taking steps to
 prevent it from happening again.
 
-Contact us at security@tripthreads.com with questions.
+Contact us at security@tripthreads.app with questions.
 
 Sincerely,
 TripThreads Security Team
@@ -594,7 +594,7 @@ ETA: [Estimated resolution time]
 
 **Channels:**
 
-1. Status page (status.tripthreads.com - future)
+1. Status page (status.tripthreads.app - future)
 2. Email notifications
 3. Social media (Twitter/X)
 4. In-app banner
@@ -693,7 +693,7 @@ ETA: [Estimated resolution time]
 **Incident Commander:**
 
 - Name: Colin Rodriguez
-- Email: colin@tripthreads.com
+- Email: colin@tripthreads.app
 - Phone: [Redacted]
 
 **Technical Support:**

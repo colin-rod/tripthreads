@@ -34,6 +34,14 @@ jest.mock('@sentry/nextjs', () => ({
   captureMessage: jest.fn(),
 }))
 
+// Mock webhook idempotency functions
+const mockCheckWebhookProcessed = jest.fn()
+const mockMarkWebhookProcessed = jest.fn()
+jest.mock('@/lib/stripe/utils', () => ({
+  checkWebhookProcessed: (...args: unknown[]) => mockCheckWebhookProcessed(...args),
+  markWebhookProcessed: (...args: unknown[]) => mockMarkWebhookProcessed(...args),
+}))
+
 describe('POST /api/webhooks/stripe', () => {
   const originalEnv = process.env
 
@@ -44,6 +52,10 @@ describe('POST /api/webhooks/stripe', () => {
 
     // Reset mocks
     jest.clearAllMocks()
+
+    // Default idempotency mock implementation (not processed by default)
+    mockCheckWebhookProcessed.mockResolvedValue({ processed: false })
+    mockMarkWebhookProcessed.mockResolvedValue({ success: true })
 
     // Default Supabase mock implementation
     mockFrom.mockReturnValue({
@@ -426,6 +438,155 @@ describe('POST /api/webhooks/stripe', () => {
     })
   })
 
+  describe('charge.refunded Event', () => {
+    const mockEvent: Partial<Stripe.Event> = {
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_test_123',
+          customer: 'cus_test_123',
+        } as Stripe.Charge,
+      },
+    }
+
+    it('downgrades user to Free plan and clears subscription data', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      const updateMock = jest.fn().mockReturnThis()
+      const eqMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'free' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: selectMock,
+          })),
+        })),
+        update: updateMock,
+        eq: eqMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockFrom).toHaveBeenCalledWith('profiles')
+      expect(updateMock).toHaveBeenCalledWith({
+        plan: 'free',
+        plan_expires_at: null,
+        stripe_subscription_id: null,
+        subscription_price_id: null,
+      })
+    })
+
+    it('handles missing customer ID gracefully', async () => {
+      const eventWithoutCustomer: Partial<Stripe.Event> = {
+        type: 'charge.refunded',
+        data: {
+          object: {
+            id: 'ch_test_123',
+            customer: null,
+          } as unknown as Stripe.Charge,
+        },
+      }
+
+      mockVerifyWebhookSignature.mockReturnValue(eventWithoutCustomer)
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(eventWithoutCustomer),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      expect(mockFrom).not.toHaveBeenCalled()
+    })
+
+    it('handles user not found gracefully', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      mockFrom.mockReturnValue({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: new Error('User not found'),
+            }),
+          })),
+        })),
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+    })
+
+    it('handles database error when updating user', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValueOnce({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: selectMock,
+          })),
+        })),
+      })
+
+      mockFrom.mockReturnValueOnce({
+        update: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({
+          data: null,
+          error: new Error('Database error'),
+        }),
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toContain('Failed to process refund')
+    })
+  })
+
   describe('Unknown Event Types', () => {
     it('returns 200 for unhandled event types', async () => {
       const unknownEvent: Partial<Stripe.Event> = {
@@ -449,6 +610,207 @@ describe('POST /api/webhooks/stripe', () => {
 
       expect(response.status).toBe(200)
       expect(mockFrom).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Webhook Idempotency', () => {
+    const mockEvent: Partial<Stripe.Event> = {
+      id: 'evt_test_duplicate123',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_123',
+          mode: 'subscription',
+          customer: 'cus_test_123',
+          client_reference_id: 'user-123',
+          subscription: 'sub_test_123',
+          metadata: {
+            userId: 'user-123',
+            priceId: 'price_monthly123',
+          },
+        } as unknown as Stripe.Checkout.Session,
+      },
+    }
+
+    it('returns success immediately if webhook event already processed', async () => {
+      // Mock that event has already been processed
+      mockCheckWebhookProcessed.mockResolvedValue({ processed: true })
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.received).toBe(true)
+      // Verify that the event handler was NOT called
+      expect(mockFrom).not.toHaveBeenCalled()
+      // Verify that event was NOT marked as processed again
+      expect(mockMarkWebhookProcessed).not.toHaveBeenCalled()
+    })
+
+    it('processes event and marks as processed when event is new', async () => {
+      mockCheckWebhookProcessed.mockResolvedValue({ processed: false })
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const updateMock = jest.fn().mockReturnThis()
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        update: updateMock,
+        eq: jest.fn().mockReturnThis(),
+        select: selectMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      // Verify that event was checked for idempotency
+      expect(mockCheckWebhookProcessed).toHaveBeenCalledWith(
+        expect.anything(), // supabase client
+        'evt_test_duplicate123',
+        'checkout.session.completed'
+      )
+      // Verify that event handler WAS called
+      expect(updateMock).toHaveBeenCalled()
+      // Verify that event was marked as processed
+      expect(mockMarkWebhookProcessed).toHaveBeenCalledWith(
+        expect.anything(), // supabase client
+        'evt_test_duplicate123',
+        'checkout.session.completed'
+      )
+    })
+
+    it('continues processing even if idempotency check fails', async () => {
+      // Mock idempotency check failure (database error)
+      mockCheckWebhookProcessed.mockResolvedValue({
+        processed: false,
+        error: new Error('Database connection failed'),
+      })
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const updateMock = jest.fn().mockReturnThis()
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        update: updateMock,
+        eq: jest.fn().mockReturnThis(),
+        select: selectMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(200)
+      // Verify that event processing continued despite check failure (fail-open approach)
+      expect(updateMock).toHaveBeenCalled()
+    })
+
+    it('succeeds even if marking as processed fails', async () => {
+      mockCheckWebhookProcessed.mockResolvedValue({ processed: false })
+      // Mock failure to mark as processed
+      mockMarkWebhookProcessed.mockResolvedValue({
+        success: false,
+        error: new Error('Database insert failed'),
+      })
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const updateMock = jest.fn().mockReturnThis()
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        update: updateMock,
+        eq: jest.fn().mockReturnThis(),
+        select: selectMock,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request)
+
+      // Webhook should still return success (event was processed successfully)
+      expect(response.status).toBe(200)
+      expect(updateMock).toHaveBeenCalled()
+    })
+
+    it('prevents duplicate processing for same event ID sent twice', async () => {
+      mockVerifyWebhookSignature.mockReturnValue(mockEvent)
+
+      const updateMock = jest.fn().mockReturnThis()
+      const selectMock = jest.fn().mockResolvedValue({
+        data: { id: 'user-123', plan: 'pro' },
+        error: null,
+      })
+
+      mockFrom.mockReturnValue({
+        update: updateMock,
+        eq: jest.fn().mockReturnThis(),
+        select: selectMock,
+      })
+
+      // First request: Event is new
+      mockCheckWebhookProcessed.mockResolvedValueOnce({ processed: false })
+      const request1 = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+      const response1 = await POST(request1)
+      expect(response1.status).toBe(200)
+      expect(updateMock).toHaveBeenCalledTimes(1)
+
+      // Second request: Event already processed (new request object with same event data)
+      mockCheckWebhookProcessed.mockResolvedValueOnce({ processed: true })
+      const request2 = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        headers: {
+          'stripe-signature': 'valid_signature',
+        },
+        body: JSON.stringify(mockEvent),
+      })
+      const response2 = await POST(request2)
+      expect(response2.status).toBe(200)
+      // Verify that handler was NOT called again
+      expect(updateMock).toHaveBeenCalledTimes(1) // Still 1 from first call
     })
   })
 })

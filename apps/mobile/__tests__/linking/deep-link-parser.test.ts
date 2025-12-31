@@ -13,7 +13,7 @@ describe('parseDeepLink', () => {
     })
 
     it('parses universal link invite link', () => {
-      const url = 'https://tripthreads.com/invite/abc123'
+      const url = 'https://tripthreads.app/invite/abc123'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -23,7 +23,7 @@ describe('parseDeepLink', () => {
     })
 
     it('parses development universal link invite link', () => {
-      const url = 'https://dev.tripthreads.com/invite/abc123'
+      const url = 'https://dev.tripthreads.app/invite/abc123'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -33,7 +33,7 @@ describe('parseDeepLink', () => {
     })
 
     it('parses invite link with redirect query param', () => {
-      const url = 'https://tripthreads.com/invite/abc123?redirect=/trips/xyz'
+      const url = 'https://tripthreads.app/invite/abc123?redirect=/trips/xyz'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -44,7 +44,7 @@ describe('parseDeepLink', () => {
     })
 
     it('handles invite link with trailing slash', () => {
-      const url = 'https://tripthreads.com/invite/abc123/'
+      const url = 'https://tripthreads.app/invite/abc123/'
       const result = parseDeepLink(url)
 
       expect(result.type).toBe('invite')
@@ -52,7 +52,7 @@ describe('parseDeepLink', () => {
     })
 
     it('handles invite link with UUID token', () => {
-      const url = 'https://tripthreads.com/invite/550e8400-e29b-41d4-a716-446655440000'
+      const url = 'https://tripthreads.app/invite/550e8400-e29b-41d4-a716-446655440000'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -74,7 +74,7 @@ describe('parseDeepLink', () => {
     })
 
     it('parses universal link trip link', () => {
-      const url = 'https://tripthreads.com/trips/xyz789'
+      const url = 'https://tripthreads.app/trips/xyz789'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -84,7 +84,7 @@ describe('parseDeepLink', () => {
     })
 
     it('parses development universal link trip link', () => {
-      const url = 'https://dev.tripthreads.com/trips/xyz789'
+      const url = 'https://dev.tripthreads.app/trips/xyz789'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -94,7 +94,7 @@ describe('parseDeepLink', () => {
     })
 
     it('handles trip link with UUID', () => {
-      const url = 'https://tripthreads.com/trips/550e8400-e29b-41d4-a716-446655440000'
+      const url = 'https://tripthreads.app/trips/550e8400-e29b-41d4-a716-446655440000'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -104,7 +104,7 @@ describe('parseDeepLink', () => {
     })
 
     it('handles trip link with trailing slash', () => {
-      const url = 'https://tripthreads.com/trips/xyz789/'
+      const url = 'https://tripthreads.app/trips/xyz789/'
       const result = parseDeepLink(url)
 
       expect(result.type).toBe('trip')
@@ -114,7 +114,7 @@ describe('parseDeepLink', () => {
 
   describe('unknown links', () => {
     it('returns unknown for home page link', () => {
-      const url = 'https://tripthreads.com'
+      const url = 'https://tripthreads.app'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -123,7 +123,7 @@ describe('parseDeepLink', () => {
     })
 
     it('returns unknown for invalid path', () => {
-      const url = 'https://tripthreads.com/about'
+      const url = 'https://tripthreads.app/about'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -132,7 +132,7 @@ describe('parseDeepLink', () => {
     })
 
     it('returns unknown for malformed invite link', () => {
-      const url = 'https://tripthreads.com/invite/'
+      const url = 'https://tripthreads.app/invite/'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({
@@ -141,7 +141,7 @@ describe('parseDeepLink', () => {
     })
 
     it('returns unknown for malformed trip link', () => {
-      const url = 'https://tripthreads.com/trips/'
+      const url = 'https://tripthreads.app/trips/'
       const result = parseDeepLink(url)
 
       expect(result).toEqual({

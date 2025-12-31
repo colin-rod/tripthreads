@@ -6,8 +6,8 @@ This guide explains how to test deep linking functionality in the TripThreads mo
 
 Deep linking allows users to open the TripThreads app directly from:
 
-- **Invite links**: `https://tripthreads.com/invite/TOKEN`
-- **Trip links**: `https://tripthreads.com/trips/ID`
+- **Invite links**: `https://tripthreads.app/invite/TOKEN`
+- **Trip links**: `https://tripthreads.app/trips/ID`
 - **Custom scheme**: `tripthreads://invite/TOKEN` or `tripthreads://trips/ID`
 
 ## Implementation Summary
@@ -57,14 +57,14 @@ xcrun simctl openurl booted "tripthreads://trips/xyz789"
 
 ```bash
 # Universal links (requires app to be installed)
-xcrun simctl openurl booted "https://tripthreads.com/invite/abc123"
-xcrun simctl openurl booted "https://tripthreads.com/trips/xyz789"
+xcrun simctl openurl booted "https://tripthreads.app/invite/abc123"
+xcrun simctl openurl booted "https://tripthreads.app/trips/xyz789"
 ```
 
 **Safari Testing:**
 
 1. Open Safari in iOS Simulator
-2. Navigate to `https://tripthreads.com/invite/abc123`
+2. Navigate to `https://tripthreads.app/invite/abc123`
 3. App should open automatically (if universal links are configured)
 
 ### 2. Local Development Testing (Android Emulator)
@@ -81,14 +81,14 @@ adb shell am start -W -a android.intent.action.VIEW -d "tripthreads://trips/xyz7
 
 ```bash
 # Universal links
-adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/invite/abc123" com.tripthreads.app
-adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/trips/xyz789" com.tripthreads.app
+adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.app/invite/abc123" com.tripthreads.app
+adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.app/trips/xyz789" com.tripthreads.app
 ```
 
 **Chrome Testing:**
 
 1. Open Chrome in Android Emulator
-2. Navigate to `https://tripthreads.com/invite/abc123`
+2. Navigate to `https://tripthreads.app/invite/abc123`
 3. App should open automatically (if app links are verified)
 
 ### 3. Physical Device Testing (Recommended)
@@ -144,7 +144,7 @@ eas build:list
 **Steps:**
 
 1. User is not logged in
-2. Click invite link: `https://tripthreads.com/invite/abc123`
+2. Click invite link: `https://tripthreads.app/invite/abc123`
 3. App opens
 
 **Expected Behavior:**
@@ -158,10 +158,10 @@ eas build:list
 
 ```bash
 # iOS Simulator
-xcrun simctl openurl booted "https://tripthreads.com/invite/abc123"
+xcrun simctl openurl booted "https://tripthreads.app/invite/abc123"
 
 # Android Emulator
-adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/invite/abc123"
+adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.app/invite/abc123"
 ```
 
 ### Scenario 2: Authenticated User Clicks Invite Link
@@ -169,7 +169,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/
 **Steps:**
 
 1. User is logged in
-2. Click invite link: `https://tripthreads.com/invite/abc123`
+2. Click invite link: `https://tripthreads.app/invite/abc123`
 3. App opens
 
 **Expected Behavior:**
@@ -184,7 +184,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/
 **Steps:**
 
 1. User is logged in
-2. Click trip link: `https://tripthreads.com/trips/xyz789`
+2. Click trip link: `https://tripthreads.app/trips/xyz789`
 3. App opens
 
 **Expected Behavior:**
@@ -212,7 +212,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/
 
 **Steps:**
 
-1. Click invalid invite link: `https://tripthreads.com/invite/invalid`
+1. Click invalid invite link: `https://tripthreads.app/invite/invalid`
 2. App opens
 
 **Expected Behavior:**
@@ -252,7 +252,7 @@ Test the parser directly in a Node REPL or test file:
 ```typescript
 import { parseDeepLink } from './lib/linking/deep-link-parser'
 
-console.log(parseDeepLink('https://tripthreads.com/invite/abc123'))
+console.log(parseDeepLink('https://tripthreads.app/invite/abc123'))
 // { type: 'invite', token: 'abc123' }
 
 console.log(parseDeepLink('tripthreads://trips/xyz789'))
@@ -263,7 +263,7 @@ console.log(parseDeepLink('tripthreads://trips/xyz789'))
 
 ### iOS - Apple App Site Association (AASA)
 
-1. **Create AASA file** at `https://tripthreads.com/.well-known/apple-app-site-association`:
+1. **Create AASA file** at `https://tripthreads.app/.well-known/apple-app-site-association`:
 
 ```json
 {
@@ -286,12 +286,12 @@ console.log(parseDeepLink('tripthreads://trips/xyz789'))
    - File must be at root domain
 
 3. **Verify:**
-   - Visit: `https://tripthreads.com/.well-known/apple-app-site-association`
+   - Visit: `https://tripthreads.app/.well-known/apple-app-site-association`
    - Use Apple's [AASA Validator](https://search.developer.apple.com/appsearch-validation-tool/)
 
 ### Android - Digital Asset Links
 
-1. **Create assetlinks.json** at `https://tripthreads.com/.well-known/assetlinks.json`:
+1. **Create assetlinks.json** at `https://tripthreads.app/.well-known/assetlinks.json`:
 
 ```json
 [
@@ -315,7 +315,7 @@ keytool -list -v -keystore your-release-keystore.jks -alias your-key-alias
 ```
 
 3. **Verify:**
-   - Visit: `https://tripthreads.com/.well-known/assetlinks.json`
+   - Visit: `https://tripthreads.app/.well-known/assetlinks.json`
    - Use Google's [Statement List Generator and Tester](https://developers.google.com/digital-asset-links/tools/generator)
 
 ## Common Issues

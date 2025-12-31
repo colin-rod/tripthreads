@@ -175,7 +175,7 @@ describe('POST /api/create-portal-session', () => {
     })
 
     it('uses correct return URL with NEXT_PUBLIC_APP_URL', async () => {
-      process.env.NEXT_PUBLIC_APP_URL = 'https://tripthreads.com'
+      process.env.NEXT_PUBLIC_APP_URL = 'https://tripthreads.app'
 
       mockFrom.mockReturnValue({
         select: jest.fn().mockReturnThis(),
@@ -195,7 +195,7 @@ describe('POST /api/create-portal-session', () => {
         url: 'https://billing.stripe.com/session/test_xxx',
       } as Stripe.BillingPortal.Session)
 
-      const request = new NextRequest('https://tripthreads.com/api/create-portal-session', {
+      const request = new NextRequest('https://tripthreads.app/api/create-portal-session', {
         method: 'POST',
       })
 
@@ -203,7 +203,7 @@ describe('POST /api/create-portal-session', () => {
 
       expect(mockBillingPortalSessionsCreate).toHaveBeenCalledWith({
         customer: 'cus_test_123',
-        return_url: 'https://tripthreads.com/settings?tab=subscription',
+        return_url: 'https://tripthreads.app/settings?tab=subscription',
       })
     })
   })

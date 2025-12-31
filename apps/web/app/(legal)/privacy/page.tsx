@@ -329,8 +329,8 @@ export default function PrivacyPage() {
 
           <p className="mb-4 leading-relaxed mt-6">
             To exercise any of these rights, contact us at{' '}
-            <a href="mailto:support@tripthreads.com" className="text-primary hover:underline">
-              support@tripthreads.com
+            <a href="mailto:support@tripthreads.app" className="text-primary hover:underline">
+              support@tripthreads.app
             </a>
             . We will respond within 30 days.
           </p>
@@ -434,15 +434,15 @@ export default function PrivacyPage() {
           <ul className="list-none mb-4 space-y-2">
             <li>
               <strong>Email:</strong>{' '}
-              <a href="mailto:support@tripthreads.com" className="text-primary hover:underline">
-                support@tripthreads.com
+              <a href="mailto:support@tripthreads.app" className="text-primary hover:underline">
+                support@tripthreads.app
               </a>
             </li>
             <li>
               <strong>Data Protection Officer:</strong> (if required, to be appointed)
             </li>
             <li>
-              <strong>Website:</strong> tripthreads.com
+              <strong>Website:</strong> tripthreads.app
             </li>
           </ul>
         </section>

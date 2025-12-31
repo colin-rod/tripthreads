@@ -27,7 +27,7 @@ type TripParticipantInsert = Database['public']['Tables']['trip_participants']['
  * Generate the full invite URL for a token
  *
  * @param token - Invite token
- * @param baseUrl - Base URL (e.g., https://tripthreads.com)
+ * @param baseUrl - Base URL (e.g., https://tripthreads.app)
  * @returns Full invite URL
  */
 export function getInviteUrl(token: string, baseUrl?: string): string {
@@ -303,6 +303,35 @@ export async function acceptInvite(
 
   if (existingParticipant) {
     throw new Error('You are already a participant in this trip')
+  }
+
+  // Check participant limit for free tier trips
+  // Get trip owner to check their subscription status
+  const { data: trip } = await supabase
+    .from('trips')
+    .select('owner_id')
+    .eq('id', invite.trip_id)
+    .single()
+
+  if (trip) {
+    // Check if trip owner is Pro user
+    const { data: isProResult, error: proCheckError } = await supabase.rpc('is_pro_user', {
+      user_id: trip.owner_id,
+    })
+
+    // If owner is not Pro, check participant count
+    if (!proCheckError && !isProResult) {
+      const { count: participantCount } = await supabase
+        .from('trip_participants')
+        .select('*', { count: 'exact', head: true })
+        .eq('trip_id', invite.trip_id)
+
+      if (participantCount !== null && participantCount >= 5) {
+        throw new Error(
+          'This trip has reached the free tier limit of 5 participants. The trip owner can upgrade to Pro for unlimited participants.'
+        )
+      }
+    }
   }
 
   // Add user to trip_participants

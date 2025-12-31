@@ -70,6 +70,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 **File:** `.github/workflows/ci.yml`
 
 **Triggers:**
+
 - ✅ Push to any branch
 - ✅ Pull requests to `development` or `main`
 - ✅ Manual workflow dispatch
@@ -84,6 +85,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 ```
 
 **Checks:**
+
 - ESLint violations (errors & warnings)
 - Code style consistency
 - Import organization
@@ -100,6 +102,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 ```
 
 **Checks:**
+
 - TypeScript compilation errors
 - Type inference issues
 - Missing type definitions
@@ -116,6 +119,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 ```
 
 **Checks:**
+
 - All unit tests pass
 - All component tests pass
 - Coverage meets minimums (informational)
@@ -132,6 +136,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 ```
 
 **Checks:**
+
 - Next.js builds successfully
 - No build-time errors
 - Bundle size within limits (informational)
@@ -151,6 +156,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 ```
 
 **Checks:**
+
 - Critical user flows work end-to-end
 - Integration with Supabase
 - Authentication flows
@@ -164,6 +170,7 @@ TripThreads uses a multi-stage deployment pipeline with automated testing, type 
 **File:** `.github/workflows/generate-types.yml`
 
 **Triggers:**
+
 - Push to `main` or `development` (migration files modified)
 - Pull requests modifying `supabase/migrations/*.sql`
 
@@ -198,6 +205,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 **Database:** Local Supabase instance
 
 **Purpose:**
+
 - Local development and testing
 - Quick iterations
 - Debug and troubleshooting
@@ -206,7 +214,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 
 ### Staging Environment
 
-**URL:** `dev.tripthreads.com` 📋 (Not yet configured)
+**URL:** `dev.tripthreads.app` 📋 (Not yet configured)
 
 **Branch:** `development`
 
@@ -215,6 +223,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 **Database:** Supabase staging project
 
 **Purpose:**
+
 - Integration testing
 - QA and user acceptance testing
 - Performance testing
@@ -226,7 +235,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 
 ### Production Environment
 
-**URL:** `tripthreads.com` 📋 (Not yet live)
+**URL:** `tripthreads.app` 📋 (Not yet live)
 
 **Branch:** `main`
 
@@ -235,6 +244,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 **Database:** Supabase production project
 
 **Purpose:**
+
 - Live user traffic
 - Revenue-generating environment
 - Monitored 24/7
@@ -250,6 +260,7 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 **File:** `vercel.json` (implicit, using defaults)
 
 **Build Settings:**
+
 - Framework: Next.js
 - Build command: `npm run build` (from root via Turborepo)
 - Output directory: `apps/web/.next`
@@ -257,11 +268,11 @@ See [SUPABASE_TYPES_GENERATION.md](SUPABASE_TYPES_GENERATION.md) for details.
 
 ### Branch Deployment Strategy
 
-| Branch | Environment | URL | Auto-Deploy |
-|--------|-------------|-----|-------------|
-| `main` | Production | `tripthreads.com` | ✅ Yes |
-| `development` | Staging | `dev.tripthreads.com` | ✅ Yes |
-| `feature/*` | Preview | `[branch]-tripthreads.vercel.app` | ✅ Yes |
+| Branch        | Environment | URL                               | Auto-Deploy |
+| ------------- | ----------- | --------------------------------- | ----------- |
+| `main`        | Production  | `tripthreads.app`                 | ✅ Yes      |
+| `development` | Staging     | `dev.tripthreads.app`             | ✅ Yes      |
+| `feature/*`   | Preview     | `[branch]-tripthreads.vercel.app` | ✅ Yes      |
 
 ### Environment Variables
 
@@ -294,6 +305,7 @@ VAPID_PRIVATE_KEY=xxx # Server-side only
 ```
 
 **Setting Variables:**
+
 1. Go to Vercel Dashboard → Project → Settings → Environment Variables
 2. Add each variable with appropriate scope (Production, Preview, Development)
 3. Redeploy if needed
@@ -301,6 +313,7 @@ VAPID_PRIVATE_KEY=xxx # Server-side only
 ### Deployment Workflow
 
 1. **Push to branch:**
+
    ```bash
    git push origin feature/my-feature
    ```
@@ -315,23 +328,25 @@ VAPID_PRIVATE_KEY=xxx # Server-side only
    - Shareable link for review
 
 4. **Merge to development:**
-   - Auto-deploys to staging (`dev.tripthreads.com`)
+   - Auto-deploys to staging (`dev.tripthreads.app`)
    - Runs full test suite
 
 5. **Merge to main:**
    - Runs E2E tests in CI
-   - Auto-deploys to production (`tripthreads.com`)
+   - Auto-deploys to production (`tripthreads.app`)
    - Sentry release tracking enabled
 
 ### Rollback Strategy
 
 **Option 1: Vercel Dashboard**
+
 1. Go to Deployments tab
 2. Find last known good deployment
 3. Click "Promote to Production"
 4. Instant rollback (no rebuild)
 
 **Option 2: Git Revert**
+
 ```bash
 git revert <bad-commit-sha>
 git push origin main
@@ -369,11 +384,11 @@ git push origin main
 
 ### Build Strategy
 
-| Profile | Purpose | Distribution |
-|---------|---------|--------------|
-| `development` | Local testing | Simulator/Emulator |
-| `preview` | Internal testing | TestFlight, Internal Testing |
-| `production` | App Store release | App Store, Play Store |
+| Profile       | Purpose           | Distribution                 |
+| ------------- | ----------------- | ---------------------------- |
+| `development` | Local testing     | Simulator/Emulator           |
+| `preview`     | Internal testing  | TestFlight, Internal Testing |
+| `production`  | App Store release | App Store, Play Store        |
 
 ### Manual Builds
 
@@ -436,11 +451,13 @@ jobs:
 ### Staging Deployment
 
 **Process:**
+
 1. Migrations applied automatically via `supabase db push --linked` in CI
 2. Staging database updated before app deployment
 3. Rollback available via rollback migration files
 
 **Command (in CI):**
+
 ```bash
 supabase link --project-ref $SUPABASE_STAGING_REF
 supabase db push --linked
@@ -449,12 +466,14 @@ supabase db push --linked
 ### Production Deployment
 
 **Process:**
+
 1. ⚠️ **Manual approval required** for production migrations
 2. Run migration via Supabase Dashboard SQL Editor
 3. Verify in Table Editor before deploying app
 4. Coordinate with app deployment (may require maintenance window)
 
 **Safeguards:**
+
 - All migrations tested in staging first
 - Rollback migrations prepared
 - Database backups verified before deployment
@@ -469,6 +488,7 @@ supabase db push --linked
 **Status:** ✅ Integrated (Phase 1)
 
 **Monitored:**
+
 - ✅ Client-side React errors
 - ✅ Server action errors
 - ✅ API route errors
@@ -476,11 +496,13 @@ supabase db push --linked
 - ✅ Supabase RLS permission errors
 
 **Alerts:**
+
 - Email: Critical errors (production)
 - Slack: Error rate spikes
 - Weekly digest: Error trends
 
 **Release Tracking:**
+
 - Automatic via Sentry Vercel integration
 - Source maps uploaded for stack traces
 - Commit SHA tagged on each release
@@ -494,12 +516,14 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Status:** 📋 Planned (Phase 3)
 
 **Tracked Events:**
+
 - User auth: `signup`, `login`, `logout`
 - Trip management: `trip_created`, `invite_sent`
 - Expenses: `expense_created`, `settlement_marked_paid`
 - Offline: `went_offline`, `sync_completed`
 
 **Session Recordings:**
+
 - Enabled for Pro users
 - 10% sampling for Free users
 
@@ -510,6 +534,7 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Status:** ✅ Enabled
 
 **Metrics:**
+
 - Core Web Vitals (LCP, FID, CLS)
 - Real User Monitoring (RUM)
 - Geographic performance breakdown
@@ -527,6 +552,7 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Configuration:** `.github/dependabot.yml`
 
 **Scans:**
+
 - Daily dependency vulnerability scans
 - Automated PR creation for security updates
 - Auto-merge for patch updates (npm ecosystem)
@@ -538,6 +564,7 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Status:** 📋 Planned (Phase 3)
 
 **Scans:**
+
 - JavaScript/TypeScript security vulnerabilities
 - SQL injection risks
 - XSS vulnerabilities
@@ -552,6 +579,7 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Status:** 📋 Planned (Phase 3)
 
 **Metrics:**
+
 - Performance score (target: ≥90)
 - Accessibility score (target: ≥90)
 - SEO score (target: ≥90)
@@ -566,6 +594,7 @@ See [SENTRY_INTEGRATION.md](../SENTRY_INTEGRATION.md) for full documentation.
 **Status:** ✅ Manual via Next.js
 
 **Commands:**
+
 ```bash
 cd apps/web
 npm run build
@@ -573,6 +602,7 @@ npm run build
 ```
 
 **Thresholds:**
+
 - Main bundle: <200KB gzipped
 - Total JS: <500KB gzipped
 - First Load JS: <300KB
@@ -616,16 +646,17 @@ npm run build
 
 ### Severity Levels
 
-| Level | Response Time | Notification |
-|-------|---------------|--------------|
-| **P0 (Critical)** | Immediate | PagerDuty, Slack, Email |
-| **P1 (High)** | < 1 hour | Slack, Email |
-| **P2 (Medium)** | < 4 hours | Email |
-| **P3 (Low)** | < 24 hours | Email |
+| Level             | Response Time | Notification            |
+| ----------------- | ------------- | ----------------------- |
+| **P0 (Critical)** | Immediate     | PagerDuty, Slack, Email |
+| **P1 (High)**     | < 1 hour      | Slack, Email            |
+| **P2 (Medium)**   | < 4 hours     | Email                   |
+| **P3 (Low)**      | < 24 hours    | Email                   |
 
 ### Rollback Procedures
 
 **Web App (Vercel):**
+
 1. Go to Vercel Dashboard → Deployments
 2. Find last known good deployment
 3. Promote to production
@@ -633,12 +664,14 @@ npm run build
 5. Monitor Sentry for errors
 
 **Database:**
+
 1. Apply rollback migration from `supabase/migrations/`
 2. Verify data integrity
 3. Redeploy app with compatible code
 4. Restore from backup if needed (last resort)
 
 **Mobile App:**
+
 - ⚠️ Cannot rollback instantly
 - Push emergency patch via EAS Update (OTA)
 - Submit expedited app store review if needed
@@ -650,6 +683,7 @@ npm run build
 ### Phase 3
 
 📋 **Planned:**
+
 - Automated mobile builds on git tags
 - PostHog integration for analytics
 - Lighthouse CI for performance tracking
@@ -658,6 +692,7 @@ npm run build
 ### Phase 4+
 
 📋 **Potential:**
+
 - Blue-green deployments for zero-downtime
 - Canary deployments (gradual rollout)
 - Feature flags via LaunchDarkly
@@ -724,6 +759,7 @@ eas build --profile preview --platform ios
 ---
 
 **For more documentation:**
+
 - [DATABASE.md](DATABASE.md) - Database schema and migrations
 - [TESTING.md](TESTING.md) - Testing strategy and examples
 - [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) - Detailed deployment procedures

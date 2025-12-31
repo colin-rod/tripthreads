@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tripthreads.app",
-      "associatedDomains": ["applinks:tripthreads.com", "applinks:dev.tripthreads.com"],
+      "associatedDomains": ["applinks:tripthreads.app", "applinks:dev.tripthreads.app"],
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow TripThreads to attach screenshots to your feedback."
       }
@@ -37,22 +37,22 @@
           "data": [
             {
               "scheme": "https",
-              "host": "tripthreads.com",
+              "host": "tripthreads.app",
               "pathPrefix": "/invite"
             },
             {
               "scheme": "https",
-              "host": "tripthreads.com",
+              "host": "tripthreads.app",
               "pathPrefix": "/trips"
             },
             {
               "scheme": "https",
-              "host": "dev.tripthreads.com",
+              "host": "dev.tripthreads.app",
               "pathPrefix": "/invite"
             },
             {
               "scheme": "https",
-              "host": "dev.tripthreads.com",
+              "host": "dev.tripthreads.app",
               "pathPrefix": "/trips"
             }
           ],
@@ -71,7 +71,7 @@
       [
         "expo-router",
         {
-          "origin": "https://tripthreads.com"
+          "origin": "https://tripthreads.app"
         }
       ]
     ]

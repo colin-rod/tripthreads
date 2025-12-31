@@ -143,7 +143,7 @@ serve(async req => {
 
       const emailResult = await sendEmailNotification(
         RESEND_API_KEY!,
-        'TripThreads <notifications@tripthreads.com>',
+        'TripThreads <notifications@tripthreads.app>',
         recipient.email,
         `${newMember.full_name || newMember.email} joined ${trip.name}`,
         `

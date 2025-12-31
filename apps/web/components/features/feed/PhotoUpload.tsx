@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Card } from '@/components/ui/card'
+import { UpgradePromptDialog } from '@/components/features/subscription/UpgradePromptDialog'
 import {
   compressImage,
   generateThumbnail,
@@ -52,6 +53,7 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
   const [error, setError] = useState<string | null>(null)
   const [uploadPermission, setUploadPermission] = useState<UploadPermission | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -74,6 +76,12 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) return
+
+    // Check if limit is reached - show upgrade dialog
+    if (uploadPermission && !uploadPermission.canUpload) {
+      setShowUpgradeDialog(true)
+      return
+    }
 
     setError(null)
     const newPhotos: PhotoPreview[] = []
@@ -196,161 +204,182 @@ export default function PhotoUpload({ tripId, onUploadComplete }: PhotoUploadPro
   const showWarning = uploadPermission ? uploadPermission.remaining <= 5 : false
 
   return (
-    <div className="space-y-4">
-      {/* Free Tier Warning/Limit */}
-      {showWarning && uploadPermission && !isLimitReached && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {uploadPermission.remaining} photos remaining on free tier. Upgrade to Pro for unlimited
-            photos.
-          </AlertDescription>
-        </Alert>
-      )}
+    <>
+      <div className="space-y-4">
+        {/* Free Tier Warning/Limit */}
+        {showWarning && uploadPermission && !isLimitReached && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {uploadPermission.remaining} photos remaining on free tier. Upgrade to Pro for
+              unlimited photos.
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {isLimitReached && uploadPermission && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Photo limit reached. You've used all {uploadPermission.limit} photos on the free tier.
-            Upgrade to Pro for unlimited photos.
-          </AlertDescription>
-        </Alert>
-      )}
+        {isLimitReached && uploadPermission && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Photo limit reached. You've used all {uploadPermission.limit} photos on the free tier.
+              <Button
+                variant="link"
+                className="h-auto p-0 ml-2 text-red-700 hover:text-red-900 underline"
+                onClick={() => setShowUpgradeDialog(true)}
+              >
+                Upgrade to Pro
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Upload Button / Drag Zone */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`
+        {/* Upload Button / Drag Zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`
           border-2 border-dashed rounded-lg p-4 text-center transition-colors
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-border'}
         `}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={e => handleFileSelect(e.target.files)}
-          className="hidden"
-          aria-label="Select photo files"
-          disabled={isLimitReached}
-        />
-
-        <Button
-          type="button"
-          variant="outline"
-          size="default"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isLimitReached || isUploading}
-          className="mx-auto"
         >
-          <Camera className="mr-2 h-4 w-4" />
-          Upload Photo
-        </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={e => handleFileSelect(e.target.files)}
+            className="hidden"
+            aria-label="Select photo files"
+            disabled={isLimitReached}
+          />
 
-        <p className="mt-2 text-xs text-muted-foreground">or drag and drop photos here</p>
-        <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, HEIC • Max 10MB</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="default"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLimitReached || isUploading}
+            className="mx-auto"
+          >
+            <Camera className="mr-2 h-4 w-4" />
+            Upload Photo
+          </Button>
+
+          <p className="mt-2 text-xs text-muted-foreground">or drag and drop photos here</p>
+          <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, HEIC • Max 10MB</p>
+        </div>
+
+        {/* Photo Previews */}
+        {photos.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-semibold">Selected Photos ({photos.length})</h3>
+            <div className="grid gap-3">
+              {photos.map((photo, index) => (
+                <Card key={index} className="p-3">
+                  <div className="flex gap-3">
+                    {/* Preview Image */}
+                    <div className="relative w-32 h-32 flex-shrink-0">
+                      <img
+                        src={photo.preview}
+                        alt={`${photo.file.name} preview`}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{photo.file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(photo.file.size)}
+                      </p>
+
+                      {/* Caption Input */}
+                      <Input
+                        type="text"
+                        placeholder="Add caption (optional)"
+                        value={photo.caption}
+                        onChange={e => handleCaptionChange(index, e.target.value)}
+                        className="mt-2 h-8 text-sm"
+                        disabled={isUploading}
+                      />
+                    </div>
+
+                    {/* Remove Button */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemovePhoto(index)}
+                      disabled={isUploading}
+                      aria-label={`Remove ${photo.file.name}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Upload Button */}
+            <div className="flex gap-2">
+              <Button
+                onClick={handleUpload}
+                disabled={isUploading || photos.length === 0}
+                className="flex-1"
+              >
+                {isUploading ? (
+                  <>
+                    <Upload className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading... {uploadProgress}%
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
+                  </>
+                )}
+              </Button>
+
+              {!isUploading && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    photos.forEach(photo => URL.revokeObjectURL(photo.preview))
+                    setPhotos([])
+                  }}
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
+
+            {/* Progress Bar */}
+            {isUploading && <Progress value={uploadProgress} className="h-2" />}
+          </div>
+        )}
       </div>
 
-      {/* Photo Previews */}
-      {photos.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-semibold">Selected Photos ({photos.length})</h3>
-          <div className="grid gap-3">
-            {photos.map((photo, index) => (
-              <Card key={index} className="p-3">
-                <div className="flex gap-3">
-                  {/* Preview Image */}
-                  <div className="relative w-32 h-32 flex-shrink-0">
-                    <img
-                      src={photo.preview}
-                      alt={`${photo.file.name} preview`}
-                      className="w-full h-full object-cover rounded"
-                    />
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{photo.file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(photo.file.size)}
-                    </p>
-
-                    {/* Caption Input */}
-                    <Input
-                      type="text"
-                      placeholder="Add caption (optional)"
-                      value={photo.caption}
-                      onChange={e => handleCaptionChange(index, e.target.value)}
-                      className="mt-2 h-8 text-sm"
-                      disabled={isUploading}
-                    />
-                  </div>
-
-                  {/* Remove Button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemovePhoto(index)}
-                    disabled={isUploading}
-                    aria-label={`Remove ${photo.file.name}`}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {/* Upload Button */}
-          <div className="flex gap-2">
-            <Button
-              onClick={handleUpload}
-              disabled={isUploading || photos.length === 0}
-              className="flex-1"
-            >
-              {isUploading ? (
-                <>
-                  <Upload className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading... {uploadProgress}%
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
-                </>
-              )}
-            </Button>
-
-            {!isUploading && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  photos.forEach(photo => URL.revokeObjectURL(photo.preview))
-                  setPhotos([])
-                }}
-              >
-                Clear All
-              </Button>
-            )}
-          </div>
-
-          {/* Progress Bar */}
-          {isUploading && <Progress value={uploadProgress} className="h-2" />}
-        </div>
+      {/* Upgrade Dialog */}
+      {showUpgradeDialog && uploadPermission && (
+        <UpgradePromptDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          limitType="photos"
+          currentUsage={uploadPermission.total - uploadPermission.remaining}
+          limit={uploadPermission.limit}
+          title="Photo Upload Limit Reached"
+          description={`You've used all ${uploadPermission.limit} photos on the free tier. Upgrade to Pro for unlimited photo uploads.`}
+        />
       )}
-    </div>
+    </>
   )
 }

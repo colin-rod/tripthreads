@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { POST, GET } from './route'
 import { createClient } from '@/lib/supabase/server'
-import { createMediaFile, canUploadPhoto } from '@tripthreads/core'
+import { createMediaFile } from '@tripthreads/core'
+import { checkPhotoLimit } from '@/lib/subscription/limits'
 
 jest.mock('@sentry/nextjs', () => ({
   captureMessage: jest.fn(),
@@ -14,12 +15,20 @@ jest.mock('@/lib/supabase/server', () => ({
 
 jest.mock('@tripthreads/core', () => ({
   createMediaFile: jest.fn(),
-  canUploadPhoto: jest.fn(),
+}))
+
+jest.mock('@/lib/subscription/limits', () => ({
+  checkPhotoLimit: jest.fn(),
+}))
+
+jest.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: jest.fn().mockResolvedValue({ allowed: true }),
+  createRateLimitResponse: jest.fn(),
 }))
 
 const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>
 const mockCreateMediaFile = createMediaFile as jest.MockedFunction<typeof createMediaFile>
-const mockCanUploadPhoto = canUploadPhoto as jest.MockedFunction<typeof canUploadPhoto>
+const mockCheckPhotoLimit = checkPhotoLimit as jest.MockedFunction<typeof checkPhotoLimit>
 
 type ParticipantQuery = {
   select: jest.MockedFunction<() => ParticipantQuery>
@@ -33,10 +42,6 @@ function createPostRequest(fields: Record<string, unknown>) {
       get: (key: string) => (key in fields ? fields[key] : null),
     }),
   } as unknown as NextRequest
-}
-
-function createGetRequest(url: string) {
-  return { url } as unknown as NextRequest
 }
 
 function createMockFile(name: string) {
@@ -96,11 +101,11 @@ describe('POST /api/upload-photo', () => {
       error: null,
     })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: true,
-      remaining: 5,
-      total: 20,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 20,
       limit: 25,
+      isProUser: false,
     })
 
     const fullImageData = { path: 'trip-123/user-1/123-photo.jpg' }
@@ -134,7 +139,7 @@ describe('POST /api/upload-photo', () => {
     expect(body).toEqual({
       success: true,
       media: { id: 'media-1' },
-      remaining: 4,
+      remaining: 4, // 25 - 20 - 1 = 4
     })
 
     expect(mockCreateMediaFile).toHaveBeenCalledWith(expect.anything(), {
@@ -145,6 +150,7 @@ describe('POST /api/upload-photo', () => {
       thumbnail_url: 'https://cdn/thumb.jpg',
       caption: 'Great trip',
       date_taken: '2024-01-01T00:00:00.000Z',
+      file_size_bytes: 100,
     })
   })
 
@@ -167,7 +173,7 @@ describe('POST /api/upload-photo', () => {
 
     expect(response.status).toBe(403)
     expect(body.error).toBe('You must be a trip participant to upload photos')
-    expect(mockCanUploadPhoto).not.toHaveBeenCalled()
+    expect(mockCheckPhotoLimit).not.toHaveBeenCalled()
   })
 
   it('rejects uploads when plan limit is reached', async () => {
@@ -175,11 +181,11 @@ describe('POST /api/upload-photo', () => {
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
     participantQuery.single.mockResolvedValue({ data: { id: 'participant-1' }, error: null })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: false,
-      remaining: 0,
-      total: 25,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: false,
+      currentCount: 25,
       limit: 25,
+      isProUser: false,
     })
 
     mockCreateClient.mockResolvedValue(supabase as never)
@@ -196,9 +202,13 @@ describe('POST /api/upload-photo', () => {
 
     expect(response.status).toBe(403)
     expect(body).toMatchObject({
-      error: 'Photo limit reached',
-      limit: 25,
-      total: 25,
+      error: 'Photo upload limit reached',
+      message: 'Free users are limited to 25 photos. Upgrade to Pro for unlimited uploads.',
+      limitInfo: {
+        currentCount: 25,
+        limit: 25,
+        isProUser: false,
+      },
     })
     expect(mockCreateMediaFile).not.toHaveBeenCalled()
   })
@@ -209,11 +219,11 @@ describe('POST /api/upload-photo', () => {
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
     participantQuery.single.mockResolvedValue({ data: { id: 'participant-1' }, error: null })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: true,
-      remaining: 5,
-      total: 20,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 20,
       limit: 25,
+      isProUser: false,
     })
 
     storageBucket.upload.mockResolvedValueOnce({ data: null, error: { message: 'failed' } })
@@ -241,11 +251,11 @@ describe('POST /api/upload-photo', () => {
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
     participantQuery.single.mockResolvedValue({ data: { id: 'participant-1' }, error: null })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: true,
-      remaining: 5,
-      total: 20,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 20,
       limit: 25,
+      isProUser: false,
     })
 
     const fullImageData = { path: 'trip-123/user-1/123-photo.jpg' }
@@ -278,11 +288,11 @@ describe('POST /api/upload-photo', () => {
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
     participantQuery.single.mockResolvedValue({ data: { id: 'participant-1' }, error: null })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: true,
-      remaining: 5,
-      total: 20,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 20,
       limit: 25,
+      isProUser: false,
     })
 
     const fullImageData = { path: 'trip-123/user-1/123-photo.jpg' }
@@ -312,21 +322,103 @@ describe('POST /api/upload-photo', () => {
     expect(body.error).toBe('Failed to save photo metadata')
     expect(storageBucket.remove).toHaveBeenCalledWith([fullImageData.path, thumbnailData.path])
   })
+
+  it('allows Pro users with 30+ photos to upload', async () => {
+    const { supabase, participantQuery, storageBucket } = createSupabaseMock()
+
+    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-pro' } }, error: null })
+    participantQuery.single.mockResolvedValue({
+      data: { id: 'participant-1', role: 'member' },
+      error: null,
+    })
+
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 30,
+      limit: Number.MAX_SAFE_INTEGER,
+      isProUser: true,
+    })
+
+    const fullImageData = { path: 'trip-123/user-pro/123-photo.jpg' }
+    const thumbnailData = { path: 'trip-123/user-pro/thumbnails/123-photo.jpg' }
+
+    storageBucket.upload
+      .mockResolvedValueOnce({ data: fullImageData, error: null })
+      .mockResolvedValueOnce({ data: thumbnailData, error: null })
+    storageBucket.getPublicUrl
+      .mockReturnValueOnce({ data: { publicUrl: 'https://cdn/full.jpg' } })
+      .mockReturnValueOnce({ data: { publicUrl: 'https://cdn/thumb.jpg' } })
+
+    mockCreateMediaFile.mockResolvedValue({ id: 'media-pro' } as never)
+    mockCreateClient.mockResolvedValue(supabase as never)
+
+    const request = createPostRequest({
+      fullImage: createMockFile('photo.jpg'),
+      thumbnail: createMockFile('photo-thumb.jpg'),
+      tripId: 'trip-123',
+      caption: 'Pro user photo',
+      dateTaken: '2024-01-01T00:00:00.000Z',
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+  })
+
+  it('allows free user at 24 photos to upload one more', async () => {
+    const { supabase, participantQuery, storageBucket } = createSupabaseMock()
+
+    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-24' } }, error: null })
+    participantQuery.single.mockResolvedValue({
+      data: { id: 'participant-1', role: 'member' },
+      error: null,
+    })
+
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 24,
+      limit: 25,
+      isProUser: false,
+    })
+
+    const fullImageData = { path: 'trip-123/user-24/123-photo.jpg' }
+    const thumbnailData = { path: 'trip-123/user-24/thumbnails/123-photo.jpg' }
+
+    storageBucket.upload
+      .mockResolvedValueOnce({ data: fullImageData, error: null })
+      .mockResolvedValueOnce({ data: thumbnailData, error: null })
+    storageBucket.getPublicUrl
+      .mockReturnValueOnce({ data: { publicUrl: 'https://cdn/full.jpg' } })
+      .mockReturnValueOnce({ data: { publicUrl: 'https://cdn/thumb.jpg' } })
+
+    mockCreateMediaFile.mockResolvedValue({ id: 'media-24' } as never)
+    mockCreateClient.mockResolvedValue(supabase as never)
+
+    const request = createPostRequest({
+      fullImage: createMockFile('photo.jpg'),
+      thumbnail: createMockFile('photo-thumb.jpg'),
+      tripId: 'trip-123',
+      caption: 'Last free photo',
+      dateTaken: '2024-01-01T00:00:00.000Z',
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toEqual({
+      success: true,
+      media: { id: 'media-24' },
+      remaining: 0, // 25 - 24 - 1 = 0
+    })
+  })
 })
 
 describe('GET /api/upload-photo', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-  })
-
-  it('returns 400 when tripId is missing', async () => {
-    const request = createGetRequest('https://example.com/api/upload-photo')
-
-    const response = await GET(request)
-    const body = await response.json()
-
-    expect(response.status).toBe(400)
-    expect(body.error).toBe('Missing tripId parameter')
   })
 
   it('returns 401 for unauthenticated users', async () => {
@@ -335,40 +427,37 @@ describe('GET /api/upload-photo', () => {
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo?tripId=trip-123')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(401)
     expect(body.error).toBe('Authentication required')
-    expect(mockCanUploadPhoto).not.toHaveBeenCalled()
+    expect(mockCheckPhotoLimit).not.toHaveBeenCalled()
   })
 
   it('returns upload permissions when authenticated', async () => {
     const { supabase } = createSupabaseMock()
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
 
-    mockCanUploadPhoto.mockResolvedValue({
-      canUpload: true,
-      remaining: 3,
-      total: 2,
+    mockCheckPhotoLimit.mockResolvedValue({
+      allowed: true,
+      currentCount: 22,
       limit: 25,
+      isProUser: false,
     })
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo?tripId=trip-123')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(body).toEqual({
-      canUpload: true,
-      remaining: 3,
-      total: 2,
+      allowed: true,
+      currentCount: 22,
       limit: 25,
+      isProUser: false,
+      remaining: 3,
     })
   })
 
@@ -376,13 +465,11 @@ describe('GET /api/upload-photo', () => {
     const { supabase } = createSupabaseMock()
     supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
 
-    mockCanUploadPhoto.mockRejectedValue(new Error('failed'))
+    mockCheckPhotoLimit.mockRejectedValue(new Error('failed'))
 
     mockCreateClient.mockResolvedValue(supabase as never)
 
-    const request = createGetRequest('https://example.com/api/upload-photo?tripId=trip-123')
-
-    const response = await GET(request)
+    const response = await GET()
     const body = await response.json()
 
     expect(response.status).toBe(500)

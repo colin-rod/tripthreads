@@ -26,13 +26,13 @@ http://localhost:3000/api/webhooks/stripe
 **Staging (when deployed):**
 
 ```
-https://dev.tripthreads.com/api/webhooks/stripe
+https://dev.tripthreads.app/api/webhooks/stripe
 ```
 
 **Production (when deployed):**
 
 ```
-https://tripthreads.com/api/webhooks/stripe
+https://tripthreads.app/api/webhooks/stripe
 ```
 
 ## Step-by-Step Setup
@@ -49,8 +49,8 @@ https://tripthreads.com/api/webhooks/stripe
 **Endpoint URL:** Enter your application URL + `/api/webhooks/stripe`
 
 - For local testing: Use [Stripe CLI](#local-testing-with-stripe-cli) instead
-- For staging: `https://dev.tripthreads.com/api/webhooks/stripe`
-- For production: `https://tripthreads.com/api/webhooks/stripe`
+- For staging: `https://dev.tripthreads.app/api/webhooks/stripe`
+- For production: `https://tripthreads.app/api/webhooks/stripe`
 
 **Description:** (optional)
 

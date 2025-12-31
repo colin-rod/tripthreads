@@ -1,19 +1,20 @@
 'use client'
 
 /**
- * PhotoGallery Component
+ * PhotoGallery Component (supports photos and videos)
  *
- * Displays trip photos in a masonry grid layout grouped by date.
+ * Displays trip photos and videos in a masonry grid layout grouped by date.
  * Features:
  * - Masonry layout (Pinterest-style)
  * - Date grouping (by trip day)
- * - Click to open lightbox
+ * - Click to open lightbox (photos only)
+ * - Native video playback with controls
  * - Loading and empty states
  */
 
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import { Calendar, Image as ImageIcon } from 'lucide-react'
+import { Calendar, Image as ImageIcon, Video as VideoIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getMediaFilesGroupedByDate } from '@tripthreads/core'
@@ -33,6 +34,7 @@ interface MediaFileWithUser {
   trip_id: string
   user_id: string
   type: string
+  file_size_bytes: number
   created_at: string
   user: {
     id: string
@@ -51,33 +53,47 @@ const truncateCaption = (caption: string | null, maxLength: number = 100): strin
   return caption.length > maxLength ? caption.substring(0, maxLength).trim() + '...' : caption
 }
 
+/**
+ * Formats file size in bytes to human-readable format
+ */
+const formatFileSize = (bytes: number | undefined): string => {
+  if (!bytes) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
+
 export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps) {
-  const [groupedPhotos, setGroupedPhotos] = useState<GroupedMedia>({})
+  const [groupedMedia, setGroupedMedia] = useState<GroupedMedia>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const supabase = createClient()
 
   useEffect(() => {
-    fetchPhotos()
+    fetchMedia()
   }, [tripId])
 
-  const fetchPhotos = async () => {
+  const fetchMedia = async () => {
     try {
       setIsLoading(true)
       setError(null)
       const grouped = await getMediaFilesGroupedByDate(supabase, tripId)
-      setGroupedPhotos(grouped)
+      setGroupedMedia(grouped)
     } catch (err) {
-      console.error('Failed to fetch photos:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load photos')
+      console.error('Failed to fetch media:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load media')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handlePhotoClick = (photo: MediaFileWithUser) => {
-    onPhotoClick?.(photo.id, photo.url)
+    // Only trigger lightbox for photos, not videos
+    if (photo.type === 'photo') {
+      onPhotoClick?.(photo.id, photo.url)
+    }
   }
 
   // Loading state
@@ -108,30 +124,32 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
   }
 
   // Empty state
-  const photoCount = Object.values(groupedPhotos).reduce((sum, photos) => sum + photos.length, 0)
+  const mediaCount = Object.values(groupedMedia).reduce((sum, media) => sum + media.length, 0)
 
-  if (photoCount === 0) {
+  if (mediaCount === 0) {
     return (
       <Card className="p-12 text-center">
         <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="font-semibold text-lg mb-2">No photos yet</h3>
+        <h3 className="font-semibold text-lg mb-2">No photos or videos yet</h3>
         <p className="text-sm text-muted-foreground">
-          Upload your first photo to start building your trip gallery
+          Upload your first photo or video to start building your trip gallery
         </p>
       </Card>
     )
   }
 
   // Render gallery grouped by date
-  const sortedDates = Object.keys(groupedPhotos).sort(
+  const sortedDates = Object.keys(groupedMedia).sort(
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   )
 
   return (
     <div className="space-y-12">
       {sortedDates.map(date => {
-        const photos = groupedPhotos[date]
+        const mediaFiles = groupedMedia[date]
         const dateObj = new Date(date)
+        const photoCount = mediaFiles.filter(m => m.type === 'photo').length
+        const videoCount = mediaFiles.filter(m => m.type === 'video').length
 
         return (
           <div key={date} className="space-y-3">
@@ -140,37 +158,56 @@ export default function PhotoGallery({ tripId, onPhotoClick }: PhotoGalleryProps
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span>{format(dateObj, 'EEEE, MMMM d, yyyy')}</span>
               <span className="text-muted-foreground">
-                ({photos.length} {photos.length === 1 ? 'photo' : 'photos'})
+                ({photoCount > 0 && `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}`}
+                {photoCount > 0 && videoCount > 0 && ', '}
+                {videoCount > 0 && `${videoCount} ${videoCount === 1 ? 'video' : 'videos'}`})
               </span>
             </div>
 
             {/* Masonry Grid */}
             <div className="columns-2 md:columns-3 lg:columns-4 gap-8 space-y-8">
-              {photos.map(photo => (
+              {mediaFiles.map(media => (
                 <div
-                  key={photo.id}
-                  className="break-inside-avoid cursor-pointer"
-                  onClick={() => handlePhotoClick(photo)}
+                  key={media.id}
+                  className={`break-inside-avoid ${media.type === 'photo' ? 'cursor-pointer' : ''}`}
+                  onClick={() => handlePhotoClick(media)}
                 >
                   <Card className="overflow-hidden bg-white shadow-md hover:shadow-xl transition-shadow duration-300 border-0">
-                    {/* Photo with white padding (postcard frame) */}
+                    {/* Media Content with white padding (postcard frame) */}
                     <div className="p-4 pb-0">
-                      <img
-                        src={photo.thumbnail_url || photo.url}
-                        alt={photo.caption || 'Trip photo'}
-                        className="w-full h-auto object-cover rounded-sm"
-                        loading="lazy"
-                      />
+                      {media.type === 'photo' ? (
+                        <img
+                          src={media.thumbnail_url || media.url}
+                          alt={media.caption || 'Trip photo'}
+                          className="w-full h-auto object-cover rounded-sm"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <video
+                          src={media.url}
+                          controls
+                          className="w-full h-auto object-cover rounded-sm"
+                          preload="metadata"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
                     </div>
 
-                    {/* Caption - Always visible below photo */}
+                    {/* Caption and metadata - Always visible below media */}
                     <div className="p-4 pt-2">
-                      {photo.caption ? (
+                      {media.caption ? (
                         <p className="text-sm text-foreground line-clamp-3">
-                          {truncateCaption(photo.caption, 100)}
+                          {truncateCaption(media.caption, 100)}
                         </p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">by {photo.user.full_name}</p>
+                        <p className="text-xs text-muted-foreground">by {media.user.full_name}</p>
+                      )}
+                      {media.type === 'video' && media.file_size_bytes && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          <VideoIcon className="inline h-3 w-3 mr-1" />
+                          {formatFileSize(media.file_size_bytes)}
+                        </p>
                       )}
                     </div>
                   </Card>

@@ -265,6 +265,101 @@ export function formatExpirationDate(planExpiresAt: string, locale = 'en-US'): s
 }
 
 // ============================================================================
+// Webhook Idempotency
+// ============================================================================
+
+/**
+ * Check if a webhook event has already been processed
+ *
+ * This function prevents duplicate webhook processing by checking if the event ID
+ * has already been stored in the database. This is critical for payment processing
+ * to prevent duplicate charges or incorrect plan state changes.
+ *
+ * @param supabase - Supabase client instance (must use service role for webhook processing)
+ * @param eventId - Stripe event ID (e.g., evt_1234567890)
+ * @param eventType - Stripe event type (e.g., checkout.session.completed)
+ * @returns Object with { processed: boolean, error?: Error }
+ *
+ * @example
+ * const result = await checkWebhookProcessed(supabase, event.id, event.type)
+ * if (result.processed) {
+ *   console.log('Event already processed, skipping')
+ *   return NextResponse.json({ received: true })
+ * }
+ */
+export async function checkWebhookProcessed(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  eventId: string,
+  _eventType: string
+): Promise<{ processed: boolean; error?: Error }> {
+  try {
+    // Check if event ID already exists
+    const { data, error } = await supabase
+      .from('processed_webhook_events')
+      .select('event_id')
+      .eq('event_id', eventId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[webhook-idempotency] Error checking event:', error)
+      return { processed: false, error }
+    }
+
+    // If data exists, event has already been processed
+    if (data) {
+      console.log(`[webhook-idempotency] Event ${eventId} already processed, skipping`)
+      return { processed: true }
+    }
+
+    return { processed: false }
+  } catch (error) {
+    console.error('[webhook-idempotency] Unexpected error:', error)
+    return { processed: false, error: error as Error }
+  }
+}
+
+/**
+ * Mark a webhook event as processed
+ *
+ * Stores the event ID in the database to prevent duplicate processing.
+ * Should be called AFTER successfully processing the webhook event.
+ *
+ * @param supabase - Supabase client instance (must use service role)
+ * @param eventId - Stripe event ID
+ * @param eventType - Stripe event type
+ * @returns Object with { success: boolean, error?: Error }
+ *
+ * @example
+ * await handleCheckoutCompleted(event)
+ * await markWebhookProcessed(supabase, event.id, event.type)
+ */
+export async function markWebhookProcessed(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  eventId: string,
+  eventType: string
+): Promise<{ success: boolean; error?: Error }> {
+  try {
+    const { error } = await supabase.from('processed_webhook_events').insert({
+      event_id: eventId,
+      event_type: eventType,
+    })
+
+    if (error) {
+      console.error('[webhook-idempotency] Error marking event as processed:', error)
+      return { success: false, error }
+    }
+
+    console.log(`[webhook-idempotency] Event ${eventId} marked as processed`)
+    return { success: true }
+  } catch (error) {
+    console.error('[webhook-idempotency] Unexpected error:', error)
+    return { success: false, error: error as Error }
+  }
+}
+
+// ============================================================================
 // Exports
 // ============================================================================
 
@@ -283,4 +378,6 @@ export default {
   isSubscriptionActive,
   getDaysRemaining,
   formatExpirationDate,
+  checkWebhookProcessed,
+  markWebhookProcessed,
 }

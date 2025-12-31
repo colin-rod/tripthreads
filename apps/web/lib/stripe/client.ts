@@ -38,7 +38,7 @@ export function getStripeServerClient(): Stripe {
     appInfo: {
       name: 'TripThreads',
       version: '0.2.0',
-      url: 'https://tripthreads.com',
+      url: 'https://tripthreads.app',
     },
   })
 }

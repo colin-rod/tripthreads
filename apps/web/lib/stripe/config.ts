@@ -52,12 +52,13 @@ export const STRIPE_PRODUCTS: Record<PlanInterval, ProductConfig> = {
   monthly: {
     productId: process.env.STRIPE_PRODUCT_PRO_MONTHLY || '',
     name: 'TripThreads Pro (Monthly)',
-    description: 'Unlimited trips, participants, and photos. Cancel anytime.',
+    description: 'Unlimited trips, participants, and photos. 10GB video storage. Cancel anytime.',
     interval: 'month',
     features: [
       'Unlimited active trips',
       'Unlimited participants per trip',
-      'Unlimited photos & videos',
+      'Unlimited photos',
+      '10GB video storage',
       'PDF trip recap',
       'Priority support',
     ],
@@ -65,12 +66,14 @@ export const STRIPE_PRODUCTS: Record<PlanInterval, ProductConfig> = {
   yearly: {
     productId: process.env.STRIPE_PRODUCT_PRO_YEARLY || '',
     name: 'TripThreads Pro (Yearly)',
-    description: 'Unlimited trips, participants, and photos. Save 17% with annual billing.',
+    description:
+      'Unlimited trips, participants, and photos. 10GB video storage. Save 17% with annual billing.',
     interval: 'year',
     features: [
       'Unlimited active trips',
       'Unlimited participants per trip',
-      'Unlimited photos & videos',
+      'Unlimited photos',
+      '10GB video storage',
       'PDF trip recap',
       'Priority support',
       '17% savings vs monthly',
@@ -79,12 +82,14 @@ export const STRIPE_PRODUCTS: Record<PlanInterval, ProductConfig> = {
   oneoff: {
     productId: process.env.STRIPE_PRODUCT_PRO_ONEOFF || '',
     name: 'TripThreads Pro (Single Month)',
-    description: 'Unlock Pro features for one month. Perfect for a single trip.',
+    description:
+      'Unlock Pro features for one month with 10GB video storage. Perfect for a single trip.',
     interval: null,
     features: [
       'Unlimited trips for 1 month',
       'Unlimited participants',
-      'Unlimited photos & videos',
+      'Unlimited photos',
+      '10GB video storage',
       'PDF trip recap',
     ],
   },
@@ -181,13 +186,17 @@ export const PLAN_FEATURES = {
     trips: 1, // 1 active trip at a time
     participants: 5, // Max 5 participants per trip
     photos: 25, // Max 25 photos total
+    videos: 0, // No video uploads (Pro feature only)
+    videoStorageGB: 0, // No video storage
     pdfRecap: false,
     prioritySupport: false,
   },
   pro: {
     trips: Infinity, // Unlimited active trips
     participants: Infinity, // Unlimited participants per trip
-    photos: Infinity, // Unlimited photos & videos
+    photos: Infinity, // Unlimited photos
+    videos: Infinity, // Unlimited video count
+    videoStorageGB: 10, // 10GB total video storage
     pdfRecap: true,
     prioritySupport: true,
   },
