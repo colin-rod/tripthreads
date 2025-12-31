@@ -88,6 +88,7 @@ CREATE TABLE audit_logs (
    - Captures: description, amount, currency, payer_id, date
 
 5. **Settlement Status Changes**
+
    ```sql
    CREATE TRIGGER audit_settlement_status_changes
      AFTER UPDATE OF status ON settlements
@@ -177,6 +178,7 @@ CREATE FUNCTION create_audit_log(
    - Returns sorted by creation date (newest first)
 
 3. **getUserAuditLogs()**
+
    ```typescript
    const logs = await getUserAuditLogs(userId, {
      limit: 100,
@@ -300,7 +302,7 @@ export type AuditResourceType =
 
 ```bash
 # Test 3: Cross-Trip Access
-curl https://dev.tripthreads.com/api/trips/${TRIP_A_ID} \
+curl https://dev.tripthreads.app/api/trips/${TRIP_A_ID} \
   -H "Cookie: sb-access-token=USER_B_TOKEN"
 
 # Expected: 403 Forbidden or empty response (RLS blocks)
@@ -459,7 +461,7 @@ cat > test-security.sh << 'EOF'
 set -e
 
 # Configuration
-BASE_URL="https://dev.tripthreads.com"
+BASE_URL="https://dev.tripthreads.app"
 OWNER_TOKEN="xxx"
 PARTICIPANT_TOKEN="yyy"
 VIEWER_TOKEN="zzz"

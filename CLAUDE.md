@@ -601,12 +601,12 @@ main (production)
 ### Branch Purposes
 
 - **`main`** - Production branch (✅ Ready)
-  - Deploys to: `tripthreads.com` (web) 📋 Not yet live
+  - Deploys to: `tripthreads.app` (web) 📋 Not yet live
   - Protected, requires PR approval
   - Only merge from `development`
 
 - **`development`** - Staging branch (✅ Active)
-  - Deploys to: `dev.tripthreads.com` 🚧 URL pending
+  - Deploys to: `dev.tripthreads.app` 🚧 URL pending
   - Integration branch for all features
   - Default branch for PRs
 

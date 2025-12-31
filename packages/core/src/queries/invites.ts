@@ -27,7 +27,7 @@ type TripParticipantInsert = Database['public']['Tables']['trip_participants']['
  * Generate the full invite URL for a token
  *
  * @param token - Invite token
- * @param baseUrl - Base URL (e.g., https://tripthreads.com)
+ * @param baseUrl - Base URL (e.g., https://tripthreads.app)
  * @returns Full invite URL
  */
 export function getInviteUrl(token: string, baseUrl?: string): string {

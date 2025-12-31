@@ -158,7 +158,7 @@ serve(async req => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'TripThreads <notifications@tripthreads.com>',
+        from: 'TripThreads <notifications@tripthreads.app>',
         to: organizer.email,
         subject: `Access Request for ${trip.name}`,
         html: `

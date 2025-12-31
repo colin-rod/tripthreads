@@ -170,7 +170,7 @@ serve(async req => {
       // Send email
       const emailResult = await sendEmailNotification(
         RESEND_API_KEY!,
-        'TripThreads <notifications@tripthreads.com>',
+        'TripThreads <notifications@tripthreads.app>',
         recipient.email,
         `New Expense Added to ${trip.name}`,
         `

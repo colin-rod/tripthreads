@@ -204,7 +204,7 @@ import { Resend } from 'https://esm.sh/resend@1.0.0'
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
 const { data, error } = await resend.emails.send({
-  from: 'TripThreads <invites@tripthreads.com>',
+  from: 'TripThreads <invites@tripthreads.app>',
   to: [invite.email],
   subject: `You're invited to ${invite.trips.name}!`,
   html: renderEmailTemplate(invite), // Your HTML template

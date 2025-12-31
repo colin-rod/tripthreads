@@ -1050,7 +1050,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 RESEND_API_KEY=re_your_api_key
 
 # Frontend URL (for email links)
-FRONTEND_URL=https://tripthreads.com
+FRONTEND_URL=https://tripthreads.app
 ```
 
 ### Migration Files

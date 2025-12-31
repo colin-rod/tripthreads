@@ -283,13 +283,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
 
 In Supabase Dashboard → Authentication → URL Configuration:
 
-**Site URL:** `http://localhost:3000` (dev) / `https://tripthreads.com` (prod)
+**Site URL:** `http://localhost:3000` (dev) / `https://tripthreads.app` (prod)
 
 **Redirect URLs (whitelist):**
 
 - `http://localhost:3000/**`
-- `https://tripthreads.com/**`
-- `https://dev.tripthreads.com/**`
+- `https://tripthreads.app/**`
+- `https://dev.tripthreads.app/**`
 - `exp://localhost:8081/**` (Expo dev)
 - `tripthreads://**` (mobile deep links - for production)
 

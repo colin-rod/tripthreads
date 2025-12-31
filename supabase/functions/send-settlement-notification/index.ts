@@ -164,7 +164,7 @@ serve(async req => {
 
       const emailResult = await sendEmailNotification(
         RESEND_API_KEY!,
-        'TripThreads <notifications@tripthreads.com>',
+        'TripThreads <notifications@tripthreads.app>',
         user.email,
         `Settlement Marked as Paid: ${trip.name}`,
         `

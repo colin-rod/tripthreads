@@ -269,7 +269,7 @@ supabase functions deploy send-access-request-email
 **Supabase Edge Functions:**
 
 - `RESEND_API_KEY` - Your Resend API key
-- `FRONTEND_URL` - Your app's URL (e.g., `https://tripthreads.com`)
+- `FRONTEND_URL` - Your app's URL (e.g., `https://tripthreads.app`)
 
 **Vercel (if not already set):**
 

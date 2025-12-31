@@ -11,7 +11,7 @@ import { test, expect, Page } from '@playwright/test'
 
 // Test data
 const TEST_TRIP_NAME = 'E2E Test Trip - Expenses'
-const TEST_USER_EMAIL = 'e2e-test@tripthreads.com'
+const TEST_USER_EMAIL = 'e2e-test@tripthreads.app'
 const TEST_USER_PASSWORD = 'TestPassword123!'
 
 /**

@@ -11,7 +11,7 @@ export interface ParsedDeepLink {
 
 /**
  * Parses a deep link URL and extracts relevant information
- * Handles both custom scheme (tripthreads://) and universal links (https://tripthreads.com)
+ * Handles both custom scheme (tripthreads://) and universal links (https://tripthreads.app)
  */
 export function parseDeepLink(url: string): ParsedDeepLink {
   // Handle empty or invalid URLs early
@@ -23,7 +23,7 @@ export function parseDeepLink(url: string): ParsedDeepLink {
     const parsed = Linking.parse(url)
     const { path, queryParams } = parsed
 
-    // Handle invite links: tripthreads://invite/TOKEN or https://tripthreads.com/invite/TOKEN
+    // Handle invite links: tripthreads://invite/TOKEN or https://tripthreads.app/invite/TOKEN
     if (path?.includes('/invite/')) {
       const token = path.split('/invite/')[1]?.split('?')[0]?.replace(/\/$/, '')
       if (token) {
@@ -35,7 +35,7 @@ export function parseDeepLink(url: string): ParsedDeepLink {
       }
     }
 
-    // Handle trip links: tripthreads://trips/ID or https://tripthreads.com/trips/ID
+    // Handle trip links: tripthreads://trips/ID or https://tripthreads.app/trips/ID
     if (path?.includes('/trips/')) {
       const tripId = path.split('/trips/')[1]?.split('?')[0]?.replace(/\/$/, '')
       if (tripId) {

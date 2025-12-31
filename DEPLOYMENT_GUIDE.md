@@ -42,7 +42,7 @@ In Supabase Dashboard → Settings → Edge Functions → Secrets:
 
 ```bash
 RESEND_API_KEY=re_xxxxxxxxxxxxx
-FRONTEND_URL=https://tripthreads.com  # or your staging URL
+FRONTEND_URL=https://tripthreads.app  # or your staging URL
 ```
 
 ### Vercel Environment Variables
@@ -378,7 +378,7 @@ Create `apps/web/public/.well-known/apple-app-site-association`:
 **Important:**
 
 - Replace `TEAM_ID` with your Apple Developer Team ID
-- File must be served at: `https://tripthreads.com/.well-known/apple-app-site-association`
+- File must be served at: `https://tripthreads.app/.well-known/apple-app-site-association`
 - No file extension
 - Must be served over HTTPS
 - Content-Type: `application/json`
@@ -411,11 +411,11 @@ After deploying:
 
 ```bash
 # Check file is accessible
-curl https://tripthreads.com/.well-known/apple-app-site-association
+curl https://tripthreads.app/.well-known/apple-app-site-association
 
 # Use Apple's validator
 # Visit: https://search.developer.apple.com/appsearch-validation-tool/
-# Enter: https://tripthreads.com
+# Enter: https://tripthreads.app
 ```
 
 ---
@@ -454,7 +454,7 @@ Create `apps/web/public/.well-known/assetlinks.json`:
 **Important:**
 
 - Replace `YOUR_SHA256_FINGERPRINT_HERE` with the SHA-256 fingerprint from step 1
-- File must be served at: `https://tripthreads.com/.well-known/assetlinks.json`
+- File must be served at: `https://tripthreads.app/.well-known/assetlinks.json`
 - Must be served over HTTPS
 - Content-Type: `application/json`
 
@@ -495,7 +495,7 @@ After deploying:
 
 ```bash
 # Check file is accessible
-curl https://tripthreads.com/.well-known/assetlinks.json
+curl https://tripthreads.app/.well-known/assetlinks.json
 
 # Use Google's validator
 # Visit: https://developers.google.com/digital-asset-links/tools/generator
@@ -599,7 +599,7 @@ Ensure `eas.json` has correct bundle IDs:
 xcrun simctl openurl booted "tripthreads://invite/abc123"
 
 # Test universal link
-xcrun simctl openurl booted "https://tripthreads.com/invite/abc123"
+xcrun simctl openurl booted "https://tripthreads.app/invite/abc123"
 ```
 
 **Android Emulator:**
@@ -609,7 +609,7 @@ xcrun simctl openurl booted "https://tripthreads.com/invite/abc123"
 adb shell am start -W -a android.intent.action.VIEW -d "tripthreads://invite/abc123"
 
 # Test app link
-adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/invite/abc123"
+adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.app/invite/abc123"
 ```
 
 **Physical Devices (Recommended):**
@@ -629,8 +629,8 @@ adb shell am start -W -a android.intent.action.VIEW -d "https://tripthreads.com/
 - [ ] Create assetlinks.json at `apps/web/public/.well-known/assetlinks.json`
 - [ ] Update Next.js config with headers
 - [ ] Deploy web app to production
-- [ ] Verify AASA is accessible: `https://tripthreads.com/.well-known/apple-app-site-association`
-- [ ] Verify assetlinks.json is accessible: `https://tripthreads.com/.well-known/assetlinks.json`
+- [ ] Verify AASA is accessible: `https://tripthreads.app/.well-known/apple-app-site-association`
+- [ ] Verify assetlinks.json is accessible: `https://tripthreads.app/.well-known/assetlinks.json`
 - [ ] Test with Apple validator
 - [ ] Test with Google validator
 
@@ -699,7 +699,7 @@ Create a PostHog dashboard to monitor:
 3. Check console logs for errors
 4. Test parsing logic directly:
    ```typescript
-   console.log(parseDeepLink('https://tripthreads.com/invite/abc123'))
+   console.log(parseDeepLink('https://tripthreads.app/invite/abc123'))
    ```
 
 ---

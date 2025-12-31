@@ -313,7 +313,7 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
    [https://dashboard.stripe.com/test/webhooks](https://dashboard.stripe.com/test/webhooks)
 
 2. **Add endpoint**
-   URL: `https://tripthreads.com/api/webhooks/stripe`
+   URL: `https://tripthreads.app/api/webhooks/stripe`
 
 3. **Select events to listen to:**
    - `customer.subscription.created`

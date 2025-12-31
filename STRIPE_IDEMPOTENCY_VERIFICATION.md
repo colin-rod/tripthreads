@@ -257,7 +257,7 @@ LIMIT 10;
 **Step 1: Configure Stripe Webhook**
 
 1. Go to Stripe Dashboard → Developers → Webhooks
-2. Add endpoint: `https://dev.tripthreads.com/api/webhooks/stripe`
+2. Add endpoint: `https://dev.tripthreads.app/api/webhooks/stripe`
 3. Select events:
    - `checkout.session.completed`
    - `customer.subscription.updated`
@@ -564,7 +564,7 @@ supabase db diff --linked
 git push origin development
 
 # Vercel auto-deploys to staging
-# Verify deployment at https://dev.tripthreads.com
+# Verify deployment at https://dev.tripthreads.app
 ```
 
 ### 4. Staging Verification
