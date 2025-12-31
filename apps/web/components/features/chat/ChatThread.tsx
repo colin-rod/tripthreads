@@ -264,7 +264,7 @@ export function ChatThread({
       user_id: currentUserId,
       message_type: 'user' as const,
       content,
-      attachments: attachments as any,
+      attachments: attachments as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       metadata: {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -349,7 +349,14 @@ export function ChatThread({
   }
 
   // Handle modal confirmation
-  const handleModalConfirm = async () => {
+  const handleModalConfirm = async (
+    createdItems?: Array<{
+      id: string
+      type: 'expense' | 'itinerary'
+      itineraryType?: string
+      title: string
+    }>
+  ) => {
     const currentCommand = parsedCommands[currentModalIndex]
 
     if (!currentCommand) {
@@ -373,6 +380,7 @@ export function ChatThread({
         command: currentCommand.command,
         hasExpense: currentCommand.hasExpense,
         hasItinerary: currentCommand.hasItinerary,
+        items: createdItems,
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -390,6 +398,7 @@ export function ChatThread({
         command: currentCommand.command,
         hasExpense: currentCommand.hasExpense,
         hasItinerary: currentCommand.hasItinerary,
+        items: createdItems,
       },
     })
 
@@ -462,6 +471,7 @@ export function ChatThread({
                 currentUserId={currentUserId}
                 participants={participants}
                 reactions={reactions.get(message.id) || []}
+                tripParticipants={participants}
               />
             ))}
             <div ref={messagesEndRef} />

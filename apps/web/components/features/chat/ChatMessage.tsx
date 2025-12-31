@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import type { ChatMessageData } from '@/app/actions/chat'
 import { ChatAttachmentDisplay } from './ChatAttachment'
 import { MessageContent } from './MessageContent'
+import { BotMessageContent } from './BotMessageContent'
 import type { MentionableUser } from './MentionAutocomplete'
 import { ReactionBar, type Reaction } from './ReactionBar'
 import { ReactionPicker } from './ReactionPicker'
@@ -19,6 +20,7 @@ interface ChatMessageProps {
   currentUserId: string | null
   participants?: MentionableUser[]
   reactions?: Reaction[]
+  tripParticipants?: MentionableUser[]
 }
 
 export function ChatMessage({
@@ -27,6 +29,7 @@ export function ChatMessage({
   currentUserId,
   participants = [],
   reactions = [],
+  tripParticipants = [],
 }: ChatMessageProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false)
   const isCurrentUser = message.user_id === currentUserId
@@ -62,7 +65,14 @@ export function ChatMessage({
             </span>
           </div>
 
-          <div className="mt-1 rounded-lg bg-muted px-3 py-2 text-sm">{message.content}</div>
+          <div className="mt-1 rounded-lg bg-muted px-3 py-2 text-sm">
+            <BotMessageContent
+              content={message.content}
+              metadata={message.metadata}
+              tripId={tripId}
+              tripParticipants={tripParticipants}
+            />
+          </div>
 
           {message.attachments && message.attachments.length > 0 && (
             <div className="mt-2 space-y-2">

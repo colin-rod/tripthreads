@@ -42,6 +42,12 @@ export interface CreateBotMessageInput {
     command?: string
     hasExpense?: boolean
     hasItinerary?: boolean
+    items?: Array<{
+      id: string
+      type: 'expense' | 'itinerary'
+      itineraryType?: string
+      title: string
+    }>
   }
 }
 
