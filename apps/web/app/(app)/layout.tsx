@@ -11,6 +11,7 @@ import { ProfileCompletionProvider } from '@/components/features/profile/Profile
 import { LazyOnboarding } from '@/components/features/onboarding/LazyOnboarding'
 import { TripContextProvider } from '@/lib/contexts/trip-context'
 import { Footer } from '@/components/features/legal/Footer'
+import { PushSubscriptionPrompt } from '@/components/features/notifications/PushSubscriptionPrompt'
 
 export default function AppLayout({
   children,
@@ -27,7 +28,12 @@ export default function AppLayout({
           Padding: pt-24 (96px) accounts for two-row navbar on trip pages
           Non-trip pages have single-row (48px) but extra padding is acceptable
         */}
-        <main className="flex-1 pt-24">{children}</main>
+        <main className="flex-1 pt-24">
+          <div className="container mx-auto px-4 mb-6">
+            <PushSubscriptionPrompt />
+          </div>
+          {children}
+        </main>
         <Footer />
       </div>
     </TripContextProvider>

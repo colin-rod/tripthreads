@@ -1,8 +1,8 @@
 # TripThreads - Project Documentation
 
-**Last Updated:** December 2025
-**Version:** 0.3.0 (Phase 1-2 Complete, Phase 3 Video Upload Complete)
-**Status:** 🚧 **Active Development** - Phase 3 (Stripe & PDF Recap) Next
+**Last Updated:** January 2026
+**Version:** 0.4.0 (Phase 1-4 Complete, Phase 5 Post-MVP)
+**Status:** 🚧 **Active Development** - Phase 5 (Post-MVP Enhancements)
 **Linear Project:** https://linear.app/crod/project/tripthreads-mvp-cda67386ed0a
 
 ---
@@ -15,9 +15,9 @@
 | ----------- | ----------- | ------------------------------------------------------ |
 | **Phase 1** | ✅ Complete | Core foundation (Auth, Trips, Participants, Invites)   |
 | **Phase 2** | ✅ Complete | Itinerary, Expenses, Multi-currency, Chat, Settlements |
-| **Phase 3** | 🚧 Partial  | Video Upload ✅, Stripe/Pro 🚧, PDF Recap 📋           |
-| **Phase 4** | 📋 Planned  | Push Notifications, Launch Prep                        |
-| **Phase 5** | 📋 Future   | Post-MVP Enhancements                                  |
+| **Phase 3** | ✅ Complete | Video Upload, Stripe/Pro, Media Feed                   |
+| **Phase 4** | ✅ Complete | Push Notifications (Web + Mobile), Email Notifications |
+| **Phase 5** | 📋 Planned  | Post-MVP Enhancements, PDF Recap, Advanced Features    |
 
 ### Most-Used Commands
 
@@ -163,6 +163,63 @@ git push origin main       # Deploy to production
 - ✅ Notification preference inheritance (trip-specific overrides global)
 - ✅ Notification logging for testing and analytics
 - ✅ Responsive HTML email templates via Resend
+
+#### Push Notifications (January 2026)
+
+**Status:** ✅ **Complete** - Phase 4 Push Notifications
+
+**Web Push Implementation:**
+
+- ✅ Service worker for push event handling
+- ✅ VAPID key setup and configuration
+- ✅ Push subscription management (subscribe/unsubscribe)
+- ✅ Service worker registration in root layout
+- ✅ Push subscription prompt component
+- ✅ Deep link support (notification clicks navigate to trip pages)
+- ✅ Token storage in profiles table (push_token_web)
+
+**Mobile Push Implementation:**
+
+- ✅ Expo Push Notifications integration
+- ✅ Permission request flow
+- ✅ Push token registration on app launch
+- ✅ Foreground and background notification handling
+- ✅ Deep link support for notification taps
+- ✅ Token storage in profiles table (push_token_mobile)
+- ✅ Android notification channel configuration
+
+**Backend Integration:**
+
+- ✅ Shared push utilities in edge functions
+- ✅ Web push via VAPID (web-push library)
+- ✅ Mobile push via Expo Push Service
+- ✅ All 6 edge functions updated with push logic:
+  - send-expense-notification
+  - send-chat-notification
+  - send-itinerary-notification
+  - send-settlement-notification
+  - send-invite-accepted-notification
+  - send-access-request-email
+- ✅ Platform-specific payload formatting
+- ✅ Comprehensive error handling and logging
+
+**User Experience:**
+
+- ✅ Global push preferences in settings
+- ✅ Per-event push toggle (invites, itinerary, expenses, photos, chat, settlements)
+- ✅ Trip-specific push overrides (inherits from global by default)
+- ✅ Push subscription prompt on first login
+- ✅ Dismissable prompt with localStorage persistence
+- ✅ Push token lifecycle management (register, update, clear)
+
+**Features:**
+
+- ✅ Multi-platform support (web + mobile)
+- ✅ Preference inheritance system (same as email)
+- ✅ Deep linking to relevant trip pages
+- ✅ Notification logging (sent/failed/skipped)
+- ✅ Token expiration handling
+- ✅ Platform detection in edge functions
 
 #### Video Upload & Media Feed (December 2025)
 
@@ -321,14 +378,20 @@ git push origin main       # Deploy to production
 - ✅ Pro tier limit enforcement (photos, videos, trips, participants)
 - 📋 PDF trip recap generation
 
-#### Phase 4: Push & Launch
+#### Phase 4: Push Notifications (January 2026 - Complete ✅)
 
-- 📋 Push notifications (web + mobile) - email notifications ✅ complete
-- 📋 Trip recap delivery
-- 📋 App store submission (iOS + Android)
+- ✅ Web push notifications via VAPID
+- ✅ Mobile push notifications via Expo
+- ✅ Push preferences UI (global + trip-specific)
+- ✅ Push subscription prompt
+- ✅ All 6 edge functions updated
+- ✅ Deep linking support
+- ✅ Token lifecycle management
 
 #### Phase 5: Post-MVP
 
+- 📋 PDF trip recap generation
+- 📋 App store submission (iOS + Android)
 - 📋 Advanced offline sync (full CRUD, conflict resolution)
 - 📋 Receipt OCR for expense creation
 - 📋 Calendar sync (Google, Apple)
@@ -354,7 +417,7 @@ git push origin main       # Deploy to production
 - **Expo Router** - File-based navigation
 - **NativeWind** - Tailwind for React Native
 - 📋 **expo-sqlite** - Offline storage (Phase 2+)
-- 📋 **Expo Push Notifications** - Push notification delivery (Phase 4)
+- ✅ **Expo Push Notifications** - Push notification delivery (Phase 4 ✅)
 
 ### Backend - ✅ Implemented
 
@@ -413,8 +476,9 @@ git push origin main       # Deploy to production
 - ✅ **OpenAI API** - Natural language parsing (GPT-4o-mini) and chat assistant (GPT-4)
   - Used for expense/itinerary parsing and trip chat
   - Cost: ~$0.00015/parse (~$4.50/month for 1k parses/day)
-- 📋 **Expo Push Notifications** - Mobile push delivery (Phase 4)
-- 📋 **Web Push API (VAPID)** - Web push notifications (Phase 4)
+- ✅ **Expo Push Notifications** - Mobile push delivery (Phase 4 ✅)
+- ✅ **Web Push API (VAPID)** - Web push notifications (Phase 4 ✅)
+- ✅ **Resend** - Email notification delivery
 
 ---
 
@@ -747,9 +811,9 @@ test(ledger): add comprehensive settlement tests
 
 1. ✅ **Phase 1:** Core Foundation (8 weeks, 16 issues, ~55 SP) - **Complete**
 2. ✅ **Phase 2:** Itinerary & Ledger (6 weeks, 9 issues, ~38 SP) - **Complete**
-3. 📋 **Phase 3:** Media, Pro Features & Stripe (6 weeks, 18 issues, ~62 SP)
-4. 📋 **Phase 4:** Push, Recap & Launch (6 weeks, 15 issues, ~52 SP)
-5. 📋 **Phase 5:** Post-MVP Enhancements (Future, 9 issues, ~52 SP)
+3. ✅ **Phase 3:** Media, Pro Features & Stripe (6 weeks, 18 issues, ~62 SP) - **Complete**
+4. ✅ **Phase 4:** Push Notifications (January 2026, ~52 SP) - **Complete**
+5. 📋 **Phase 5:** Post-MVP Enhancements (Future, 9+ issues, ~52 SP)
 
 ---
 
@@ -838,28 +902,18 @@ npm run build              # Build for production
 
 ## 🔮 Future Enhancements
 
-### Phase 3 (Next) - Media & Pro
+### Phase 5 (Next) - Post-MVP & Launch
 
-- 📋 Photo/video uploads and trip feed
-- 📋 Stripe integration and Pro subscriptions
 - 📋 PDF trip recap generation
-- 📋 Pro tier limits enforcement
-
-### Phase 4 - Launch Prep
-
-- 📋 Push notifications (web + mobile)
-- 📋 App store submission
-- 📋 Marketing website
-- 📋 Email campaigns
-
-### Phase 5+ - Post-MVP
-
+- 📋 App store submission (iOS + Android)
+- 📋 Marketing website and landing pages
 - 📋 Advanced offline sync with conflict resolution
 - 📋 Receipt OCR for expense creation
 - 📋 Calendar sync (Google, Apple)
-- 📋 Map integration for itinerary
+- 📋 Map integration for itinerary visualization
 - 📋 Trip templates and duplication
 - 📋 Real-time presence indicators
+- 📋 Multi-language support (i18n)
 
 ---
 
@@ -935,9 +989,9 @@ For issues or questions:
 
 ---
 
-**Version:** 0.2.0 (Phase 1-2 Complete)
-**Last Updated:** November 2025
-**Next Phase:** Phase 3 - Media & Stripe Integration
+**Version:** 0.4.0 (Phase 1-4 Complete)
+**Last Updated:** January 2026
+**Next Phase:** Phase 5 - Post-MVP & Launch (PDF Recap, App Store Submission)
 **Linear Project:** https://linear.app/crod/project/tripthreads-mvp-cda67386ed0a
 
 ---
