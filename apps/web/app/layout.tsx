@@ -8,6 +8,8 @@ import { FloatingFeedbackButton } from '@/components/features/feedback/FloatingF
 import { CookieConsentBanner } from '@/components/features/legal/CookieConsentBanner'
 import { ServiceWorkerRegistration } from '@/components/features/notifications/ServiceWorkerRegistration'
 import { initializeAnalytics } from '@/lib/analytics'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 // Initialize analytics trackers on app load
 initializeAnalytics()
@@ -33,6 +35,8 @@ export default function RootLayout({
         <SonnerToaster position="top-right" />
         <FloatingFeedbackButton />
         <CookieConsentBanner />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
