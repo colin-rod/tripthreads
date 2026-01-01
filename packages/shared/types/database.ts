@@ -873,6 +873,10 @@ export type Database = {
           plan_expires_at: string | null
           privacy_accepted_at: string | null
           profile_completed_at: string | null
+          push_token_mobile: string | null
+          push_token_mobile_updated_at: string | null
+          push_token_web: string | null
+          push_token_web_updated_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_currency: string | null
@@ -898,6 +902,10 @@ export type Database = {
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
+          push_token_mobile?: string | null
+          push_token_mobile_updated_at?: string | null
+          push_token_web?: string | null
+          push_token_web_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_currency?: string | null
@@ -923,6 +931,10 @@ export type Database = {
           plan_expires_at?: string | null
           privacy_accepted_at?: string | null
           profile_completed_at?: string | null
+          push_token_mobile?: string | null
+          push_token_mobile_updated_at?: string | null
+          push_token_web?: string | null
+          push_token_web_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_currency?: string | null
