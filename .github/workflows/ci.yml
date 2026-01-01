@@ -201,6 +201,17 @@ jobs:
             ~/.android/adb*
           key: avd-pixel-7-api-34
 
+      # Generate native code with expo prebuild
+      - name: Prebuild native code
+        run: npx expo prebuild --clean --no-install
+        working-directory: apps/mobile
+
+      # Install iOS native dependencies (CocoaPods)
+      - name: Install iOS dependencies
+        if: matrix.platform == 'iOS'
+        run: pod install
+        working-directory: apps/mobile/ios
+
       # Build mobile app
       - name: Build mobile app for Detox
         run: ${{ matrix.build-cmd }}
