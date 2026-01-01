@@ -23,7 +23,7 @@ import { toast } from '@/hooks/use-toast'
 /**
  * Convert base64 string to Uint8Array for VAPID key
  */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
 

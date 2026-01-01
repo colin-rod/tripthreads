@@ -58,6 +58,10 @@ const mockUser: User = {
   updated_at: new Date().toISOString(),
   deleted_at: null,
   is_deleted: false,
+  push_token_web: null,
+  push_token_mobile: null,
+  push_token_web_updated_at: null,
+  push_token_mobile_updated_at: null,
 }
 
 const mockUserNoName: User = {
