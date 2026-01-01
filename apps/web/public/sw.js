@@ -1,3 +1,5 @@
+/* global self, clients, console */
+
 /**
  * Service Worker for Push Notifications
  *
