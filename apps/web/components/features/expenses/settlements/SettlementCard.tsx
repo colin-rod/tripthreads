@@ -43,7 +43,7 @@ export function SettlementCard({ settlement, currentUserId, onMarkAsPaid }: Sett
 
   return (
     <div
-      className={`flex items-center gap-4 rounded-lg border bg-card p-4 transition-all ${
+      className={`flex items-center gap-4 rounded-lg border bg-card p-4 shadow-sm transition-all ${
         isPending ? 'hover:shadow-sm' : 'opacity-75'
       }`}
     >

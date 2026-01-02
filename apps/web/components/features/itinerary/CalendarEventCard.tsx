@@ -38,7 +38,7 @@ export function CalendarEventCard({ item, isAllDay, onClick }: CalendarEventCard
       <button
         onClick={onClick}
         className={cn(
-          'w-full h-full rounded-md p-2 text-left transition-all hover:shadow-md',
+          'w-full h-full rounded-md p-2 text-left shadow-sm transition-all hover:shadow-md',
           'border-l-4 cursor-pointer',
           config.bgColor,
           config.borderColor,

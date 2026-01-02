@@ -71,7 +71,7 @@ export function UserBalanceCard({ balance, currentUserId }: UserBalanceCardProps
   const balanceColor = getBalanceColor(balance.net_balance)
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border bg-card p-3 transition-all hover:shadow-sm">
+    <div className="flex items-center justify-between gap-4 rounded-lg border bg-card p-3 shadow-sm transition-all hover:shadow-sm">
       {/* User info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <Avatar className="h-8 w-8 flex-shrink-0">
