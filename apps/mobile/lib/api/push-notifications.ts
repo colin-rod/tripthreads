@@ -5,7 +5,7 @@
  * Phase 4: Push Notifications
  */
 
-import { supabase } from '../supabase'
+import { supabase } from '../supabase/client'
 
 /**
  * Update push token in database
