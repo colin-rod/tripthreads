@@ -10,13 +10,13 @@ module.exports = {
     extend: {
       colors: {
         // Playful Citrus Pop Design System - Mobile colors
-        border: '#E8DFD5',
-        input: '#E8DFD5',
-        ring: '#F97316',
-        background: '#FAF2ED',
+        border: '#E0E0DA',
+        input: '#E0E0DA',
+        ring: '#FF6B1A',
+        background: '#F5F5F0',
         foreground: '#11333B',
         primary: {
-          DEFAULT: '#F97316',
+          DEFAULT: '#FF6B1A',
           foreground: '#FFFFFF',
         },
         secondary: {

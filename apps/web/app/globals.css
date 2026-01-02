@@ -4,7 +4,7 @@
 
 :root {
   /* Primary Colors */
-  --primary: 24 95% 71%; /* #F97316 - Orange 500 */
+  --primary: 24 100% 55%; /* #FF6B1A - Deeper vibrant orange */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
   /* Secondary Colors */
@@ -16,7 +16,7 @@
   --destructive-foreground: 0 0% 100%; /* #FFFFFF */
 
   /* Neutral Colors */
-  --background: 26 28% 92%; /* #FAF2ED - Warm cream */
+  --background: 60 20% 95%; /* #F5F5F0 - Neutral warm-gray */
   --foreground: 194 58% 17%; /* #11333B - Deep teal */
 
   --muted: 244 64% 95%; /* #D6D6F9 - Light lavender */
@@ -28,9 +28,9 @@
   --popover: 0 0% 100%; /* #FFFFFF */
   --popover-foreground: 194 58% 17%; /* #11333B */
 
-  --border: 29 24% 88%; /* #E8DFD5 - Warm tan */
-  --input: 29 24% 88%; /* #E8DFD5 */
-  --ring: 24 95% 71%; /* #F97316 */
+  --border: 60 10% 88%; /* #E0E0DA - Cooler neutral */
+  --input: 60 10% 88%; /* #E0E0DA */
+  --ring: 24 100% 55%; /* #FF6B1A */
 
   --accent: 142 71% 45%; /* #22C55E */
   --accent-foreground: 0 0% 100%; /* #FFFFFF */

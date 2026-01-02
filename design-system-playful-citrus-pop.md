@@ -18,7 +18,7 @@ Inspired by **Sunny Citrus** and **Retro Pop**, with a refreshing green accent a
 
 | Token                  | Hex       | Usage                                 |
 | ---------------------- | --------- | ------------------------------------- |
-| `--primary`            | `#F97316` | Primary buttons, highlights, key CTAs |
+| `--primary`            | `#FF6B1A` | Primary buttons, highlights, key CTAs |
 | `--primary-foreground` | `#FFFFFF` | Text on primary                       |
 | `--secondary`          | `#22C55E` | Secondary actions, positive tone      |
 | `--destructive`        | `#EF4444` | Destructive or error actions          |
@@ -27,13 +27,13 @@ Inspired by **Sunny Citrus** and **Retro Pop**, with a refreshing green accent a
 
 | Token               | Hex       | Usage                            |
 | ------------------- | --------- | -------------------------------- |
-| `--background`      | `#FAF2ED` | Page background (light mode)     |
+| `--background`      | `#F5F5F0` | Page background (light mode)     |
 | `--background-dark` | `#1A1A1A` | Page background (dark mode)      |
 | `--foreground`      | `#11333B` | Main text and icons (light mode) |
 | `--foreground-dark` | `#F5F5F5` | Main text and icons (dark mode)  |
 | `--muted`           | `#D6D6F9` | Subtle backgrounds, muted text   |
 | `--muted-dark`      | `#2E2E2E` | Subtle backgrounds (dark mode)   |
-| `--border`          | `#E8DFD5` | Card and element borders         |
+| `--border`          | `#E0E0DA` | Card and element borders         |
 | `--border-dark`     | `#3F3F3F` | Borders (dark mode)              |
 
 ### **Semantic Colors**
@@ -273,8 +273,8 @@ xl: 1280px  /* Large desktops */
 
 | Combination                                  | Ratio | Pass                        |
 | -------------------------------------------- | ----- | --------------------------- |
-| Primary (#F97316) on White                   | 4.5:1 | ✅ AA                       |
-| Foreground (#11333B) on Background (#FAF2ED) | 12:1  | ✅ AAA                      |
+| Primary (#FF6B1A) on White                   | 5.2:1 | ✅ AA                       |
+| Foreground (#11333B) on Background (#F5F5F0) | 11:1  | ✅ AAA                      |
 | Secondary (#22C55E) on White                 | 3.2:1 | ⚠️ Use with large text only |
 | Error (#EF4444) on White                     | 4.2:1 | ✅ AA                       |
 
@@ -327,10 +327,10 @@ For design tools (Figma, Sketch):
 ```json
 {
   "colors": {
-    "primary": "#F97316",
+    "primary": "#FF6B1A",
     "secondary": "#22C55E",
     "destructive": "#EF4444",
-    "background": "#FAF2ED",
+    "background": "#F5F5F0",
     "foreground": "#11333B",
     "success": "#22C55E",
     "warning": "#FACC15",
