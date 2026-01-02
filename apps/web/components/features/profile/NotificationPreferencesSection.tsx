@@ -127,30 +127,45 @@ export function NotificationPreferencesSection({
         <div>
           <h4 className="text-sm font-medium mb-1">Push Notifications</h4>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Receive push notifications on your devices (coming soon)
+            Receive instant push notifications on your devices
           </p>
         </div>
 
-        <div className="space-y-3 opacity-50">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label htmlFor="push_trip_invites" className="cursor-not-allowed">
+            <Label htmlFor="push_trip_invites" className="cursor-pointer">
               Trip invitations
             </Label>
-            <Switch id="push_trip_invites" checked={preferences.push_trip_invites} disabled />
+            <Switch
+              id="push_trip_invites"
+              checked={preferences.push_trip_invites}
+              onCheckedChange={value => handleToggle('push_trip_invites', value)}
+              disabled={isSaving}
+            />
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="push_expense_updates" className="cursor-not-allowed">
+            <Label htmlFor="push_expense_updates" className="cursor-pointer">
               Expense updates
             </Label>
-            <Switch id="push_expense_updates" checked={preferences.push_expense_updates} disabled />
+            <Switch
+              id="push_expense_updates"
+              checked={preferences.push_expense_updates}
+              onCheckedChange={value => handleToggle('push_expense_updates', value)}
+              disabled={isSaving}
+            />
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="push_trip_updates" className="cursor-not-allowed">
+            <Label htmlFor="push_trip_updates" className="cursor-pointer">
               Trip updates
             </Label>
-            <Switch id="push_trip_updates" checked={preferences.push_trip_updates} disabled />
+            <Switch
+              id="push_trip_updates"
+              checked={preferences.push_trip_updates}
+              onCheckedChange={value => handleToggle('push_trip_updates', value)}
+              disabled={isSaving}
+            />
           </div>
         </div>
       </div>

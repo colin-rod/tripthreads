@@ -22,6 +22,12 @@ import {
   sendEmailNotification,
   logNotification,
 } from '../_shared/notifications.ts'
+import {
+  sendWebPush,
+  sendMobilePush,
+  formatPushPayload,
+  type PushPayload,
+} from '../_shared/push.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'http://localhost:3000'
@@ -282,10 +288,112 @@ serve(async req => {
     }
 
     console.log(
-      `Sent ${emailResults.filter(r => r.status === 'sent').length} of ${emailResults.length} emails`
+      `Sent ${emailResults.filter(r => r.status === 'sent').length} of ${emailResults.length} invite-accepted email notifications`
     )
 
-    return new Response(JSON.stringify({ success: true, results: emailResults }), {
+    // Filter recipients for push notifications
+    const toNotifyPush = await filterRecipientsAndLog(
+      supabase,
+      participant.trip_id,
+      participants,
+      'invites',
+      'push',
+      metadata
+    )
+
+    // Send push notifications
+    const pushResults = []
+    for (const p of toNotifyPush) {
+      const recipient = p.user
+
+      // Prepare push payload
+      const { title, body } = formatPushPayload(
+        'invites',
+        trip.name,
+        newMember.full_name || newMember.email,
+        {}
+      )
+
+      const payload: PushPayload = {
+        title,
+        body,
+        url: `${FRONTEND_URL}/trips/${trip.id}`,
+        tag: `invite-accepted-${participant.id}`,
+        requireInteraction: false,
+      }
+
+      // Send web push if token exists
+      if (recipient.push_token_web) {
+        try {
+          await sendWebPush(JSON.parse(recipient.push_token_web), payload)
+          await logNotification(supabase, {
+            trip_id: participant.trip_id,
+            user_id: recipient.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'sent',
+            metadata: { ...metadata, platform: 'web' },
+          })
+          pushResults.push({ recipient: recipient.email, platform: 'web', status: 'sent' })
+        } catch (error) {
+          console.error('Error sending web push:', error)
+          await logNotification(supabase, {
+            trip_id: participant.trip_id,
+            user_id: recipient.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            metadata: { ...metadata, platform: 'web' },
+          })
+          pushResults.push({
+            recipient: recipient.email,
+            platform: 'web',
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      }
+
+      // Send mobile push if token exists
+      if (recipient.push_token_mobile) {
+        try {
+          await sendMobilePush(recipient.push_token_mobile, payload)
+          await logNotification(supabase, {
+            trip_id: participant.trip_id,
+            user_id: recipient.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'sent',
+            metadata: { ...metadata, platform: 'mobile' },
+          })
+          pushResults.push({ recipient: recipient.email, platform: 'mobile', status: 'sent' })
+        } catch (error) {
+          console.error('Error sending mobile push:', error)
+          await logNotification(supabase, {
+            trip_id: participant.trip_id,
+            user_id: recipient.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            metadata: { ...metadata, platform: 'mobile' },
+          })
+          pushResults.push({
+            recipient: recipient.email,
+            platform: 'mobile',
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      }
+    }
+
+    console.log(
+      `Sent ${pushResults.filter(r => r.status === 'sent').length} of ${pushResults.length} invite-accepted push notifications`
+    )
+
+    return new Response(JSON.stringify({ success: true, emailResults, pushResults }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })

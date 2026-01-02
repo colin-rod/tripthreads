@@ -6,7 +6,10 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import { FloatingFeedbackButton } from '@/components/features/feedback/FloatingFeedbackButton'
 import { CookieConsentBanner } from '@/components/features/legal/CookieConsentBanner'
+import { ServiceWorkerRegistration } from '@/components/features/notifications/ServiceWorkerRegistration'
 import { initializeAnalytics } from '@/lib/analytics'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 // Initialize analytics trackers on app load
 initializeAnalytics()
@@ -24,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased font-sans">
+        <ServiceWorkerRegistration />
         <AuthProvider>
           <PostHogProvider>{children}</PostHogProvider>
         </AuthProvider>
@@ -31,6 +35,8 @@ export default function RootLayout({
         <SonnerToaster position="top-right" />
         <FloatingFeedbackButton />
         <CookieConsentBanner />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

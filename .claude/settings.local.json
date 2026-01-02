@@ -96,7 +96,10 @@
       "Bash(npx supabase gen types:*)",
       "Bash(timeout 5 npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(timeout 30 tail:*)"
+      "Bash(timeout 30 tail:*)",
+      "Bash(gh run watch:*)",
+      "Bash(supabase --version:*)",
+      "Bash(npx web-push generate-vapid-keys)"
     ],
     "deny": [],
     "ask": []

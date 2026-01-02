@@ -16,6 +16,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { getEffectivePreference, logNotification } from '../_shared/notifications.ts'
+import { sendWebPush, sendMobilePush, type PushPayload } from '../_shared/push.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const FRONTEND_URL = Deno.env.get('FRONTEND_URL') || 'http://localhost:3000'
@@ -328,10 +329,114 @@ serve(async req => {
       },
     })
 
-    return new Response(JSON.stringify({ success: true, emailId: emailResult.id }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    // Send push notification to organizer if they have push enabled
+    const pushResults = []
+
+    // Fetch organizer's profile with push tokens
+    const { data: organizerProfile } = await supabase
+      .from('profiles')
+      .select('push_token_web, push_token_mobile')
+      .eq('id', organizer.id)
+      .single()
+
+    if (organizerProfile && shouldNotify) {
+      // Prepare push payload
+      const payload: PushPayload = {
+        title: `📬 Access request for ${trip.name}`,
+        body: `${requester.full_name || requester.email} wants to join your trip`,
+        url: `${FRONTEND_URL}/trips/${trip.id}/settings`,
+        tag: `access-request-${request.id}`,
+        requireInteraction: true, // Requires action
+      }
+
+      // Send web push if token exists
+      if (organizerProfile.push_token_web) {
+        try {
+          await sendWebPush(JSON.parse(organizerProfile.push_token_web), payload)
+          await logNotification(supabase, {
+            trip_id: trip.id,
+            user_id: organizer.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'sent',
+            metadata: {
+              platform: 'web',
+              requester_email: requester.email,
+              requester_name: requester.full_name,
+            },
+          })
+          pushResults.push({ platform: 'web', status: 'sent' })
+        } catch (error) {
+          console.error('Error sending web push:', error)
+          await logNotification(supabase, {
+            trip_id: trip.id,
+            user_id: organizer.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            metadata: { platform: 'web' },
+          })
+          pushResults.push({
+            platform: 'web',
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      }
+
+      // Send mobile push if token exists
+      if (organizerProfile.push_token_mobile) {
+        try {
+          await sendMobilePush(organizerProfile.push_token_mobile, payload)
+          await logNotification(supabase, {
+            trip_id: trip.id,
+            user_id: organizer.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'sent',
+            metadata: {
+              platform: 'mobile',
+              requester_email: requester.email,
+              requester_name: requester.full_name,
+            },
+          })
+          pushResults.push({ platform: 'mobile', status: 'sent' })
+        } catch (error) {
+          console.error('Error sending mobile push:', error)
+          await logNotification(supabase, {
+            trip_id: trip.id,
+            user_id: organizer.id,
+            event_type: 'invites',
+            notification_type: 'push',
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            metadata: { platform: 'mobile' },
+          })
+          pushResults.push({
+            platform: 'mobile',
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      }
+
+      console.log(
+        `Sent ${pushResults.filter(r => r.status === 'sent').length} of ${pushResults.length} access-request push notifications`
+      )
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        emailId: emailResult.id,
+        pushResults,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
   } catch (error) {
     console.error('Error in send-access-request-email function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
