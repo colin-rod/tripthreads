@@ -101,7 +101,10 @@
       "Bash(supabase --version:*)",
       "Bash(npx web-push generate-vapid-keys)",
       "Bash(npx tailwindcss --help:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(timeout 20 npm test:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []

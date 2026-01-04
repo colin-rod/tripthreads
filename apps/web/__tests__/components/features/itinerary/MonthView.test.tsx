@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MonthView } from '@/components/features/itinerary/MonthView'
 import type { ItineraryItemWithParticipants } from '@tripthreads/core'
-import { format, addDays } from 'date-fns'
+import { format, addDays, startOfMonth, parseISO } from 'date-fns'
 
 // Mock the DayDetailPopover component
 jest.mock('@/components/features/itinerary/DayDetailPopover', () => ({
@@ -89,9 +89,12 @@ describe('MonthView', () => {
     it('renders 42 day cells (6 weeks × 7 days)', () => {
       render(<MonthView {...defaultProps} />)
 
-      // Find all day cells by their date number (1-31)
-      const calendarGrid = screen.getByRole('button', { name: /^\d+$/ }).closest('.grid')
-      expect(calendarGrid).toBeInTheDocument()
+      // Find all day cells - both buttons (with items) and divs (without items)
+      const calendarElement = screen.getByText('January 2026').parentElement?.parentElement
+      const dayCells = calendarElement?.querySelectorAll('.min-h-\\[60px\\]')
+
+      // Should have 42 cells (6 weeks × 7 days)
+      expect(dayCells?.length).toBe(42)
     })
 
     it('displays correct month/year header', () => {
@@ -136,7 +139,7 @@ describe('MonthView', () => {
       const onMonthChange = jest.fn()
       const props = {
         ...defaultProps,
-        currentMonth: new Date('2026-01-15'),
+        currentMonth: new Date('2026-02-01'), // Start at Feb, can go back to Jan
         tripStartDate: '2026-01-01T00:00:00Z',
         tripEndDate: '2026-02-28T00:00:00Z',
         onMonthChange,
@@ -144,24 +147,31 @@ describe('MonthView', () => {
 
       render(<MonthView {...props} />)
 
-      const prevButton = screen.getAllByRole('button')[0] // First button is prev
+      // Find prev button by its ChevronLeft icon
+      const buttons = screen.getAllByRole('button')
+      const prevButton = buttons.find(btn => btn.querySelector('.lucide-chevron-left'))
       expect(prevButton).not.toBeDisabled()
 
-      fireEvent.click(prevButton)
+      fireEvent.click(prevButton!)
       expect(onMonthChange).toHaveBeenCalled()
     })
 
     it('disables previous month button when at trip start', () => {
       const props = {
         ...defaultProps,
-        currentMonth: new Date('2026-01-01'),
+        currentMonth: startOfMonth(parseISO('2026-01-01T00:00:00Z')),
         tripStartDate: '2026-01-01T00:00:00Z',
         tripEndDate: '2026-02-28T00:00:00Z',
+        items: mockItems, // Ensure items are present for this test
       }
 
       render(<MonthView {...props} />)
 
-      const prevButton = screen.getAllByRole('button')[0]
+      // Find the prev button by its ChevronLeft icon
+      const buttons = screen.getAllByRole('button')
+      const prevButton = buttons.find(btn => btn.querySelector('.lucide-chevron-left'))
+
+      // Should be disabled when current month equals first trip month
       expect(prevButton).toBeDisabled()
     })
 
@@ -177,12 +187,12 @@ describe('MonthView', () => {
 
       render(<MonthView {...props} />)
 
-      // Find next button (after "Today" button)
+      // Find next button by its ChevronRight icon
       const buttons = screen.getAllByRole('button')
-      const nextButton = buttons[buttons.length - 1]
+      const nextButton = buttons.find(btn => btn.querySelector('.lucide-chevron-right'))
       expect(nextButton).not.toBeDisabled()
 
-      fireEvent.click(nextButton)
+      fireEvent.click(nextButton!)
       expect(onMonthChange).toHaveBeenCalled()
     })
 
@@ -196,8 +206,9 @@ describe('MonthView', () => {
 
       render(<MonthView {...props} />)
 
+      // Find next button by its ChevronRight icon
       const buttons = screen.getAllByRole('button')
-      const nextButton = buttons[buttons.length - 1]
+      const nextButton = buttons.find(btn => btn.querySelector('.lucide-chevron-right'))
       expect(nextButton).toBeDisabled()
     })
 
@@ -330,77 +341,108 @@ describe('MonthView', () => {
   })
 
   describe('Interactions', () => {
-    it('opens dropdown menu when trip day cell is clicked', () => {
+    it('opens dropdown menu when trip day cell is clicked (only for days with items)', async () => {
       render(<MonthView {...defaultProps} />)
 
-      // Find a day cell within trip range (Jan 15)
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      // Find a day cell within trip range that HAS items (Jan 15 has items in mockItems)
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg')
+      })
       const jan15Button = dayButtons[0]
 
       fireEvent.click(jan15Button)
 
-      // Dropdown menu should appear
-      expect(screen.getByText('View Day Details')).toBeInTheDocument()
+      // Dropdown menu should appear (only days with items show dropdown)
+      await waitFor(() => {
+        expect(screen.getByText('View Day Details')).toBeInTheDocument()
+      })
       expect(screen.getByText('Go to Week View')).toBeInTheDocument()
       expect(screen.getByText('Add New Item')).toBeInTheDocument()
     })
 
-    it('triggers onNavigateToWeek when "Go to Week View" clicked', () => {
+    it('triggers onNavigateToWeek when "Go to Week View" clicked', async () => {
       const onNavigateToWeek = jest.fn()
       render(<MonthView {...defaultProps} onNavigateToWeek={onNavigateToWeek} />)
 
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg')
+      })
       fireEvent.click(dayButtons[0])
 
-      const weekViewOption = screen.getByText('Go to Week View')
-      fireEvent.click(weekViewOption)
+      await waitFor(() => {
+        const weekViewOption = screen.getByText('Go to Week View')
+        fireEvent.click(weekViewOption)
+      })
 
       expect(onNavigateToWeek).toHaveBeenCalled()
     })
 
-    it('triggers onCreateItem when "Add New Item" clicked', () => {
+    it('triggers onCreateItem when "Add New Item" clicked', async () => {
       const onCreateItem = jest.fn()
       render(<MonthView {...defaultProps} onCreateItem={onCreateItem} />)
 
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg')
+      })
       fireEvent.click(dayButtons[0])
 
-      const addItemOption = screen.getByText('Add New Item')
-      fireEvent.click(addItemOption)
+      await waitFor(() => {
+        const addItemOption = screen.getByText('Add New Item')
+        fireEvent.click(addItemOption)
+      })
 
       expect(onCreateItem).toHaveBeenCalled()
     })
 
-    it('hides "Add New Item" when canEdit is false', () => {
+    it('hides "Add New Item" when canEdit is false', async () => {
       render(<MonthView {...defaultProps} canEdit={false} />)
 
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg')
+      })
       fireEvent.click(dayButtons[0])
+
+      await waitFor(() => {
+        expect(screen.getByText('View Day Details')).toBeInTheDocument()
+      })
 
       expect(screen.queryByText('Add New Item')).not.toBeInTheDocument()
     })
 
-    it('does not show dropdown for non-trip days', () => {
+    it('does not render button for days without items', () => {
       render(<MonthView {...defaultProps} />)
 
-      // Jan 1 is before trip start (Jan 10)
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '1')
-      const jan1Button = dayButtons[0]
+      // Jan 10 is within trip range (Jan 10-25) but has no items
+      // It should be a div, not a button, so no dropdown
+      const allButtons = screen.getAllByRole('button')
+      const jan10Buttons = allButtons.filter(btn => btn.textContent === '10')
 
-      fireEvent.click(jan1Button)
-
-      // Dropdown should not appear
-      expect(screen.queryByText('View Day Details')).not.toBeInTheDocument()
+      // Should not find any button with "10" (navigation buttons are separate)
+      expect(jan10Buttons.length).toBe(0)
     })
 
-    it('opens day detail popover when "View Day Details" clicked', () => {
+    it('opens day detail popover when "View Day Details" clicked', async () => {
       render(<MonthView {...defaultProps} />)
 
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg')
+      })
       fireEvent.click(dayButtons[0])
 
-      const viewDetailsOption = screen.getByText('View Day Details')
-      fireEvent.click(viewDetailsOption)
+      await waitFor(() => {
+        const viewDetailsOption = screen.getByText('View Day Details')
+        fireEvent.click(viewDetailsOption)
+      })
 
       expect(screen.getByTestId('day-detail-popover')).toBeInTheDocument()
     })
@@ -429,7 +471,15 @@ describe('MonthView', () => {
 
       render(<MonthView {...props} />)
 
-      const dayButtons = screen.getAllByRole('button').filter(btn => btn.textContent === '15')
+      // Should still render the month view with the trip date
+      expect(screen.getByText('January 2026')).toBeInTheDocument()
+
+      // Jan 15 has items in mockItems, so it should be a button (excluding navigation buttons)
+      const allButtons = screen.getAllByRole('button')
+      const dayButtons = allButtons.filter(btn => {
+        const text = btn.textContent?.trim() || ''
+        return text === '15' && !btn.querySelector('svg') // Exclude nav buttons with icons
+      })
       expect(dayButtons.length).toBeGreaterThan(0)
     })
 

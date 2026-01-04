@@ -75,7 +75,7 @@ describe('DayDetailPopover', () => {
     it('displays the date in header', () => {
       render(<DayDetailPopover {...defaultProps} />)
 
-      expect(screen.getByText(/Wednesday, January 15, 2026/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thursday, January 15, 2026/i)).toBeInTheDocument()
     })
 
     it('displays all items for the selected day', () => {

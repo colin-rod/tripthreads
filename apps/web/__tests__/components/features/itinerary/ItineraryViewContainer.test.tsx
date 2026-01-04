@@ -110,10 +110,9 @@ describe('ItineraryViewContainer', () => {
 
       render(<ItineraryViewContainer {...defaultProps} />)
 
-      expect(
-        screen.getByRole('status', { hidden: true }) ||
-          screen.getByText(/loading/i, { exact: false })
-      ).toBeTruthy()
+      // Check for the spinner element (animate-spin class)
+      const spinner = document.querySelector('.animate-spin')
+      expect(spinner).toBeInTheDocument()
     })
 
     it('loads and displays itinerary items', async () => {
