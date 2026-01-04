@@ -99,7 +99,9 @@
       "Bash(timeout 30 tail:*)",
       "Bash(gh run watch:*)",
       "Bash(supabase --version:*)",
-      "Bash(npx web-push generate-vapid-keys)"
+      "Bash(npx web-push generate-vapid-keys)",
+      "Bash(npx tailwindcss --help:*)",
+      "Bash(npx tailwindcss:*)"
     ],
     "deny": [],
     "ask": []

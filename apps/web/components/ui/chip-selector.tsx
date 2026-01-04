@@ -31,10 +31,7 @@ export function ChipSelector<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn(
-        'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1 rounded-lg border border-border p-1',
-        className
-      )}
+      className={cn('grid grid-cols-2 gap-1 rounded-lg border border-border p-1', className)}
     >
       {options.map(option => {
         const Icon = option.icon
