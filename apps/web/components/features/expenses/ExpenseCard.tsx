@@ -120,7 +120,7 @@ export function ExpenseCard({
   return (
     <div
       className={cn(
-        'group relative rounded-lg border bg-card p-4 shadow transition-all hover:shadow-md cursor-pointer'
+        'group relative rounded-lg border bg-card p-4 shadow-md transition-all hover:shadow-lg cursor-pointer'
       )}
       onClick={onClick}
     >

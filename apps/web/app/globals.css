@@ -69,6 +69,21 @@
   --color-success: oklch(from hsl(var(--success)) l c h);
   --color-warning: oklch(from hsl(var(--warning)) l c h);
   --color-error: oklch(from hsl(var(--error)) l c h);
+  --color-card: oklch(from hsl(var(--card)) l c h);
+  --color-card-foreground: oklch(from hsl(var(--card-foreground)) l c h);
+  --color-popover: oklch(from hsl(var(--popover)) l c h);
+  --color-popover-foreground: oklch(from hsl(var(--popover-foreground)) l c h);
+  --color-accent: oklch(from hsl(var(--accent)) l c h);
+  --color-accent-foreground: oklch(from hsl(var(--accent-foreground)) l c h);
+  --color-destructive: oklch(from hsl(var(--destructive)) l c h);
+  --color-destructive-foreground: oklch(from hsl(var(--destructive-foreground)) l c h);
+  --color-success-foreground: oklch(from hsl(var(--success-foreground)) l c h);
+  --color-warning-foreground: oklch(from hsl(var(--warning-foreground)) l c h);
+  --color-error-foreground: oklch(from hsl(var(--error-foreground)) l c h);
+  --color-info: oklch(from hsl(var(--info)) l c h);
+  --color-info-foreground: oklch(from hsl(var(--info-foreground)) l c h);
+  --color-input: oklch(from hsl(var(--input)) l c h);
+  --color-ring: oklch(from hsl(var(--ring)) l c h);
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
