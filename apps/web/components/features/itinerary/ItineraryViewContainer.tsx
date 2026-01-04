@@ -7,12 +7,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import { startOfMonth, parseISO } from 'date-fns'
 import { CalendarView } from './CalendarView'
 import { ListView } from './ListView'
+import { MonthView } from './MonthView'
 import { ItineraryItemDialog } from './ItineraryItemDialog'
 import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
-import { Calendar, List, Plus } from 'lucide-react'
+import { Calendar, List, Plus, CalendarDays } from 'lucide-react'
 import { getTripItineraryItems } from '@tripthreads/core'
 import { deleteItineraryItem } from '@/app/actions/itinerary'
 import { useToast } from '@/hooks/use-toast'
@@ -37,7 +39,7 @@ interface ItineraryViewContainerProps {
   canEdit: boolean
 }
 
-type ViewMode = 'calendar' | 'list'
+type ViewMode = 'calendar' | 'list' | 'month'
 type DialogMode = 'view' | 'edit' | 'create' | null
 
 export function ItineraryViewContainer({
@@ -55,6 +57,9 @@ export function ItineraryViewContainer({
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [selectedItem, setSelectedItem] = useState<ItineraryItemWithParticipants | undefined>()
   const [itemToDelete, setItemToDelete] = useState<ItineraryItemWithParticipants | null>(null)
+  const [currentMonth, setCurrentMonth] = useState<Date>(() =>
+    startOfMonth(parseISO(tripStartDate))
+  )
 
   // Load itinerary items
   const loadItems = async () => {
@@ -82,7 +87,7 @@ export function ItineraryViewContainer({
   // Load view preference from localStorage
   useEffect(() => {
     const savedView = localStorage.getItem('itinerary-view-mode')
-    if (savedView === 'calendar' || savedView === 'list') {
+    if (savedView === 'calendar' || savedView === 'list' || savedView === 'month') {
       setViewMode(savedView)
     }
   }, [])
@@ -143,6 +148,17 @@ export function ItineraryViewContainer({
     setSelectedItem(undefined)
   }
 
+  const handleNavigateToWeek = () => {
+    setViewMode('calendar')
+    localStorage.setItem('itinerary-view-mode', 'calendar')
+  }
+
+  const handleCreateItemForDate = () => {
+    // TODO: Pre-fill the dialog with the selected date
+    setSelectedItem(undefined)
+    setDialogMode('create')
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -157,13 +173,22 @@ export function ItineraryViewContainer({
       <div className="flex items-center justify-between">
         <div className="inline-flex rounded-lg border p-1">
           <Button
+            variant={viewMode === 'month' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => handleViewChange('month')}
+            className="gap-2"
+          >
+            <CalendarDays className="h-4 w-4" />
+            Month
+          </Button>
+          <Button
             variant={viewMode === 'calendar' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleViewChange('calendar')}
             className="gap-2"
           >
             <Calendar className="h-4 w-4" />
-            Calendar
+            Week
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -191,7 +216,20 @@ export function ItineraryViewContainer({
       </div>
 
       {/* Views */}
-      {viewMode === 'calendar' ? (
+      {viewMode === 'month' ? (
+        <MonthView
+          items={items}
+          tripStartDate={tripStartDate}
+          tripEndDate={tripEndDate}
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
+          onItemClick={handleItemClick}
+          onNavigateToWeek={handleNavigateToWeek}
+          onCreateItem={handleCreateItemForDate}
+          currentUserId={currentUserId}
+          canEdit={canEdit}
+        />
+      ) : viewMode === 'calendar' ? (
         <CalendarView
           items={items}
           tripId={tripId}
