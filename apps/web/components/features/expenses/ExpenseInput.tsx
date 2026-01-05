@@ -484,7 +484,12 @@ export function ExpenseInput({ tripId, onSubmit }: ExpenseInputProps) {
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" onClick={handleReset} disabled={submitting}>
+                  <Button
+                    variant="outline"
+                    onClick={handleReset}
+                    disabled={submitting}
+                    className="flex-1"
+                  >
                     <Edit3 className="mr-2 h-4 w-4" />
                     Edit
                   </Button>
