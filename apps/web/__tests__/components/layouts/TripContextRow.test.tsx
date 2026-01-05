@@ -129,6 +129,23 @@ describe('TripContextRow', () => {
     })
   })
 
+  describe('Styling', () => {
+    it('applies trip-context background styling', () => {
+      const { container } = render(
+        <TripContextRow
+          trip={mockTrip}
+          isOwner={true}
+          userRole="owner"
+          activeSection="home"
+          onNavigate={mockOnNavigate}
+        />
+      )
+
+      const tripContextRow = container.querySelector('.bg-trip-context')
+      expect(tripContextRow).toBeInTheDocument()
+    })
+  })
+
   describe('Basic rendering', () => {
     it('renders trip name', () => {
       render(

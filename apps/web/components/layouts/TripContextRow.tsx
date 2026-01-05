@@ -71,7 +71,7 @@ export function TripContextRow({
   }
 
   return (
-    <div className="flex h-12 items-center justify-between px-6 border-t border-border bg-background">
+    <div className="flex h-12 items-center justify-between px-6 border-t border-border bg-trip-context">
       {/* Left Section */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         {/* Back Arrow - only show if not on home section */}
