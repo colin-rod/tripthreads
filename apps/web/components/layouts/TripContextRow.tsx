@@ -57,7 +57,7 @@ export function TripContextRow({
   // Format dates
   const startDate = new Date(trip.start_date)
   const endDate = new Date(trip.end_date)
-  const dateRange = `${format(startDate, 'MMM d')}-${format(endDate, 'd, yyyy')}`
+  const dateRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`
 
   const participantCount = trip.trip_participants?.length || 0
 
