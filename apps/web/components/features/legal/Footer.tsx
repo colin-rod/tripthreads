@@ -5,9 +5,10 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border bg-muted/30 mt-auto">
-      <div className="container max-w-7xl py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Brand */}
-        <div className="space-y-4">
+      <div className="container max-w-7xl py-6">
+        {/* Row 1: Branding + Navigation */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4">
+          {/* Left: Logo + Tagline */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <svg
               className="h-8 w-8 text-primary"
@@ -22,93 +23,42 @@ export function Footer() {
               <circle cx="12" cy="10" r="3" />
             </svg>
             <span className="font-semibold text-lg">TripThreads</span>
+            <span className="hidden sm:inline text-sm text-muted-foreground">
+              — Make memories, not spreadsheets
+            </span>
           </Link>
-          <p className="text-sm text-muted-foreground">
-            Make memories, not spreadsheets — travel made simple.
-          </p>
+
+          {/* Right: Navigation Links */}
+          <nav className="flex gap-6 text-sm">
+            <Link
+              href="/trips"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Trips
+            </Link>
+            <Link
+              href="/#features"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Features
+            </Link>
+            <a
+              href="mailto:support@tripthreads.app"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Contact
+            </a>
+            <Link
+              href="/feedback"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Feedback
+            </Link>
+          </nav>
         </div>
 
-        {/* Product */}
-        <div>
-          <h3 className="font-semibold mb-4">Product</h3>
-          <ul className="space-y-3 text-sm">
-            <li>
-              <Link
-                href="/trips"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Trips
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/#features"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Features
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Legal */}
-        <div>
-          <h3 className="font-semibold mb-4">Legal</h3>
-          <ul className="space-y-3 text-sm">
-            <li>
-              <Link
-                href="/terms"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Terms of Service
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/privacy"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/cookies"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cookie Policy
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Support */}
-        <div>
-          <h3 className="font-semibold mb-4">Support</h3>
-          <ul className="space-y-3 text-sm">
-            <li>
-              <a
-                href="mailto:support@tripthreads.app"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Contact Us
-              </a>
-            </li>
-            <li>
-              <Link
-                href="/feedback"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Feedback
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="border-t border-border">
-        <div className="container max-w-7xl py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+        {/* Row 2: Copyright + Legal Links */}
+        <div className="border-t border-border pt-4 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>© {currentYear} TripThreads. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/terms" className="hover:text-foreground transition-colors">
