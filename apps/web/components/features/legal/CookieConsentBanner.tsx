@@ -62,45 +62,62 @@ export function CookieConsentBanner() {
   if (!showBanner) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t-2 border-primary shadow-lg">
-      <div className="container max-w-6xl py-6 space-y-4">
+    <div className="fixed bottom-4 right-4 left-4 md:left-auto md:max-w-md z-50 bg-card/95 backdrop-blur-sm border-2 border-primary shadow-xl rounded-lg transition-all duration-300 ease-in-out">
+      <div className="px-4 py-4 md:px-5 md:py-5 space-y-3">
         {!showDetails ? (
           // Simple mode
           <>
-            <div className="flex items-start gap-4 flex-col md:flex-row">
-              <div className="flex-1 space-y-2">
-                <h3 className="font-semibold text-lg">We value your privacy</h3>
-                <p className="text-sm text-muted-foreground">
-                  We use cookies to enhance your experience, analyze site usage, and improve our
-                  service. You can customize your preferences or accept all cookies.{' '}
-                  <Link href="/cookies" className="text-primary hover:underline">
-                    Learn more
-                  </Link>
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Button variant="outline" onClick={handleRejectOptional}>
-                  Reject Optional
+            <div className="space-y-3">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">
+                We value your privacy
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                We use cookies to enhance your experience, analyze site usage, and improve our
+                service. You can customize your preferences or accept all cookies.{' '}
+                <Link
+                  href="/cookies"
+                  className="text-primary hover:underline font-medium text-xs md:text-sm"
+                >
+                  Learn more
+                </Link>
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleAcceptAll} className="w-full">
+                Accept All
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleRejectOptional}
+                  className="flex-1 text-xs md:text-sm"
+                >
+                  Reject
                 </Button>
-                <Button variant="outline" onClick={() => setShowDetails(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDetails(true)}
+                  className="flex-1 text-xs md:text-sm"
+                >
                   Customize
                 </Button>
-                <Button onClick={handleAcceptAll}>Accept All</Button>
               </div>
             </div>
           </>
         ) : (
           // Detailed mode
           <>
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Cookie Preferences</h3>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">
+                Cookie Preferences
+              </h3>
 
               {/* Necessary Cookies */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex-1 pr-8">
-                  <Label className="font-medium">Strictly Necessary</Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Required for authentication and core functionality. Cannot be disabled.
+              <div className="flex items-center justify-between py-2">
+                <div className="flex-1 pr-4">
+                  <Label className="font-medium text-xs md:text-sm">Strictly Necessary</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Required for authentication and core functionality.
                   </p>
                 </div>
                 <Switch checked disabled aria-label="Strictly necessary cookies (always enabled)" />
@@ -109,13 +126,16 @@ export function CookieConsentBanner() {
               <Separator />
 
               {/* Performance Cookies */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex-1 pr-8">
-                  <Label htmlFor="performance" className="font-medium cursor-pointer">
+              <div className="flex items-center justify-between py-2">
+                <div className="flex-1 pr-4">
+                  <Label
+                    htmlFor="performance"
+                    className="font-medium cursor-pointer text-xs md:text-sm"
+                  >
                     Performance
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Vercel Analytics for page load times and Core Web Vitals.
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Vercel Analytics for page load times.
                   </p>
                 </div>
                 <Switch
@@ -129,13 +149,16 @@ export function CookieConsentBanner() {
               <Separator />
 
               {/* Functional Cookies */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex-1 pr-8">
-                  <Label htmlFor="functional" className="font-medium cursor-pointer">
+              <div className="flex items-center justify-between py-2">
+                <div className="flex-1 pr-4">
+                  <Label
+                    htmlFor="functional"
+                    className="font-medium cursor-pointer text-xs md:text-sm"
+                  >
                     Functional
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Sentry error tracking and session replay (errors only).
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sentry error tracking and session replay.
                   </p>
                 </div>
                 <Switch
@@ -149,13 +172,16 @@ export function CookieConsentBanner() {
               <Separator />
 
               {/* Analytics Cookies */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex-1 pr-8">
-                  <Label htmlFor="analytics" className="font-medium cursor-pointer">
+              <div className="flex items-center justify-between py-2">
+                <div className="flex-1 pr-4">
+                  <Label
+                    htmlFor="analytics"
+                    className="font-medium cursor-pointer text-xs md:text-sm"
+                  >
                     Analytics
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    PostHog for feature usage and user journeys.
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PostHog for feature usage and journeys.
                   </p>
                 </div>
                 <Switch
@@ -167,15 +193,25 @@ export function CookieConsentBanner() {
               </div>
             </div>
 
-            <div className="flex justify-between pt-4 flex-col md:flex-row gap-3">
-              <Button variant="ghost" onClick={() => setShowDetails(false)}>
-                Back
+            <div className="flex flex-col gap-2 pt-3">
+              <Button onClick={handleSavePreferences} className="w-full">
+                Save Preferences
               </Button>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleRejectOptional}>
-                  Reject Optional
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleRejectOptional}
+                  className="flex-1 text-xs md:text-sm"
+                >
+                  Reject All
                 </Button>
-                <Button onClick={handleSavePreferences}>Save Preferences</Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowDetails(false)}
+                  className="flex-1 text-xs md:text-sm"
+                >
+                  Back
+                </Button>
               </div>
             </div>
           </>
