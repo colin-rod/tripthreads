@@ -81,8 +81,13 @@ export function ExpenseListView({
     payerIds: [],
     participantIds: [],
   })
-  const [selectedExpense, setSelectedExpense] = useState<ExpenseWithDetails | null>(null)
-  const [expenseToEdit, setExpenseToEdit] = useState<ExpenseWithDetails | null>(null)
+
+  // Unified Sheet state with mode
+  const [sheetState, setSheetState] = useState<{
+    expense: ExpenseWithDetails | null
+    mode: 'view' | 'edit'
+  }>({ expense: null, mode: 'view' })
+
   const [expenseToDelete, setExpenseToDelete] = useState<ExpenseWithDetails | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
 
@@ -91,13 +96,12 @@ export function ExpenseListView({
   }
 
   const handleAddExpense = () => {
-    setExpenseToEdit(null)
     setIsFormOpen(true)
   }
 
   const handleEditExpense = (expense: ExpenseWithDetails) => {
-    setExpenseToEdit(expense)
-    setIsFormOpen(true)
+    // Close any open sheet and switch to edit mode
+    setSheetState({ expense, mode: 'edit' })
   }
 
   const handleDeleteExpense = (expense: ExpenseWithDetails) => {
@@ -327,7 +331,7 @@ export function ExpenseListView({
                     key={expense.id}
                     expense={expense}
                     currentUserId={currentUserId}
-                    onClick={() => setSelectedExpense(expense)}
+                    onClick={() => setSheetState({ expense, mode: 'view' })}
                     onEdit={() => handleEditExpense(expense)}
                     onDelete={() => handleDeleteExpense(expense)}
                   />
@@ -338,30 +342,29 @@ export function ExpenseListView({
         </div>
       )}
 
-      {/* Detail sheet */}
-      {selectedExpense && (
+      {/* Detail Sheet (view + edit inline) */}
+      {sheetState.expense && (
         <ExpenseDetailSheet
-          expense={selectedExpense}
-          open={!!selectedExpense}
+          expense={sheetState.expense}
+          open={!!sheetState.expense}
           onOpenChange={open => {
-            if (!open) setSelectedExpense(null)
+            if (!open) setSheetState({ expense: null, mode: 'view' })
           }}
           currentUserId={currentUserId}
-          onEdit={() => handleEditExpense(selectedExpense)}
-          onDelete={() => handleDeleteExpense(selectedExpense)}
+          mode={sheetState.mode}
+          onModeChange={mode => setSheetState(prev => ({ ...prev, mode }))}
+          tripParticipants={tripParticipants}
+          onDelete={() => handleDeleteExpense(sheetState.expense!)}
+          onSuccess={handleSuccess}
         />
       )}
 
-      {/* Create/Edit Form Dialog */}
+      {/* Create Form Dialog (create only) */}
       <ExpenseFormDialog
         open={isFormOpen}
-        onOpenChange={open => {
-          setIsFormOpen(open)
-          if (!open) setExpenseToEdit(null)
-        }}
+        onOpenChange={setIsFormOpen}
         tripId={tripId}
         tripParticipants={tripParticipants}
-        expense={expenseToEdit || undefined}
         onSuccess={handleSuccess}
       />
 

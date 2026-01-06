@@ -1,5 +1,15 @@
 import * as React from 'react'
-import { Modal, View, TouchableOpacity, Pressable, type ModalProps } from 'react-native'
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  type ModalProps,
+} from 'react-native'
 import { cn } from '../../lib/utils'
 
 export interface SheetProps extends Omit<ModalProps, 'visible'> {
@@ -34,18 +44,25 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = 'SheetOverlay'
 
 const SheetContent = React.forwardRef<
-  React.ElementRef<typeof View>,
-  React.ComponentPropsWithoutRef<typeof View> & { onClose?: () => void }
+  React.ElementRef<typeof ScrollView>,
+  React.ComponentPropsWithoutRef<typeof ScrollView> & { onClose?: () => void }
 >(({ className, children, onClose, ...props }, ref) => (
   <View className="flex-1 justify-end">
     <TouchableOpacity activeOpacity={1} onPress={onClose} className="flex-1" />
-    <View
-      ref={ref}
-      className={cn('bg-background rounded-t-3xl px-6 py-8', 'border-t-2 border-border', className)}
-      {...props}
-    >
-      {children}
-    </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        ref={ref}
+        className={cn(
+          'bg-background rounded-t-3xl px-6 py-8',
+          'border-t-2 border-border',
+          'max-h-[90vh]',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </ScrollView>
+    </KeyboardAvoidingView>
   </View>
 ))
 
@@ -67,4 +84,22 @@ const SheetFooter = React.forwardRef<
 
 SheetFooter.displayName = 'SheetFooter'
 
-export { Sheet, SheetOverlay, SheetContent, SheetHeader, SheetFooter }
+const SheetTitle = React.forwardRef<
+  React.ElementRef<typeof Text>,
+  React.ComponentPropsWithoutRef<typeof Text>
+>(({ className, ...props }, ref) => (
+  <Text ref={ref} className={cn('text-2xl font-semibold text-foreground', className)} {...props} />
+))
+
+SheetTitle.displayName = 'SheetTitle'
+
+const SheetDescription = React.forwardRef<
+  React.ElementRef<typeof Text>,
+  React.ComponentPropsWithoutRef<typeof Text>
+>(({ className, ...props }, ref) => (
+  <Text ref={ref} className={cn('text-sm text-muted-foreground mt-1', className)} {...props} />
+))
+
+SheetDescription.displayName = 'SheetDescription'
+
+export { Sheet, SheetOverlay, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription }

@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import type { ExpenseWithDetails, OptimizedSettlement } from '@tripthreads/core'
+import { ExpenseDetailSheet } from './ExpenseDetailSheet'
 
 interface ExpensesSectionProps {
   expenses: ExpenseWithDetails[]
   settlements: OptimizedSettlement[]
+  currentUserId: string
+  tripParticipants: Array<{ id: string; full_name: string | null; avatar_url?: string | null }>
   loading?: boolean
   error?: string
 }
@@ -32,9 +36,24 @@ const getCategoryIcon = (category: string) => {
   }
 }
 
-export function ExpensesSection({ expenses, settlements, loading, error }: ExpensesSectionProps) {
+export function ExpensesSection({
+  expenses,
+  settlements,
+  currentUserId,
+  tripParticipants,
+  loading,
+  error,
+}: ExpensesSectionProps) {
   const router = useRouter()
   const params = useLocalSearchParams<{ id: string }>()
+
+  // Sheet state for view/edit
+  const [sheetState, setSheetState] = useState<{
+    expense: ExpenseWithDetails | null
+    mode: 'view' | 'edit'
+  }>({ expense: null, mode: 'view' })
+
+  const [_showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   if (loading) {
     return (
@@ -118,7 +137,7 @@ export function ExpensesSection({ expenses, settlements, loading, error }: Expen
               {expenses.map(expense => (
                 <TouchableOpacity
                   key={expense.id}
-                  onPress={() => router.push(`/(app)/trips/${params.id}/expenses/${expense.id}`)}
+                  onPress={() => setSheetState({ expense, mode: 'view' })}
                   className="bg-card p-4 rounded-xl border border-border"
                 >
                   <View className="flex-row items-start justify-between">
@@ -151,6 +170,22 @@ export function ExpensesSection({ expenses, settlements, loading, error }: Expen
           </View>
         )}
       </View>
+
+      {/* Expense Detail Sheet */}
+      {sheetState.expense && (
+        <ExpenseDetailSheet
+          expense={sheetState.expense}
+          open={!!sheetState.expense}
+          onOpenChange={open => !open && setSheetState({ expense: null, mode: 'view' })}
+          mode={sheetState.mode}
+          onModeChange={mode => setSheetState(prev => ({ ...prev, mode }))}
+          currentUserId={currentUserId}
+          tripParticipants={tripParticipants}
+          onDelete={() => setShowDeleteDialog(true)}
+        />
+      )}
+
+      {/* TODO: Add delete confirmation dialog */}
     </ScrollView>
   )
 }

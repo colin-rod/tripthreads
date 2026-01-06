@@ -27,9 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { DurationBadge } from './DurationBadge'
 import { ItineraryItemTooltip } from './ItineraryItemTooltip'
-import { MetadataSection } from './MetadataSection'
 import { CollapsedMetadataPreview } from './CollapsedMetadataPreview'
-import { useState } from 'react'
 
 interface ListViewProps {
   items: ItineraryItemWithParticipants[]
@@ -105,7 +103,6 @@ function ItineraryListItem({
   onEdit,
   onDelete,
 }: ItineraryListItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
   const config = ITINERARY_ITEM_TYPE_CONFIG[item.type]
   const iconName = config.icon as keyof typeof LucideIcons
   const IconComponent = (LucideIcons[iconName] as LucideIcon | undefined) || LucideIcons.Calendar
@@ -115,33 +112,18 @@ function ItineraryListItem({
 
   const canEdit = item.created_by === currentUserId // Simplified - RLS will enforce full rules
 
-  // Check if there's additional content to show when expanded
-  const hasExpandableContent =
-    (item.metadata && Object.keys(item.metadata).length > 0) ||
-    item.notes ||
-    (item.links && item.links.length > 0)
-
   return (
     <ItineraryItemTooltip item={item}>
       <div
         className={cn(
-          'group relative rounded-lg border bg-card p-4 transition-all cursor-pointer',
-          config.bgColor,
-          // Visual indicators for expandable/expanded state
-          !isExpanded && hasExpandableContent && 'hover:shadow-md hover:border-primary/50',
-          isExpanded && 'shadow-md ring-2 ring-primary/20'
+          'group relative rounded-lg border bg-card p-4 transition-all cursor-pointer hover:shadow-md hover:border-primary/50',
+          config.bgColor
         )}
         onClick={e => {
           // Prevent if clicking on interactive elements (links, buttons, menu)
           if ((e.target as HTMLElement).closest('a, button')) return
-
-          if (!isExpanded && hasExpandableContent) {
-            // First click: expand
-            setIsExpanded(true)
-          } else {
-            // Second click on expanded card (or first click if no expandable content): open modal
-            onClick?.()
-          }
+          // Always open Sheet on click
+          onClick?.()
         }}
       >
         <div className="flex items-start justify-between gap-4">
@@ -173,12 +155,7 @@ function ItineraryListItem({
               </div>
 
               {item.description && (
-                <p
-                  className={cn(
-                    'text-sm text-muted-foreground mt-1',
-                    !isExpanded && 'line-clamp-2'
-                  )}
-                >
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                   {item.description}
                 </p>
               )}
@@ -190,30 +167,29 @@ function ItineraryListItem({
                 </div>
               )}
 
-              {/* Booking Reference (collapsed state only, for transport & accommodation) */}
-              {!isExpanded &&
-                (() => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const metadata = item.metadata as any
-                  const reference =
-                    item.type === 'transport'
-                      ? metadata?.booking_reference
-                      : item.type === 'accommodation'
-                        ? metadata?.confirmation_number
-                        : null
+              {/* Booking Reference (for transport & accommodation) */}
+              {(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const metadata = item.metadata as any
+                const reference =
+                  item.type === 'transport'
+                    ? metadata?.booking_reference
+                    : item.type === 'accommodation'
+                      ? metadata?.confirmation_number
+                      : null
 
-                  return (
-                    reference && (
-                      <div className="flex items-center gap-1 mt-2 text-sm">
-                        <LucideIcons.Ticket className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-muted-foreground truncate">{reference}</span>
-                      </div>
-                    )
+                return (
+                  reference && (
+                    <div className="flex items-center gap-1 mt-2 text-sm">
+                      <LucideIcons.Ticket className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground truncate">{reference}</span>
+                    </div>
                   )
-                })()}
+                )
+              })()}
 
-              {/* Key Metadata Preview (collapsed state only) */}
-              {!isExpanded && <CollapsedMetadataPreview item={item} />}
+              {/* Key Metadata Preview */}
+              <CollapsedMetadataPreview item={item} />
 
               {/* Participants */}
               {item.participants && item.participants.length > 0 && (
@@ -223,43 +199,6 @@ function ItineraryListItem({
                     {item.participants.length} participant
                     {item.participants.length !== 1 ? 's' : ''}
                   </span>
-                </div>
-              )}
-
-              {/* Expanded Details */}
-              {isExpanded && hasExpandableContent && (
-                <div className="mt-4 pt-4 border-t space-y-3">
-                  {/* Metadata Section */}
-                  <MetadataSection item={item} />
-
-                  {/* Notes */}
-                  {item.notes && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
-                      <p className="text-sm text-foreground">{item.notes}</p>
-                    </div>
-                  )}
-
-                  {/* Links */}
-                  {item.links && item.links.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">Links</p>
-                      <div className="space-y-1">
-                        {item.links.map((link, idx) => (
-                          <a
-                            key={idx}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline block truncate"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            {link.title || link.url}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

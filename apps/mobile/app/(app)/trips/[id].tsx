@@ -95,15 +95,22 @@ function TripDetailContent({ tripData }: { tripData: TripData }) {
 
       {/* Content based on current section */}
       {currentSection === 'dashboard' && <DashboardView tripData={tripData} />}
-      {currentSection === 'expenses' && (
+      {currentSection === 'expenses' && tripData.trip && (
         <ExpensesSection
           expenses={tripData.expenses}
           settlements={tripData.settlements}
+          currentUserId={tripData.trip.owner_id}
+          tripParticipants={[]}
           error={tripData.errors.expenses}
         />
       )}
-      {currentSection === 'plan' && (
-        <PlanSection itinerary={tripData.itinerary} error={tripData.errors.itinerary} />
+      {currentSection === 'plan' && tripData.trip && (
+        <PlanSection
+          itinerary={tripData.itinerary}
+          currentUserId={tripData.trip.owner_id}
+          tripParticipants={[]}
+          error={tripData.errors.itinerary}
+        />
       )}
       {currentSection === 'chat' && (
         <ChatSection initialMessages={tripData.chatMessages} error={tripData.errors.chat} />

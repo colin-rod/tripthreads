@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
-import type { GroupedItineraryItems } from '@tripthreads/core'
+import type { GroupedItineraryItems, ItineraryItemWithParticipants } from '@tripthreads/core'
+import { ItineraryItemDetailSheet } from './ItineraryItemDetailSheet'
 
 interface PlanSectionProps {
   itinerary: GroupedItineraryItems[]
+  currentUserId: string
+  tripParticipants?: Array<{ id: string; full_name: string | null; avatar_url?: string | null }>
   loading?: boolean
   error?: string
 }
@@ -25,9 +29,23 @@ const getTypeIcon = (type: string) => {
   }
 }
 
-export function PlanSection({ itinerary, loading, error }: PlanSectionProps) {
+export function PlanSection({
+  itinerary,
+  currentUserId,
+  tripParticipants,
+  loading,
+  error,
+}: PlanSectionProps) {
   const router = useRouter()
   const params = useLocalSearchParams<{ id: string }>()
+
+  // Sheet state for view/edit
+  const [sheetState, setSheetState] = useState<{
+    item: ItineraryItemWithParticipants | null
+    mode: 'view' | 'edit'
+  }>({ item: null, mode: 'view' })
+
+  const [_showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   if (loading) {
     return (
@@ -99,7 +117,7 @@ export function PlanSection({ itinerary, loading, error }: PlanSectionProps) {
                   {group.items.map(item => (
                     <TouchableOpacity
                       key={item.id}
-                      onPress={() => router.push(`/(app)/trips/${params.id}/itinerary/${item.id}`)}
+                      onPress={() => setSheetState({ item, mode: 'view' })}
                       className="bg-card p-4 rounded-xl border border-border"
                     >
                       <View className="flex-row items-start">
@@ -149,6 +167,22 @@ export function PlanSection({ itinerary, loading, error }: PlanSectionProps) {
           </View>
         )}
       </View>
+
+      {/* Itinerary Item Detail Sheet */}
+      {sheetState.item && (
+        <ItineraryItemDetailSheet
+          item={sheetState.item}
+          open={!!sheetState.item}
+          onOpenChange={open => !open && setSheetState({ item: null, mode: 'view' })}
+          mode={sheetState.mode}
+          onModeChange={mode => setSheetState(prev => ({ ...prev, mode }))}
+          currentUserId={currentUserId}
+          tripParticipants={tripParticipants}
+          onDelete={() => setShowDeleteDialog(true)}
+        />
+      )}
+
+      {/* TODO: Add delete confirmation dialog */}
     </ScrollView>
   )
 }

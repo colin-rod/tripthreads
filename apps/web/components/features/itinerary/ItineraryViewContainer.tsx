@@ -12,6 +12,7 @@ import { CalendarView } from './CalendarView'
 import { ListView } from './ListView'
 import { MonthView } from './MonthView'
 import { ItineraryItemDialog } from './ItineraryItemDialog'
+import { ItineraryItemDetailSheet } from './ItineraryItemDetailSheet'
 import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { Button } from '@/components/ui/button'
 import { Calendar, List, Plus, CalendarDays } from 'lucide-react'
@@ -40,7 +41,6 @@ interface ItineraryViewContainerProps {
 }
 
 type ViewMode = 'calendar' | 'list' | 'month'
-type DialogMode = 'view' | 'edit' | 'create' | null
 
 export function ItineraryViewContainer({
   tripId,
@@ -54,8 +54,16 @@ export function ItineraryViewContainer({
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [items, setItems] = useState<ItineraryItemWithParticipants[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [dialogMode, setDialogMode] = useState<DialogMode>(null)
-  const [selectedItem, setSelectedItem] = useState<ItineraryItemWithParticipants | undefined>()
+
+  // Unified Sheet state with mode (for view/edit)
+  const [sheetState, setSheetState] = useState<{
+    item: ItineraryItemWithParticipants | null
+    mode: 'view' | 'edit'
+  }>({ item: null, mode: 'view' })
+
+  // Separate dialog for create mode
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+
   const [itemToDelete, setItemToDelete] = useState<ItineraryItemWithParticipants | null>(null)
   const [currentMonth, setCurrentMonth] = useState<Date>(() =>
     startOfMonth(parseISO(tripStartDate))
@@ -99,13 +107,13 @@ export function ItineraryViewContainer({
   }
 
   const handleItemClick = (item: ItineraryItemWithParticipants) => {
-    setSelectedItem(item)
-    setDialogMode(canEdit && item.created_by === currentUserId ? 'edit' : 'view')
+    // Always open in view mode, user can click Edit button if they can edit
+    setSheetState({ item, mode: 'view' })
   }
 
   const handleEditClick = (item: ItineraryItemWithParticipants) => {
-    setSelectedItem(item)
-    setDialogMode('edit')
+    // Open directly in edit mode (from dropdown menu)
+    setSheetState({ item, mode: 'edit' })
   }
 
   const handleDeleteClick = (item: ItineraryItemWithParticipants) => {
@@ -142,10 +150,8 @@ export function ItineraryViewContainer({
     }
   }
 
-  const handleDialogSuccess = async () => {
+  const handleSuccess = async () => {
     await loadItems()
-    setDialogMode(null)
-    setSelectedItem(undefined)
   }
 
   const handleNavigateToWeek = () => {
@@ -155,8 +161,7 @@ export function ItineraryViewContainer({
 
   const handleCreateItemForDate = () => {
     // TODO: Pre-fill the dialog with the selected date
-    setSelectedItem(undefined)
-    setDialogMode('create')
+    setCreateDialogOpen(true)
   }
 
   if (isLoading) {
@@ -202,13 +207,7 @@ export function ItineraryViewContainer({
         </div>
 
         {canEdit && (
-          <Button
-            onClick={() => {
-              setSelectedItem(undefined)
-              setDialogMode('create')
-            }}
-            className="gap-2"
-          >
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Item
           </Button>
@@ -248,23 +247,32 @@ export function ItineraryViewContainer({
         />
       )}
 
-      {/* Item Dialog */}
-      {dialogMode && (
-        <ItineraryItemDialog
-          open={dialogMode !== null}
+      {/* Detail Sheet (view + edit inline) */}
+      {sheetState.item && (
+        <ItineraryItemDetailSheet
+          item={sheetState.item}
+          open={!!sheetState.item}
           onOpenChange={open => {
-            if (!open) {
-              setDialogMode(null)
-              setSelectedItem(undefined)
-            }
+            if (!open) setSheetState({ item: null, mode: 'view' })
           }}
-          mode={dialogMode}
-          item={selectedItem}
+          mode={sheetState.mode}
+          onModeChange={mode => setSheetState(prev => ({ ...prev, mode }))}
           tripId={tripId}
           tripParticipants={tripParticipants}
-          onSuccess={handleDialogSuccess}
+          onDelete={() => handleDeleteClick(sheetState.item!)}
+          onSuccess={handleSuccess}
         />
       )}
+
+      {/* Create Dialog (create only) */}
+      <ItineraryItemDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        mode="create"
+        tripId={tripId}
+        tripParticipants={tripParticipants}
+        onSuccess={handleSuccess}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog
