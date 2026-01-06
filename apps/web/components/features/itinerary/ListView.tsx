@@ -11,6 +11,7 @@
  * - Compact, scannable layout
  */
 
+import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import type { ItineraryItemWithParticipants } from '@tripthreads/core'
 import { groupItineraryItemsByDate, ITINERARY_ITEM_TYPE_CONFIG } from '@tripthreads/core'
@@ -28,6 +29,7 @@ import { Button } from '@/components/ui/button'
 import { DurationBadge } from './DurationBadge'
 import { ItineraryItemTooltip } from './ItineraryItemTooltip'
 import { CollapsedMetadataPreview } from './CollapsedMetadataPreview'
+import { MetadataSection } from './MetadataSection'
 
 interface ListViewProps {
   items: ItineraryItemWithParticipants[]
@@ -45,6 +47,25 @@ export function ListView({
   onDeleteItem,
 }: ListViewProps) {
   const groupedItems = groupItineraryItemsByDate(items)
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
+
+  const handleItemToggle = (itemId: string, hasExpandable: boolean) => {
+    if (!hasExpandable) {
+      // No expandable content - go straight to onClick
+      const item = items.find(i => i.id === itemId)
+      if (item) onItemClick?.(item)
+      return
+    }
+
+    if (expandedItemId === itemId) {
+      // Already expanded - call onClick to open Sheet
+      const item = items.find(i => i.id === itemId)
+      if (item) onItemClick?.(item)
+    } else {
+      // Not expanded - expand it
+      setExpandedItemId(itemId)
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -76,7 +97,8 @@ export function ListView({
                 key={item.id}
                 item={item}
                 currentUserId={currentUserId}
-                onClick={() => onItemClick?.(item)}
+                isExpanded={expandedItemId === item.id}
+                onToggle={hasExpandable => handleItemToggle(item.id, hasExpandable)}
                 onEdit={() => onEditItem?.(item)}
                 onDelete={() => onDeleteItem?.(item)}
               />
@@ -88,10 +110,70 @@ export function ListView({
   )
 }
 
+/**
+ * Determines if an itinerary item has expandable content
+ */
+function hasExpandableContent(item: ItineraryItemWithParticipants): boolean {
+  // Check for notes
+  if (item.notes) return true
+
+  // Check for links
+  if (item.links && item.links.length > 0) return true
+
+  // Check for metadata (same logic as MetadataSection)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadata = (item.metadata || {}) as any
+
+  switch (item.type) {
+    case 'transport':
+      return !!(
+        (metadata.departure_location && metadata.arrival_location) ||
+        metadata.terminal ||
+        metadata.gate ||
+        metadata.seat_number ||
+        metadata.booking_reference
+      )
+
+    case 'accommodation':
+      return !!(
+        metadata.check_in_time ||
+        metadata.check_out_time ||
+        metadata.room_number ||
+        metadata.address
+      )
+
+    case 'dining':
+      return !!(
+        metadata.reservation_time ||
+        metadata.cuisine_type ||
+        metadata.price_range ||
+        metadata.dietary_notes
+      )
+
+    case 'activity':
+      return !!(
+        metadata.meeting_point ||
+        metadata.duration ||
+        metadata.difficulty_level ||
+        metadata.group_size
+      )
+
+    case 'sightseeing':
+      return !!(metadata.admission_price || metadata.opening_hours || metadata.recommended_duration)
+
+    case 'general':
+      return false
+
+    default:
+      return false
+  }
+}
+
 interface ItineraryListItemProps {
   item: ItineraryItemWithParticipants
   currentUserId: string
-  onClick?: () => void
+  isExpanded: boolean
+  onToggle: (hasExpandable: boolean) => void
   onEdit?: () => void
   onDelete?: () => void
 }
@@ -99,7 +181,8 @@ interface ItineraryListItemProps {
 function ItineraryListItem({
   item,
   currentUserId,
-  onClick,
+  isExpanded,
+  onToggle,
   onEdit,
   onDelete,
 }: ItineraryListItemProps) {
@@ -112,18 +195,22 @@ function ItineraryListItem({
 
   const canEdit = item.created_by === currentUserId // Simplified - RLS will enforce full rules
 
+  // Calculate if item has expandable content
+  const hasExpandable = hasExpandableContent(item)
+
   return (
     <ItineraryItemTooltip item={item}>
       <div
         className={cn(
           'group relative rounded-lg border bg-card p-4 transition-all cursor-pointer hover:shadow-md hover:border-primary/50',
-          config.bgColor
+          config.bgColor,
+          isExpanded && 'ring-2 ring-primary/20'
         )}
         onClick={e => {
           // Prevent if clicking on interactive elements (links, buttons, menu)
           if ((e.target as HTMLElement).closest('a, button')) return
-          // Always open Sheet on click
-          onClick?.()
+          // Toggle expansion or open Sheet
+          onToggle(hasExpandable)
         }}
       >
         <div className="flex items-start justify-between gap-4">
@@ -155,7 +242,12 @@ function ItineraryListItem({
               </div>
 
               {item.description && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                <p
+                  className={cn(
+                    'text-sm text-muted-foreground mt-1',
+                    !isExpanded && 'line-clamp-2'
+                  )}
+                >
                   {item.description}
                 </p>
               )}
@@ -199,6 +291,43 @@ function ItineraryListItem({
                     {item.participants.length} participant
                     {item.participants.length !== 1 ? 's' : ''}
                   </span>
+                </div>
+              )}
+
+              {/* Expanded Content */}
+              {isExpanded && hasExpandable && (
+                <div className="mt-4 space-y-3 border-t pt-3">
+                  {/* Metadata Section */}
+                  <MetadataSection item={item} />
+
+                  {/* Notes Section */}
+                  {item.notes && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Note:</p>
+                      <p className="text-sm text-foreground">{item.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Links Section */}
+                  {item.links && item.links.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Links:</p>
+                      <div className="flex flex-col gap-1">
+                        {item.links.map((link, index) => (
+                          <a
+                            key={index}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {link.title || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
