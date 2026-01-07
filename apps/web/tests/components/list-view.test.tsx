@@ -237,7 +237,7 @@ describe('ListView', () => {
   })
 
   describe('Interactions', () => {
-    it('should call onItemClick when item is clicked', async () => {
+    it('should expand item on first click, then call onItemClick on second click', async () => {
       const user = userEvent.setup()
 
       render(
@@ -252,9 +252,55 @@ describe('ListView', () => {
 
       const flightItem = screen.getByText('Flight to Lisbon').closest('.group')
 
-      // Click should immediately trigger onItemClick (opens sheet)
+      // First click - should expand (not call onItemClick) because item has notes
+      await user.click(flightItem!)
+      expect(mockOnItemClick).not.toHaveBeenCalled()
+
+      // Second click - should call onItemClick to open Sheet
       await user.click(flightItem!)
       expect(mockOnItemClick).toHaveBeenCalledWith(mockItems[0])
+      expect(mockOnItemClick).toHaveBeenCalledTimes(1)
+    })
+
+    it('should call onItemClick immediately for items without expandable content', async () => {
+      const user = userEvent.setup()
+
+      // Create item with no expandable content (no notes, links, or metadata)
+      const simpleItem: ItineraryItemWithParticipants = {
+        id: 'simple-1',
+        trip_id: 'trip-123',
+        type: 'transport',
+        title: 'Simple Flight',
+        description: 'Quick trip',
+        notes: null,
+        links: [],
+        start_time: '2025-06-15T08:00:00Z',
+        end_time: '2025-06-15T11:00:00Z',
+        is_all_day: false,
+        location: 'Airport',
+        metadata: {},
+        created_by: 'user-123',
+        created_at: '2025-06-01T10:00:00Z',
+        updated_at: '2025-06-01T10:00:00Z',
+        participants: [],
+      }
+
+      render(
+        <ListView
+          items={[simpleItem]}
+          currentUserId="user-123"
+          onItemClick={mockOnItemClick}
+          onEditItem={mockOnEditItem}
+          onDeleteItem={mockOnDeleteItem}
+        />
+      )
+
+      const item = screen.getByText('Simple Flight').closest('.group')
+
+      // Should immediately call onItemClick (no expansion needed)
+      await user.click(item!)
+      expect(mockOnItemClick).toHaveBeenCalledWith(simpleItem)
+      expect(mockOnItemClick).toHaveBeenCalledTimes(1)
     })
 
     it('should show actions menu for items created by current user', async () => {
