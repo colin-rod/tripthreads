@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { getStripeClient } from '@/lib/stripe/client'
-import { getDisplayAmount, type Currency, type PlanInterval } from '@/lib/stripe/config'
+import { getDisplayAmount, getPriceId, type Currency, type PlanInterval } from '@/lib/stripe/config'
 import { detectCurrency } from '@/lib/stripe/utils'
 import type { Database } from '@tripthreads/core'
 
@@ -105,17 +105,6 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Get price ID for selected plan
-  const getPriceId = (plan: PlanInterval): string => {
-    // Price IDs from environment variables
-    const priceIds: Record<PlanInterval, string> = {
-      monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || '',
-      yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY || '',
-      oneoff: process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF || '',
-    }
-    return priceIds[plan]
   }
 
   const handleManageSubscription = async () => {
