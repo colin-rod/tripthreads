@@ -20,7 +20,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
+    "@supabase/supabase-js": "^2.90.1",
     "zod": "^4.3.5",
     "date-fns": "^4.1.0",
     "class-variance-authority": "^0.7.1",
