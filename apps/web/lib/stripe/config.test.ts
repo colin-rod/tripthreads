@@ -29,9 +29,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
 
   describe('STRIPE_PRICES', () => {
     it('should load price IDs from environment variables', async () => {
-      process.env.STRIPE_PRICE_MONTHLY = 'price_monthly_test'
-      process.env.STRIPE_PRICE_YEARLY = 'price_yearly_test'
-      process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff_test'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY = 'price_monthly_test'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY = 'price_yearly_test'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF = 'price_oneoff_test'
 
       // Re-import to get fresh values
       jest.resetModules()
@@ -43,9 +43,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
     })
 
     it('should use empty string as fallback when env vars not set', async () => {
-      delete process.env.STRIPE_PRICE_MONTHLY
-      delete process.env.STRIPE_PRICE_YEARLY
-      delete process.env.STRIPE_PRICE_ONEOFF
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF
 
       jest.resetModules()
       const config = await import('./config')
@@ -58,9 +58,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
 
   describe('getPriceId()', () => {
     it('should return the correct price ID for each plan', async () => {
-      process.env.STRIPE_PRICE_MONTHLY = 'price_monthly_123'
-      process.env.STRIPE_PRICE_YEARLY = 'price_yearly_456'
-      process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff_789'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY = 'price_monthly_123'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY = 'price_yearly_456'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF = 'price_oneoff_789'
 
       jest.resetModules()
       const config = await import('./config')
@@ -71,7 +71,7 @@ describe('Stripe Config - Adaptive Pricing', () => {
     })
 
     it('should return the same price ID for all currencies (adaptive pricing)', async () => {
-      process.env.STRIPE_PRICE_MONTHLY = 'price_adaptive_monthly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY = 'price_adaptive_monthly'
 
       jest.resetModules()
       const config = await import('./config')
@@ -121,9 +121,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
       process.env.STRIPE_PRODUCT_PRO_MONTHLY = 'prod_monthly'
       process.env.STRIPE_PRODUCT_PRO_YEARLY = 'prod_yearly'
       process.env.STRIPE_PRODUCT_PRO_ONEOFF = 'prod_oneoff'
-      process.env.STRIPE_PRICE_MONTHLY = 'price_monthly'
-      process.env.STRIPE_PRICE_YEARLY = 'price_yearly'
-      process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY = 'price_monthly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY = 'price_yearly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF = 'price_oneoff'
 
       jest.resetModules()
       const config = await import('./config')
@@ -135,9 +135,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
       delete process.env.STRIPE_PRODUCT_PRO_MONTHLY
       process.env.STRIPE_PRODUCT_PRO_YEARLY = 'prod_yearly'
       process.env.STRIPE_PRODUCT_PRO_ONEOFF = 'prod_oneoff'
-      process.env.STRIPE_PRICE_MONTHLY = 'price_monthly'
-      process.env.STRIPE_PRICE_YEARLY = 'price_yearly'
-      process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY = 'price_monthly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY = 'price_yearly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF = 'price_oneoff'
 
       jest.resetModules()
       const config = await import('./config')
@@ -152,9 +152,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
       process.env.STRIPE_PRODUCT_PRO_MONTHLY = 'prod_monthly'
       process.env.STRIPE_PRODUCT_PRO_YEARLY = 'prod_yearly'
       process.env.STRIPE_PRODUCT_PRO_ONEOFF = 'prod_oneoff'
-      delete process.env.STRIPE_PRICE_MONTHLY
-      process.env.STRIPE_PRICE_YEARLY = 'price_yearly'
-      process.env.STRIPE_PRICE_ONEOFF = 'price_oneoff'
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY = 'price_yearly'
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF = 'price_oneoff'
 
       jest.resetModules()
       const config = await import('./config')
@@ -162,7 +162,7 @@ describe('Stripe Config - Adaptive Pricing', () => {
       expect(() => config.validateStripeConfig()).toThrow(
         'Missing required Stripe environment variables'
       )
-      expect(() => config.validateStripeConfig()).toThrow('STRIPE_PRICE_MONTHLY')
+      expect(() => config.validateStripeConfig()).toThrow('NEXT_PUBLIC_STRIPE_PRICE_MONTHLY')
     })
 
     it('should check for 3 price IDs (not 9) with adaptive pricing', async () => {
@@ -170,9 +170,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
       process.env.STRIPE_PRODUCT_PRO_YEARLY = 'prod_yearly'
       process.env.STRIPE_PRODUCT_PRO_ONEOFF = 'prod_oneoff'
       // Missing all price IDs
-      delete process.env.STRIPE_PRICE_MONTHLY
-      delete process.env.STRIPE_PRICE_YEARLY
-      delete process.env.STRIPE_PRICE_ONEOFF
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY
+      delete process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF
 
       jest.resetModules()
       const config = await import('./config')
@@ -184,9 +184,9 @@ describe('Stripe Config - Adaptive Pricing', () => {
         config.validateStripeConfig()
       } catch (error) {
         const errorMessage = (error as Error).message
-        expect(errorMessage).toContain('STRIPE_PRICE_MONTHLY')
-        expect(errorMessage).toContain('STRIPE_PRICE_YEARLY')
-        expect(errorMessage).toContain('STRIPE_PRICE_ONEOFF')
+        expect(errorMessage).toContain('NEXT_PUBLIC_STRIPE_PRICE_MONTHLY')
+        expect(errorMessage).toContain('NEXT_PUBLIC_STRIPE_PRICE_YEARLY')
+        expect(errorMessage).toContain('NEXT_PUBLIC_STRIPE_PRICE_ONEOFF')
         // Should NOT contain currency-specific variables
         expect(errorMessage).not.toContain('STRIPE_PRICE_MONTHLY_EUR')
         expect(errorMessage).not.toContain('STRIPE_PRICE_MONTHLY_USD')

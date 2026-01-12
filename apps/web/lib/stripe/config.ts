@@ -265,7 +265,7 @@ export function validateStripeConfig(): void {
   // Check prices (adaptive pricing - one ID per plan)
   Object.entries(STRIPE_PRICES).forEach(([plan, priceId]) => {
     if (!priceId) {
-      missing.push(`STRIPE_PRICE_${plan.toUpperCase()}`)
+      missing.push(`NEXT_PUBLIC_STRIPE_PRICE_${plan.toUpperCase()}`)
     }
   })
 
