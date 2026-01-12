@@ -100,9 +100,9 @@ export const STRIPE_PRODUCTS: Record<PlanInterval, ProductConfig> = {
  * Stripe automatically shows the correct currency based on customer location
  */
 export const STRIPE_PRICES: Record<PlanInterval, string> = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY || '',
-  yearly: process.env.STRIPE_PRICE_YEARLY || '',
-  oneoff: process.env.STRIPE_PRICE_ONEOFF || '',
+  monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || '',
+  yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY || '',
+  oneoff: process.env.NEXT_PUBLIC_STRIPE_PRICE_ONEOFF || '',
 }
 
 /**
